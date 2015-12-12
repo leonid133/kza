@@ -1,0 +1,99 @@
+void CardCS(unsigned int CS)
+{
+	SFRPAGE = SPI0_PAGE;
+	
+	NSSMD0 = CS;   
+	P3_2=CS;
+
+   Delay(150);
+	return;
+}
+
+void SD_init(void)
+{
+	unsigned int xdata i;
+	
+	unsigned char xdata b;
+
+	xdata char SFRPAGE_SAVE = SFRPAGE;
+	SFRPAGE = SPI0_PAGE;
+
+	
+	CardCS(1);
+
+	for (i = 0; i < 10; i++)
+		SPI(0xFF);
+
+	CardCS(0);
+//CMD0 
+	SPI(0x40);
+	SPI(0x00);
+	SPI(0x00);
+	SPI(0x00);
+	SPI(0x00);
+	SPI(0x95);
+
+   do
+	{
+		SPI(0xFF);
+		b = SPI0DAT;
+	}while(b==0xFF);
+	
+	while(SPI0DAT!=0xFF) 
+	{
+		SPI(0xFF);
+	}
+
+
+	do
+	{
+	//CMD55
+		SPI(0x77);
+		SPI(0x00);
+		SPI(0x00);
+		SPI(0x00);
+		SPI(0x00);
+		SPI(0xFF);
+   	do
+		{
+			SPI(0xFF);
+			b = SPI0DAT;
+		}while(b==0xFF);
+	
+		while(SPI0DAT!=0xFF) 
+		{
+			SPI(0xFF);
+		}
+
+		//ACMD41
+		SPI(0x69);
+		SPI(0x00);
+		SPI(0x00);
+		SPI(0x00);
+		SPI(0x00);
+		SPI(0xFF);
+   	do
+		{
+			SPI(0xFF);
+			b = SPI0DAT;
+		}while(b==0xFF);
+	
+		while(SPI0DAT!=0xFF) 
+		{
+			SPI(0xFF);
+		}
+
+
+		Delay(1000000);
+
+
+	} while ((b & 0x01));
+
+	
+	CardCS(1);
+	SPI(0xFF);		
+	Delay(5000);	
+	
+	SFRPAGE = SFRPAGE_SAVE;
+	return;
+}

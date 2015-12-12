@@ -1,0 +1,5 @@
+var phpadsbanner = '';
+
+phpadsbanner += '<'+'a href=\'http://188.124.226.15/adclick.php?bannerid=817&amp;zoneid=9&amp;source=&amp;dest=http%3A%2F%2Fwww.compel.ru%2F2012%2F01%2F23%2Fsverhbyistryie-1200v-igbt-7-go-pokoleniya-ot-international-rectifier%2F+%3Futm_source%3Drba-group%26utm_medium%3D%25D0%25B1%25D0%25B0%25D0%25BD%25D0%25BD%25D0%25B5%25D1%2580%26utm_campaign%3DIR-7-generation-IGBT\' target=\'_blank\'><'+'img src=\'http://188.124.226.15/adimage.php?filename=ir_igbt-.gif&amp;contenttype=gif\' width=\'140\' height=\'200\' alt=\'Сверхбыстрые 1200V IGBT 7-го поколения от IR\' title=\'Сверхбыстрые 1200V IGBT 7-го поколения от IR\' border=\'0\'><'+'/a><'+'div id="beacon_817" style="position: absolute; left: 0px; top: 0px; visibility: hidden;"><'+'img src=\'http://188.124.226.15/adlog.php?bannerid=817&amp;clientid=45&amp;zoneid=9&amp;source=&amp;block=0&amp;capping=0&amp;cb=3573bf6fdb5f1e0fbd696f65a8a0da01\' width=\'0\' height=\'0\' alt=\'\' style=\'width: 0px; height: 0px;\'><'+'/div>';
+
+document.write(phpadsbanner);

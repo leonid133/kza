@@ -1,0 +1,822 @@
+#include "c8051f120.h"
+#include "tarservo.h"
+#include "init.h"
+#include "servo.h"
+#include <intrins.h>
+#include <float.h>
+
+#define NBFM 		50
+xdata char BuferFromModem [NBFM]; // Для анализа с последовательного порта
+xdata char wBFM, rBFM, marBFM;	 
+
+//xdata unsigned int Value[16]; 
+
+void UART0_isr(void);
+void UART1_isr(void);
+void Timer0_isr(void);
+
+//SPI------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------
+// MMC_Command_Exec
+//-----------------------------------------------------------------------------
+//
+// This function generates the necessary SPI traffic for all MMC SPI commands.
+// The three parameters are described below:
+// 
+// cmd:      This parameter is used to index into the command table and read 
+//           the desired command.  The Command Table Index Constants allow the
+//           caller to use a meaningful constant name in the cmd parameter 
+//           instead of a simple index number.  For example, instead of calling 
+//           MMC_Command_Exec (0, argument, pchar) to send the MMC into idle 
+//           state, the user can call 
+//           MMC_Command_Exec (GO_IDLE_STATE, argument, pchar);
+//
+// argument: This parameter is used for MMC commands that require an argument.
+//           MMC arguments are 32-bits long and can be values such as an
+//           an address, a block length setting, or register settings for the
+//           MMC.
+//
+// pchar:    This parameter is a pointer to the local data location for MMC 
+//           data operations.  When a read or write occurs, data will be stored
+//           or retrieved from the location pointed to by pchar.
+//
+// The MMC_Command_Exec function indexes the command table using the cmd 
+// parameter. It reads the command table entry into memory and uses information
+// from that entry to determine how to proceed.  Returns the 16-bit card 
+// response value;
+//
+
+unsigned int MMC_Command_Exec (unsigned char cmd, unsigned long argument,
+                           unsigned char *pchar)
+{
+   idata COMMAND current_command;      // Local space for the command table 
+                                       // entry;
+   idata ULONG long_arg;               // Union variable for easy byte 
+                                       // transfers of the argument;
+                                       // Static variable that holds the 
+                                       // current data block length;
+   static unsigned long current_blklen = 512;
+   unsigned long old_blklen = 512;     // Temp variable to preserve data block
+                                       // length during temporary changes;
+   idata unsigned int counter = 0;     // Byte counter for multi-byte fields;
+   idata UINT card_response;           // Variable for storing card response;
+   idata unsigned char data_resp;      // Variable for storing data response;
+   idata unsigned char dummy_CRC;      // Dummy variable for storing CRC field;
+
+                                       
+   current_command = commandlist[cmd]; // Retrieve desired command table entry
+                                       // from code space;
+   SPI0DAT = 0xFF;                     // Send buffer SPI clocks to ensure no
+   while(!SPIF){}                      // MMC operations are pending;
+   SPIF = 0;
+   NSSMD0 = 0;                         // Select MMC by pulling CS low;
+   SPI0DAT = 0xFF;                     // Send another byte of SPI clocks;
+   while(!SPIF){}
+   SPIF = 0;
+                                       // Issue command opcode;
+   SPI0DAT = (current_command.command_byte | 0x40);
+   long_arg.l = argument;              // Make argument byte addressable;
+                                       // If current command changes block
+                                       // length, update block length variable
+                                       // to keep track;
+                                       // Command byte = 16 means that a set
+                                       // block length command is taking place
+                                       // and block length variable must be
+                                       // set;
+   if(current_command.command_byte == 16)
+   {
+      current_blklen = argument;       
+   }                                
+                                       // Command byte = 9 or 10 means that a
+                                       // 16-byte register value is being read
+                                       // from the card, block length must be
+                                       // set to 16 bytes, and restored at the
+                                       // end of the transfer;
+   if((current_command.command_byte == 9)||
+      (current_command.command_byte == 10))
+   {
+      old_blklen = current_blklen;     // Command is a GET_CSD or GET_CID,
+      current_blklen = 16;             // set block length to 16-bytes;
+   }
+   while(!SPIF){}                      // Wait for initial SPI transfer to end;
+   SPIF = 0;                           // Clear SPI Interrupt flag;
+
+                                       // If an argument is required, transmit
+                                       // one, otherwise transmit 4 bytes of
+                                       // 0x00;
+   if(current_command.arg_required == YES)
+   {
+      counter = 0;
+      while(counter <= 3)
+      {
+         SPI0DAT = long_arg.b[counter];
+         counter++;
+         while(!SPIF){}
+         SPIF = 0;
+      }
+   }
+   else
+   {
+      counter = 0;
+      while(counter <= 3)
+      {
+         SPI0DAT = 0x00;
+         counter++;
+         while(!SPIF){}
+         SPIF = 0;
+      }
+   }
+   SPI0DAT = current_command.CRC;      // Transmit CRC byte;  In all cases
+   while(!SPIF){}                      // except CMD0, this will be a dummy
+   SPIF = 0;                           // character;
+
+                                       // The command table entry will indicate
+                                       // what type of response to expect for
+                                       // a given command;  The following 
+                                       // conditional handles the MMC response;
+   if(current_command.response == R1)  // Read the R1 response from the card;
+   {
+      do
+      {
+         SPI0DAT = 0xFF;               // Write dummy value to SPI so that 
+         while(!SPIF){}                // the response byte will be shifted in;
+         SPIF = 0;
+         card_response.b[0] = SPI0DAT; // Save the response;
+      }
+      while((card_response.b[0] & BUSY_BIT));
+   }
+                                       // Read the R1b response;
+   else if(current_command.response == R1b)
+   {
+      do
+      {
+         SPI0DAT = 0xFF;               // Start SPI transfer;
+         while(!SPIF){}
+         SPIF = 0;
+         card_response.b[0] = SPI0DAT; // Save card response
+      }
+      while((card_response.b[0] & BUSY_BIT));
+      do                               // Wait for busy signal to end;
+      {
+         SPI0DAT = 0xFF;               
+         while(!SPIF){}
+         SPIF = 0;
+      }
+      while(SPI0DAT == 0x00);          // When byte from card is non-zero,
+   }                                   // card is no longer busy;
+                                       // Read R2 response
+   else if(current_command.response == R2)
+   {
+      do
+      {
+         SPI0DAT = 0xFF;               // Start SPI transfer;
+         while(!SPIF){}
+         SPIF = 0;
+         card_response.b[0] = SPI0DAT; // Read first byte of response;
+      }
+      while((card_response.b[0] & BUSY_BIT));
+      SPI0DAT = 0xFF;
+      while(!SPIF){}
+      SPIF = 0;
+      card_response.b[1] = SPI0DAT;    // Read second byte of response;
+   }
+   else                                // Read R3 response;
+   {
+      do
+      {
+         SPI0DAT = 0xFF;               // Start SPI transfer;
+         while(!SPIF){}
+         SPIF = 0;
+         card_response.b[0] = SPI0DAT; // Read first byte of response;
+      }
+      while((card_response.b[0] & BUSY_BIT));
+      counter = 0;
+      while(counter <= 3)              // Read next three bytes and store them
+      {                                // in local memory;  These bytes make up
+         counter++;                    // the Operating Conditions Register
+         SPI0DAT = 0xFF;               // (OCR);
+         while(!SPIF){}
+         SPIF = 0;
+         *pchar++ = SPI0DAT;
+      }
+   }
+   switch(current_command.trans_type)  // This conditional handles all data 
+   {                                   // operations;  The command entry
+                                       // determines what type, if any, data
+                                       // operations need to occur;
+      case RD:                         // Read data from the MMC;
+         do                            // Wait for a start read token from
+         {                             // the MMC;
+            SPI0DAT = 0xFF;            // Start a SPI transfer;
+            while(!SPIF){}
+            SPIF = 0;
+         }
+         while(SPI0DAT != START_SBR);  // Check for a start read token;
+         counter = 0;                  // Reset byte counter;
+                                       // Read <current_blklen> bytes;
+         while(counter < (unsigned int)current_blklen)
+         {
+            SPI0DAT = 0x00;            // Start SPI transfer;
+            while(!SPIF){}
+            SPIF = 0;
+            *pchar++ = SPI0DAT;        // Store data byte in local memory;
+            counter++;                 // Increment data byte counter;
+         }
+         SPI0DAT = 0x00;               // After all data is read, read the two
+         while(!SPIF){}                // CRC bytes;  These bytes are not used
+         SPIF = 0;                     // in this mode, but the placeholders 
+         dummy_CRC = SPI0DAT;          // must be read anyway;
+         SPI0DAT = 0x00;
+         while(!SPIF){}
+         SPIF = 0;
+         dummy_CRC = SPI0DAT;
+         break;
+      case WR:                         // Write data to the MMC;
+         SPI0DAT = 0xFF;               // Start by sending 8 SPI clocks so
+         while(!SPIF){}                // the MMC can prepare for the write;
+         SPIF = 0;
+         SPI0DAT = START_SBW;          // Send the start write block token;
+         while(!SPIF){}
+         SPIF = 0;
+         counter = 0;                  // Reset byte counter;
+                                       // Write <current_blklen> bytes to MMC;
+         while(counter < (unsigned int)current_blklen)
+         {
+            SPI0DAT = *pchar++;        // Write data byte out through SPI;
+            while(!SPIF){}
+            SPIF = 0;
+            counter++;                 // Increment byte counter;
+         }
+
+         SPI0DAT = 0xFF;               // Write CRC bytes (don't cares);
+         while(!SPIF){}
+         SPIF = 0;
+         SPI0DAT = 0xFF;
+         while(!SPIF){}
+         SPIF = 0;
+
+         do                            // Read Data Response from card;
+         {                             
+            SPI0DAT = 0xFF;
+            while(!SPIF){}
+            SPIF = 0;
+            data_resp = SPI0DAT;
+         }                             // When bit 0 of the MMC response
+                                       // is clear, a valid data response
+                                       // has been received;
+         while((data_resp & DATA_RESP_MASK) != 0x01);
+
+         do                            // Wait for end of busy signal;
+         {
+            SPI0DAT = 0xFF;            // Start SPI transfer to receive
+            while(!SPIF){}             // busy tokens;
+            SPIF = 0;
+         }
+         while(SPI0DAT == 0x00);       // When a non-zero token is returned,
+                                       // card is no longer busy;
+         SPI0DAT = 0xFF;               // Issue 8 SPI clocks so that all card
+         while(!SPIF){}                // operations can complete;
+         SPIF = 0;
+         break;
+      default: break;
+   }
+   SPI0DAT = 0xFF;
+   while(!SPIF){}
+   SPIF = 0;
+
+
+   NSSMD0 = 1;                         // Deselect memory card;
+   SPI0DAT = 0xFF;                     // Send 8 more SPI clocks to ensure
+   while(!SPIF){}                      // the card has finished all necessary
+   SPIF = 0;                           // operations;
+                                       // Restore old block length if needed;
+   if((current_command.command_byte == 9)||
+      (current_command.command_byte == 10))
+   {
+      current_blklen = old_blklen;
+   }
+   return card_response.i;
+}
+
+
+
+//-----------------------------------------------------------------------------
+// MMC_FLASH_Init
+//-----------------------------------------------------------------------------
+//
+// This function initializes the flash card, configures it to operate in SPI
+// mode, and reads the operating conditions register to ensure that the device
+// has initialized correctly.  It also determines the size of the card by 
+// reading the Card Specific Data Register (CSD).
+
+void MMC_FLASH_Init (void)
+{
+   idata UINT card_status;             // Stores card status returned from 
+                                       // MMC function calls(MMC_Command_Exec);
+   idata unsigned char counter = 0;    // SPI byte counter;
+   idata unsigned int size;            // Stores size variable from card;
+   unsigned char xdata *pchar;         // Xdata pointer for storing MMC 
+                                       // register values;
+                                       // Transmit at least 64 SPI clocks
+                                       // before any bus comm occurs.
+   pchar = (unsigned char xdata*)LOCAL_BLOCK;
+   for(counter = 0; counter < 8; counter++)
+   {
+      SPI0DAT = 0xFF;
+      while(!SPIF){}
+      SPIF = 0;
+   }
+   NSSMD0 = 0;                         // Select the MMC with the CS pin;
+                                       // Send 16 more SPI clocks to 
+                                       // ensure proper startup;
+   for(counter = 0; counter < 2; counter++)
+   {
+      SPI0DAT = 0xFF;
+      while(!SPIF){}
+      SPIF = 0;
+   }
+                                       // Send the GO_IDLE_STATE command with
+                                       // CS driven low;  This causes the MMC
+                                       // to enter SPI mode;
+   card_status.i = MMC_Command_Exec(GO_IDLE_STATE,EMPTY,EMPTY);
+                                       // Send the SEND_OP_COND command
+   do                                  // until the MMC indicates that it is
+   {                                   // no longer busy (ready for commands);
+      SPI0DAT = 0xFF;
+      while(!SPIF){}
+      SPIF = 0;
+      card_status.i = MMC_Command_Exec(SEND_OP_COND,EMPTY,EMPTY);
+   }
+   while ((card_status.b[0] & 0x01));
+   SPI0DAT = 0xFF;                     // Send 8 more SPI clocks to complete
+   while(!SPIF){}                      // the initialization sequence;
+   SPIF = 0;
+   do                                  // Read the Operating Conditions 
+   {                                   // Register (OCR);
+      card_status.i = MMC_Command_Exec(READ_OCR,EMPTY,pchar);
+   }
+   while(!(*pchar&0x80));              // Check the card busy bit of the OCR;
+
+   card_status.i = MMC_Command_Exec(SEND_STATUS,EMPTY,EMPTY);
+                                       // Get the Card Specific Data (CSD)
+                                       // register to determine the size of the
+                                       // MMC;
+   card_status.i = MMC_Command_Exec(SEND_CSD,EMPTY,pchar);
+   pchar += 9;                         // Size indicator is in the 9th byte of
+                                       // CSD register;
+                                       // Extract size indicator bits;
+   size = (unsigned int)((((*pchar) & 0x03) << 1) | 
+                         (((*(pchar+1)) & 0x80) >> 7));
+   switch(size)                        // Assign PHYSICAL_SIZE variable to 
+   {                                   // appropriate size constant;
+      case 1: PHYSICAL_SIZE = PS_8MB; break;
+      case 2: PHYSICAL_SIZE = PS_16MB; break;
+      case 3: PHYSICAL_SIZE = PS_32MB; break;
+      case 4: PHYSICAL_SIZE = PS_64MB; break;
+      case 5: PHYSICAL_SIZE = PS_128MB; break;
+      default: break;
+   }
+                                       // Determine the number of MMC sectors;
+   PHYSICAL_BLOCKS = PHYSICAL_SIZE / PHYSICAL_BLOCK_SIZE;
+   LOG_SIZE = PHYSICAL_SIZE - LOG_ADDR;
+}
+//-----------------------------------------------------------------------------
+// MMC_FLASH_Read
+//-----------------------------------------------------------------------------
+//
+// This function reads <length> bytes of FLASH from MMC address <address>, and
+// stores them in external RAM at the location pointed to by <pchar>.
+// There are two cases that must be considered when performing a read.  If the
+// requested data is located entirely in a single FLASH block, the function
+// sets the read length appropriately and issues a read command.  If requested
+// data crosses a FLASH block boundary, the read operation is broken into two
+// parts.  The first part reads data from the starting address to the end of 
+// the starting block, and then reads from the start of the next block to the
+// end of the requested data.  Before each read, the read length must be set
+// to the proper value.
+/*
+unsigned char MMC_FLASH_Read (unsigned long address, unsigned char *pchar,
+                         unsigned int length)
+{
+   idata unsigned long flash_page_1;   // Stores address of first FLASH page;
+   idata unsigned long flash_page_2;   // Stores address of second FLASH page;
+   idata unsigned int card_status;     // Stores MMC status after each MMC
+                                       // command;
+
+   if(length > 512) return 0;          // Test for valid data length;  Length
+                                       // must be less than 512 bytes;
+                                       // Find address of first FLASH block;
+   flash_page_1 = address & ~(PHYSICAL_BLOCK_SIZE-1);
+                                       // Find address of second FLASH block;
+   flash_page_2 = (address+length-1) & ~(PHYSICAL_BLOCK_SIZE-1);
+   if(flash_page_1 == flash_page_2)    // Execute the following if data is 
+   {                                   // located within one FLASH block;
+                                       // Set read length to requested data
+                                       // length;
+      card_status = MMC_Command_Exec(SET_BLOCKLEN,(unsigned long)length,
+                                 EMPTY);
+                                       // Issue read command;
+      card_status = MMC_Command_Exec(READ_SINGLE_BLOCK,address,pchar);
+   }
+   else                                // Execute the following if data crosses
+   {                                   // MMC block boundary;
+                                       // Set the read length to the length
+                                       // from the starting address to the
+                                       // end of the first FLASH page;
+      card_status = MMC_Command_Exec(SET_BLOCKLEN,
+                                (unsigned long)(flash_page_2 - address),
+                                 EMPTY);
+                                       // Issue read command;
+      card_status = MMC_Command_Exec(READ_SINGLE_BLOCK,address,pchar);
+                                       // Set read length to the length from
+                                       // the start of the second FLASH page
+                                       // to the end of the data;
+      card_status = MMC_Command_Exec(SET_BLOCKLEN,
+                                (unsigned long)length - 
+                                (flash_page_2 - address),
+                                 EMPTY);
+                                       // Issue second read command;  Notice
+                                       // that the incoming data stored in 
+                                       // external RAM must be offset from the
+                                       // original pointer value by the length
+                                       // of data stored during the first read 
+                                       // operation;
+      card_status = MMC_Command_Exec(READ_SINGLE_BLOCK,flash_page_2,
+                                 pchar + (flash_page_2 - address));
+   }
+}
+*/
+//-----------------------------------------------------------------------------
+// MMC_FLASH_Clear
+//-----------------------------------------------------------------------------
+//
+// This function erases <length> bytes of flash starting at address <address>.
+// The <scratch> pointer points to a 512 byte area of XRAM that can
+// be used as temporary storage space.  The flow of this function is similar
+// to the FLASH_Read function in that there are two possible cases.  If the
+// space to be cleared is contained within one MMC block, the block can be
+// stored locally and erased from the MMC.  Then the desired area can be 
+// cleared in the local copy and the block can be written back to the MMC.  If 
+// the desired clear area crosses a FLASH block boundary, the previous steps 
+// must be executed seperately for both blocks.
+/*
+unsigned char MMC_FLASH_Clear (unsigned long address, unsigned char *scratch,
+                          unsigned int length)
+{
+   idata unsigned long flash_page_1;   // Stores address of first FLASH page;
+   idata unsigned long flash_page_2;   // Stores address of second FLASH page;
+   idata unsigned int card_status;     // Stores MMC status after each MMC
+                                       // command;
+   idata unsigned int counter;         // Counter for clearing bytes in local
+                                       // block copy;
+   unsigned char xdata *index;         // Index into local block used for 
+                                       // clearing desired data;
+   if(length > 512) return 0;          // Test desired clear length;  If 
+                                       // length > 512, break out and return
+                                       // zero;
+                                       // Calculate first FLASH page address;
+   flash_page_1 = address & ~(PHYSICAL_BLOCK_SIZE-1);
+                                       // Calculate second FLASH page address;
+   flash_page_2 = (address+length-1) & ~(PHYSICAL_BLOCK_SIZE-1);
+   if(flash_page_1 == flash_page_2)    // Clear space all in one FLASH block
+   {                                   // condition;
+                                       // Read first FLASH block;
+      card_status = MMC_Command_Exec(SET_BLOCKLEN,
+                                 (unsigned long)PHYSICAL_BLOCK_SIZE,
+                                 EMPTY);
+      card_status = MMC_Command_Exec(READ_SINGLE_BLOCK,flash_page_1,scratch);
+                                       // Set index to address of area to clear
+                                       // in local block;
+      index = (unsigned int)(address % PHYSICAL_BLOCK_SIZE) + scratch;
+      counter = 0;
+      while(counter<length)            // Clear desired area in local block;
+      {
+         *index++ = 0x00;
+         counter++;
+      }
+                                       // Tag first FLASH page for erase;
+      card_status = MMC_Command_Exec(TAG_SECTOR_START,flash_page_1,EMPTY);
+      card_status = MMC_Command_Exec(TAG_SECTOR_END,flash_page_1,EMPTY);
+                                       // Erase first FLASH page;
+      card_status = MMC_Command_Exec(ERASE,EMPTY,EMPTY);
+                                       // Write local copy of block back out
+                                       // to MMC;
+      card_status = MMC_Command_Exec(WRITE_BLOCK,flash_page_1,scratch);
+   }
+   else                                // Clear space crosses FLASH block
+   {                                   // boundaries condition;
+                                       // Follow same procedure as for single
+                                       // block case above;  Read first block
+                                       // clear data from start address to end
+                                       // of block;  Erase block in FLASH;
+                                       // Write local copy back out;
+      card_status = MMC_Command_Exec(SET_BLOCKLEN,
+                                 (unsigned long)PHYSICAL_BLOCK_SIZE,
+                                 EMPTY);
+      card_status = MMC_Command_Exec(READ_SINGLE_BLOCK,flash_page_1,scratch);
+      index = (unsigned int)(address % PHYSICAL_BLOCK_SIZE) + scratch;
+      counter = (unsigned int)(flash_page_2 - address);
+      while(counter > 0)
+      {
+         *index++ = 0xFF;
+         counter--;
+      }
+      card_status = MMC_Command_Exec(TAG_SECTOR_END,flash_page_1,EMPTY);
+      card_status = MMC_Command_Exec(ERASE,EMPTY,EMPTY);
+      card_status = MMC_Command_Exec(WRITE_BLOCK,flash_page_1,scratch);
+                                       // Same process as above, but using
+                                       // second FLASH block;  Area to be
+                                       // cleared extends from beginning of
+                                       // second FLASH block to end of desired
+                                       // clear area;
+      card_status = MMC_Command_Exec(READ_SINGLE_BLOCK,flash_page_2,scratch);
+      index = scratch;
+      counter = (unsigned int)(length - (flash_page_2 - address));
+      while(counter > 0)
+      {
+         *index++ = 0xFF;
+         counter--;
+      }
+      card_status = MMC_Command_Exec(TAG_SECTOR_END,flash_page_2,EMPTY);
+      card_status = MMC_Command_Exec(ERASE,EMPTY,EMPTY);
+      card_status = MMC_Command_Exec(WRITE_BLOCK,flash_page_2,scratch);
+   }
+}
+*/
+//-----------------------------------------------------------------------------
+// MMC_FLASH_Write
+//-----------------------------------------------------------------------------
+//
+// This function operates much like the MMC_FLASH_Clear and MMC_FLASH_Read
+// functions.  As with the others, if the desired write space crosses a FLASH 
+// block boundary, the operation must be broken into two pieces.  
+// MMC_FLASH_Write uses the MMC_FLASH_Clear function to clear the write space 
+// before issuing any writes.  The desired write space is cleared using 
+// MMC_FLASH_Clear, then the data is read in, the previously cleared write 
+// space is modified, and the data is written back out.
+//
+// While it would be more efficient to avoid the MMC_FLASH_Clear and simply 
+// perform a read-modify-write operation, using MMC_FLASH_Clear helps make the 
+// process easier to understand.
+/*
+unsigned char MMC_FLASH_Write (unsigned long address, unsigned char *scratch,
+                          unsigned char *wdata, unsigned int length)
+{
+   idata unsigned long flash_page_1;   // First FLASH page address;
+   idata unsigned long flash_page_2;   // Second FLASH page address;
+   idata unsigned int card_status;     // Stores status returned from MMC;
+   idata unsigned int counter;         // Byte counter used for writes to 
+                                       // local copy of data block;
+   unsigned char xdata *index;         // Pointer into local copy of data
+                                       // block, used during modification;
+   MMC_FLASH_Clear(address,scratch,length); // Clear desired write space;
+   if(length > 512) return 0;          // Check for valid data length;
+                                       // Calculate first FLASH page address;
+   flash_page_1 = address & ~(PHYSICAL_BLOCK_SIZE-1);
+                                       // Calculate second FLASH page address;
+   flash_page_2 = (address+length-1) & ~(PHYSICAL_BLOCK_SIZE-1);
+   if(flash_page_1 == flash_page_2)    // Handle single FLASH block condition;
+   {
+                                       // Set block length to default block
+                                       // size (512 bytes);
+      card_status = MMC_Command_Exec(SET_BLOCKLEN,
+                                 (unsigned long)PHYSICAL_BLOCK_SIZE,
+                                 EMPTY);
+                                       // Read data block;
+      card_status = MMC_Command_Exec(READ_SINGLE_BLOCK,flash_page_1,scratch);
+      index = (unsigned int)(address % PHYSICAL_BLOCK_SIZE) + scratch;
+      counter = 0;
+      while(counter<length)            // Modify write space in local copy;
+      {
+         *index++ = *wdata++;
+         counter++;
+      }
+                                       // Write modified block back to MMC;
+      card_status = MMC_Command_Exec(WRITE_BLOCK,flash_page_1,scratch);
+   }
+   else                                // Handle multiple FLASH block 
+   {                                   // condition;
+                                       // Set block length to default block
+                                       // size (512 bytes);
+      card_status = MMC_Command_Exec(SET_BLOCKLEN,
+                                 (unsigned long)PHYSICAL_BLOCK_SIZE,
+                                 EMPTY);
+                                       // Read first data block;
+      card_status = MMC_Command_Exec(READ_SINGLE_BLOCK,flash_page_1,scratch);
+      index = (unsigned int)(address % PHYSICAL_BLOCK_SIZE) + scratch;
+      counter = (unsigned int)(flash_page_2 - address);
+      while(counter > 0)               // Modify data in local copy of first
+      {                                // block;
+         *index++ = *wdata++;
+         counter--;
+      }
+                                       // Write local copy back to MMC;
+      card_status = MMC_Command_Exec(WRITE_BLOCK,flash_page_1,scratch);
+                                       // Read second data block;
+      card_status = MMC_Command_Exec(READ_SINGLE_BLOCK,flash_page_2,scratch);
+      index = scratch;
+      counter = (unsigned int)(length - (flash_page_2 - address));
+      while(counter > 0)               // Modify data in local copy of second
+      {                                // block;
+         *index++ = *wdata++;
+         counter--;
+      }
+                                       // Write local copy back to MMC;
+      card_status = MMC_Command_Exec(WRITE_BLOCK,flash_page_2,scratch);
+   }
+}
+*/
+//-----------------------------------------------------------------------------
+// MMC_FLASH_MassErase
+//-----------------------------------------------------------------------------
+//
+// This function erases <length> bytes of flash starting with the block
+// indicated by <address1>.  This function only handles sector-sized erases
+// or larger.  Function should be called with sector-aligned erase addresses.
+/*
+unsigned char MMC_FLASH_MassErase (unsigned long address1, 
+                                   unsigned long length)
+{
+   idata unsigned char card_status;    // Stores card status returned from MMC;
+                                       // Store start and end sectors to be
+                                       // to be erased;
+   idata unsigned long flash_page_1, flash_page_2;
+                                       // Store start and end groups to be
+                                       // erased;
+   idata unsigned long flash_group_1, flash_group_2;
+                                       // Compute first sector address for 
+                                       // erase;
+   flash_page_1 = address1 & ~(PHYSICAL_BLOCK_SIZE-1);
+                                       // Compute first group address for 
+                                       // erase;
+   flash_group_1 = flash_page_1 &~(PHYSICAL_GROUP_SIZE-1);
+                                       // Compute last sector address for 
+                                       // erase;
+   flash_page_2 = (address1 + length) & ~(PHYSICAL_BLOCK_SIZE-1);
+                                       // Compute last group address for erase;
+   flash_group_2 = flash_page_2 &~(PHYSICAL_GROUP_SIZE-1);
+
+   if(flash_group_1 == flash_group_2)  // Handle condition where entire erase
+   {                                   // space is in one erase group;
+                                       // Tag first sector;
+      card_status = MMC_Command_Exec(TAG_SECTOR_START,flash_page_1,EMPTY);
+                                       // Tag last sector;
+      card_status = MMC_Command_Exec(TAG_SECTOR_END,flash_page_2,EMPTY);
+                                       // Issue erase command;
+      card_status = MMC_Command_Exec(ERASE,EMPTY,EMPTY);
+   }
+   else                                // Handle condition where erase space
+   {                                   // crosses an erase group boundary;
+                                       // Tag first erase sector;
+      card_status = MMC_Command_Exec(TAG_SECTOR_START,flash_page_1,EMPTY);
+                                       // Tag last sector of first group;
+      card_status = MMC_Command_Exec(TAG_SECTOR_END,
+                                (flash_group_1 + 
+                                (unsigned long)(PHYSICAL_GROUP_SIZE 
+                                - PHYSICAL_BLOCK_SIZE)),EMPTY);
+                                       // Issue erase command;
+      card_status = MMC_Command_Exec(ERASE,EMPTY,EMPTY);
+                                       // Tag first sector of last erase group;
+      card_status = MMC_Command_Exec(TAG_SECTOR_START,flash_group_2,EMPTY);
+                                       // Tag last erase sector;
+      card_status = MMC_Command_Exec(TAG_SECTOR_END,flash_page_2,EMPTY);
+                                       // Issue erase;
+      card_status = MMC_Command_Exec(ERASE,EMPTY,EMPTY);
+                                       // Conditional that erases all groups
+                                       // between first and last group;
+      if(flash_group_2 > (flash_group_1 + PHYSICAL_GROUP_SIZE))
+      {
+                                       // Tag first whole group to be erased;
+         card_status = MMC_Command_Exec(TAG_ERASE_GROUP_START,
+                                   (flash_group_1 + 
+                                   (unsigned long)PHYSICAL_GROUP_SIZE),EMPTY);
+                                       // Tag last whole group to be erased;
+         card_status = MMC_Command_Exec(TAG_ERASE_GROUP_END,
+                                   (flash_page_2 - 
+                                   (unsigned long)PHYSICAL_GROUP_SIZE),EMPTY);
+                                       // Issue erase command;
+         card_status = MMC_Command_Exec(ERASE,EMPTY,EMPTY);
+      }
+   }
+
+   return card_status;
+}
+*/
+//-----------------------------------------------------------------------
+void main(void)
+{
+	//Для работы с последовательным портом "Модем"
+	xdata char RK_code[26], nByte = 0, KontrSumma = 0, PWM;
+	unsigned int Value;	
+
+	WDTCN = 0xde;			//Стоп сторожевой таймер
+	WDTCN = 0xad;
+//   WDTCN = 0x07;	   // Макс время = 0,021 с
+
+   FLSCL = FLSCL | 1;	//Разрешение стирания/записи FLASH памяти
+
+	port_init(); 
+	sysclk();
+	SPI_Init ();	
+	UART0_Init();	
+	UART1_Init(); 
+	DAC0_init();	
+	ADC_init();
+	Timer0_init(); 
+	MMC_FLASH_Init();
+
+	config();
+//	EA = 0;
+
+//	DAC0 = 0x00;
+
+	rBFM = wBFM = marBFM = 0;
+	for(PWM = 1; PWM < 15; PWM++)
+	{
+		Value = 37500;
+		write(PWM+112, Value);
+	}
+		
+	while(1)	
+	{
+   	if(rBFM < wBFM+marBFM*NBFM)
+   	{
+			if ((BuferFromModem[rBFM] & 0xC0) == 0x40)	
+			{
+				nByte = 0;
+				KontrSumma = 0;
+				PWM = BuferFromModem[rBFM] & 0x3f;
+			}
+			if (nByte > 25)
+				nByte = 25;
+			RK_code[nByte] = BuferFromModem[rBFM] & 0x7f;
+			KontrSumma = KontrSumma^RK_code[nByte++];
+
+			if ( (nByte == 5) && (KontrSumma == 0) )
+			{
+				Value = RK_code[1]+((unsigned int)RK_code[2] << 7)+((unsigned int)RK_code[3] << 14);
+				write(PWM+112, Value);
+			}
+
+         rBFM++;
+			if(rBFM >= NBFM)
+			{
+   			rBFM = 0;
+				marBFM = 0;	
+			}
+      }
+		
+	}	//while (1)
+	return;
+}
+
+//-------------------------------------------------------------------
+void UART0_isr(void) interrupt 4
+{
+	xdata char SFRPAGE_SAVE = SFRPAGE;
+	SFRPAGE = UART0_PAGE;
+	
+	if (RI0)  
+  	{ 
+		BuferFromModem [wBFM++] = SBUF0;  // read character
+		if(wBFM >= NBFM)
+		{
+     		wBFM = 0;
+			marBFM = 1;	
+		}      
+	  	RI0 = 0;		
+	}
+	if (TI0)
+		TI0 = 0;
+
+	SFRPAGE = SFRPAGE_SAVE;
+	return;
+}
+
+//---------------------------------------------------------------------------------
+void UART1_isr(void) interrupt 20
+{
+	xdata char SFRPAGE_SAVE = SFRPAGE;//, tmp;
+	SFRPAGE = UART1_PAGE;							  
+
+	if (RI1)  
+		RI1 = 0;
+
+	TI1 = 0;
+	SFRPAGE = SFRPAGE_SAVE;
+	return;
+}
+
+//----------------------------------------------------------------------
+void TIMER0_ISR (void) interrupt 1
+{
+	xdata char SFRPAGE_SAVE = SFRPAGE;
+	SFRPAGE = 0;
+
+	TH0 = 0xAE;     // 0xFFFF-49766400/48/FREQ = 0xAEFF
+	TL0 = 0xFF;     
+
+	SFRPAGE = SFRPAGE_SAVE;
+	return;
+}

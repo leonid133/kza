@@ -1,0 +1,314 @@
+		----------------------------------------------------
+                     USBXpress Development Kit v3.1.1a Release Notes
+                     Copyright (C) 2007 Silicon Laboratories, Inc.
+		----------------------------------------------------
+
+This release contains the following components:
+
+Driver Directory:
+	Customizable Driver Installer/Uninstaller
+        	* USBXpressInstaller.exe (version 2.0/2.0)
+	        * Setup.ini
+
+	Device Drivers  
+		* SiUSBXp.sys (version 3.1 for use with DLL 3.1.1)
+		* SiLib.sys
+
+	Inf and Catalog files
+        	* SiUSBXp.inf
+	        * SiUSBXp.cat
+
+Examples Directory:
+	CP210x Directory:
+		* CP210x Test.exe example and source
+			- This example application transfers data between a CP210x device 
+			  and a real COM Port using a NULL modem cable
+	File Transfer Directory:
+		* FileTransfer Example and source for the host and device
+			- This example transfers files to and from the USBXpress device
+			- Contains Visual C++ 6.0 and Visual Basic 6.0 host examples
+	Test Panel Directory
+		* TestPanel Example and source
+			- This example displays and sets the current states of input
+			  and output modules on the specified target board
+			- Contains Visual C++ 6.0, Visual Basic 6.0, Visual Basic .NET 2003,
+			  and Visual C# .NET 2005 host examples
+
+USBXpress API Directory:
+	Device Directory:	
+		F32x Directory:
+			* Firmware Library for C8051F320/1 devices
+		F326_7 Directory:
+			* Firmware Library for C8051F326/7 devices
+		F34x Directory:
+			* Firmware Library for C8051F34x devices
+	Host Directory:
+		* Windows DLL library for Cp210x, F32x and F34x devices (version 3.1.1)
+
+Utilities Directory:
+	CP210xSetIDs Directory
+		* Utility to change EEPROM contents on CP210x devices works with both the
+		  VCP and USBXpress drivers.
+
+
+Known Issues and Limitations
+----------------------------
+
+	1) Supported operating systems: Microsoft Windows 2000, XP, Server 2003, Vista.
+
+	2) When using this package with CP210x devices, you must change the default factory
+	   Product ID (PID) from 0xEA60 to 0xEA61. Install the device as instructed in your
+	   CP210x Development Kit along with the Virtual Serial Port Drivers. Once the device
+	   is installed, use the CP210xSetIDs.exe program to change the PID to 0xEA61. Then
+	   you may load the USBXpress device driver included in this package.
+
+	4) A call to SI_GetProductString with 'Options' set to SI_RETURN_DESCRIPTION will return 
+	   only the driver description string, and not the one in the device.
+	
+	5) When using SI_SetBaudRate with CP2101, only the valid baud rates listed in the 
+	   CP2101 data sheet should be used. Attempting to use other baud rates will return 
+	   SI_DEVICE_IO_FAILED.
+
+
+Release Dates
+-------------
+
+	USBXpress Development Kit v3.1.1a - September 12, 2007
+
+
+Revision History
+-----------------
+
+version 3.1.1a
+	New Features/Enhancements
+	-------------------------
+	- Added a 64 bit version of the SiUSBXp.DLL library.
+
+	Corrections
+	-----------
+	- Corrected to not allow the DLL to clean up an open handle on a thread detach.
+
+
+version 3.1.1
+	New Features/Enhancements
+	-------------------------	
+	- Updated Visual C++ 6.0 Test Panel example source to correctly handle open/close and
+	  timeouts.
+	  
+	- Added Visual C# .NET 2005 Test Panel example source code.
+	
+
+version 3.1
+	New Features/Enhancements
+	-------------------------	
+	- Updated Driver for Vista and re-certified through Winqual for 2K/XP/S2K3/Vista(x86/x64)
+
+	- Updated the USBXpress Driver Installer to version 2.0 which includes Vista.
+
+	- Added two functions to the DLL, SI_GetDriverVersion and SI_GetDLLVersion.
+
+
+version 3.0.5
+	Corrections
+	-----------
+	- Corrected SI_CheckRXQueue so that the correct number of bytes is returned, and is
+	a meaningful value. The flags are also confirmed for this function.
+
+	- Addressed blue screen issue for surprise removal of USBXpress device that is connected
+	and opened.
+
+	- Updated the USBXpress Installer to version 1.5. This eliminates rare Windows 2K errors
+	which claim that the driver cannot be uninstalled.
+	
+
+version 3.0.4
+	New Features/Enhancements
+	-------------------------
+	- Modified the driver to pend multiple I/O requests.
+
+	- SI_Read now allows reads to complete with less than the data requested, as long as
+	there are more than 0 bytes. Check the buffer length returned from the SI_Read function
+	to determine the exact number of bytes that are returned.
+
+	Corrections
+	-----------
+	- Updated the USBXpress Installer to version 1.4. This eliminates errors when trying
+	to install/uninstall read-only files.
+
+
+version 3.0.3
+	Corrections
+	-----------
+	- Modfied SI_Read and SI_Write to cancel IO operations that timeout or fail.
+
+	- Corrected a bug in the driver which returns an incorrect amount of bytes for SI_Read.
+
+	- Changed the return value when SI_Read is called for a second time and the first
+	SI_Read is still pending, it will show up as a system error.
+
+
+version 3.0.1
+	Corrections
+	-----------
+	- Corrected the DLL Thread/Process Detach functionality to call the updated version of
+	SI_Close.
+
+	- Changed the default DLL Timeout values to be infinite instead of 0. This prevents timeouts
+	occurring on current code, and makes calls the do not set any timeouts to be synchronous
+	but non-blocking.
+
+
+version 3.0
+	New Features/Enhancements
+	-------------------------
+	- This verison of the driver is certifiable, and has been certified for XP and
+	Server 2003.
+
+	- SI_Read is no longer a blocking call. The interface now has an added overlapped
+	object parameter that can be passed to the function. Otherwise, old code will work
+	because the parameter defaults to NULL. If it is NULL, then the SI_Read function
+	will not block, and performs the wait inside of the SiUSBXp.DLL.
+
+	- A new installation utility has been introduced which will clear old installations
+	to always successfully upgrade the Driver to the latest version. This new utility
+	can be customized without breaking the driver's certification.
+	
+	Corrections
+	-----------
+	- SI_GetProductString was fixed so that the requested string is correctly returned.
+
+	- SI_Open change to return INVALID_PARAMATER instead of the incorrect INVALID_HANLDE_VALUE
+	whenever an invalid HANDLE pointer is provided.
+
+	
+version 2.42
+	Corrections
+	-----------
+	'USBXpress Host API
+		Fixed the constant SI_WRITE_FAILED return when USING SI_Write();
+
+Version 2.41
+	Corrections
+	-----------
+	'USBXPress Host API:
+		Wrong build of the Interface DLL replaced with the correct build.
+
+Version 2.4
+
+	New Features/Enhancements
+	-------------------------
+	No changes to host-side driver and DLL; version numbers incremented to v2.4.
+	'F3xx firmware libraries:
+		USBX_F320_1.LIB firmware library is compatible with 'F320/1 and 'F34x devices.
+		Added FileTransfer and TestPanel examples for 'F34x devices - please note that 
+		these examples are the same as those for 'F32x device because those devices 
+		are code-compatible.
+		
+		Added new firmware library for C8051F326/7 devices (USBX_F326_7.LIB).
+		Added FileTransfer example for C8051F326/7 devices.
+		If you are porting an existing application from 'F320/1 to 'F326/7, please note
+		that these two families are not exactly code-compatible. See the device 				datasheets for more details.
+
+		Added function USB_Get_Library_Version to library that returns a 2-byte BCD
+		value (0x0241=2.41); Previously, the only way to determine the version was by
+		the file date.
+
+	Corrections
+	-----------
+	'F320/1 firmware library:
+		Fixed issue in v2.3 library that ignored a IN endpoint halt command.
+
+
+Version 2.31
+
+
+Version 2.3
+
+	New Features/Enhancements
+	-------------------------
+	Application Note AN169 has been updated from Revision 1.5 to Revision 1.6:
+	Updated Return Values for SI_Open, SI_Read, SI_FlushBuffers, and SI_GetPartNumber.
+	'F320/1 firmware library:
+		Library renamed from USB_API.LIB to USBX_F320_1.LIB
+		USB_Clock_Start() function added to improve flexibility.
+	See UpgradeNotes.txt for steps to upgrade existing applications.
+
+	Corrections
+	-----------
+	Added GetPartNumber support for CP2101.
+	Close function now sets a handle passed by reference to INVALID_HANDLE_VALUE.
+	Updated invalid handle and invalid parameter checks in the API.
+	'F320/1 firmware library:
+		Fixed USB_Disable() hang issue.
+		Eliminated unnecessary delay in Block_Write() when sending a zero-length packet.
+		Corrected USB clock startup code to check if clock multiplier is already enabled.
+		Removed default values for USB_Init() parameters to save code space; NULL cannot 
+		be used any more to choose defaults.
+
+Version 2.11
+	License Agreement updated.
+
+Version 2.1
+
+	Corrections
+	-----------
+	FlushBuffers IO Control Request fixed for F32x devices, make sure to update
+	both the device driver and the dll from your previous version.
+
+Version 2.0
+	New Features/Enhancements
+	-------------------------
+	64KB FIFO Read buffer added to the device driver.
+	Functions added to support CP210x devices.
+	Added customizable device driver Installer and Uninstaller.
+	
+	Corrections
+	-----------
+	ResetDevice function removed.
+
+Version 1.4
+
+	New Features/Enhancements
+	-------------------------
+	Added Windows XP certified drivers to Kit. Certified drivers located in the 
+	"Driver/Windows Certified" directory.
+
+	Corrections
+	-----------
+	Fixed Windows 98SE issue where the serial number string was not being returned.
+	Fixed driver load issue under Windows 98SE.
+
+
+Version 1.3
+	New Features/Enhancements
+	-------------------------
+	Converted to Silicon Laboratories branding.
+
+Version 1.2
+	New Features/Enhancements
+	-------------------------
+	Added Visual Studio .Net(Copyright Microsoft Corporation) support
+
+	Corrections
+	-----------
+	Fixed Keil Linker incompatibility which would give the following linker error:
+	Fatal error L251: Restricted module not supported.
+	
+Version 1.1
+
+	Corrections
+	-----------
+	Fixed Windows 98SE issue where the serial number string was not being returned.
+
+
+Version 1.0
+
+	New features/Enhancements
+	-------------------------
+	Initial release.
+
+	Corrections
+	-----------
+	Initial release.
+
+

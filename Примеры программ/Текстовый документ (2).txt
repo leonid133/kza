@@ -1,0 +1,92 @@
+/-----------------------------------------------------------------------------------------
+void WriteByteInKZA(unsigned char Byte)
+{ 
+	static xdata int nByte = 0, nPage = 0;
+	static bit buf_num = 1, flNewPage = 1;
+	xdata unsigned int i = 0;
+
+	SFRPAGE = 0x00;
+
+	if (flNewPage)
+	{
+		flNewPage = 0;
+		CS=0;               				// Select flash
+		for(i=0;i<50;i++)					// Wait ??? nS
+			;									
+		SPIF=0;
+		if (buf_num)       				// Buffer 2 Write
+			SPI0DAT=0x87;
+		else             					// Buffer 1 Write
+			SPI0DAT=0x84;
+		while(!SPIF)
+			;
+
+		SPIF=0;
+		SPI0DAT=0xFF;		  				// Don't care byte
+		while(!SPIF)
+			;
+		
+		SPIF=0;
+		SPI0DAT=0xfc; 			               // Ia?eiaai caienu n ioeaaiai aaeoa
+		while(!SPIF)
+			;                                         
+	
+		SPIF=0;
+		SPI0DAT = 0;           		
+		while(!SPIF)
+			;
+	}
+	SPIF=0;
+	SPI0DAT = Byte;//nPage+1;//0x33;		
+	while(!SPIF)
+		;
+
+	if (nByte < 527) 
+		nByte++;
+	else 
+	{
+		nByte = 0;
+		flNewPage = 1;
+		CS = 1;
+		for(i=0;i<10;i++)								// Wait ??? nS
+			;
+		while (!RDY)
+			;
+
+		CS=0;		  
+		for(i=0;i<10;i++)							// Wait ??? nS
+			;
+		SPIF=0;	
+		if (buf_num)       			// O?nide for Buffer 2 writing
+			SPI0DAT=0x86;
+		else             				// O?nide for Buffer 1 writing
+			SPI0DAT=0x83;
+		while(!SPIF)
+			;
+		SPIF=0;
+		SPI0DAT=(nPage & 0x1FC0) >> 6;			// High 7 bits of 13-bit Page Adress
+		while(!SPIF)
+			;
+		SPIF=0;
+		SPI0DAT=(nPage & 0x003F) << 2;   		// Low 6 bits of 13-bit page adress
+		while(!SPIF)
+			;
+		SPIF=0;
+		SPI0DAT=0xFF;                				// Don't care byte
+		while(!SPIF)
+			;
+		for(i=0;i<10;i++)							// Wait 250 nS 
+			;
+		CS=1;        
+
+		buf_num=!buf_num;
+	
+		if (nPage < 8192) 
+			nPage++;
+/*		else 
+			nPage = 0;*/	//iiea
+		for(i=0;i<50000;i++)								// Wait 250 nS
+			;
+		CS = 1;
+	}
+}												// End Routine

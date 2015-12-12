@@ -1,0 +1,333 @@
+#include "c8051f120.h"
+#include "mmcflash.h"
+#include <intrins.h>
+#include <stdio.h>                     
+#include <ctype.h> 
+
+//SPI------------------------------------------------------------------
+void SPI_Init (void)
+{
+	SPI0CFG = 0x40;
+	SPI0CN = 0x0F;
+	SPI0CKR = 0x08; //2.8 Mhz
+}                                                                                                                                                                                                                                                                                                   
+
+//-----------------------------------------------------------------------
+void MMC_init(void)
+{
+	xdata unsigned int i, i2;
+	xdata unsigned char b;
+
+	xdata char SFRPAGE_SAVE = SFRPAGE;
+	SFRPAGE = SPI0_PAGE;
+
+	P3_2 = 1;
+
+	for (i = 0; i < 10; i++)
+	{
+		SPI0DAT = 0xFF;	while(SPIF == 0) ;   SPIF = 0;
+	}
+
+	P3_2 = 0;
+//CMD0 
+	SPI0DAT = 0x40;	while(SPIF == 0) ;   SPIF = 0;
+	SPI0DAT = 0x00;   while(SPIF == 0) ;   SPIF = 0;
+	SPI0DAT = 0x00;   while(SPIF == 0) ;   SPIF = 0;
+	SPI0DAT = 0x00;   while(SPIF == 0) ;   SPIF = 0;
+	SPI0DAT = 0x00;	while(SPIF == 0) ;   SPIF = 0;
+	SPI0DAT = 0x95;   while(SPIF == 0) ;   SPIF = 0;
+	
+	do
+	{
+		SPI0DAT = 0xFF; while(SPIF == 0)	;	SPIF = 0;
+		b = SPI0DAT;
+	} while(b == 0xFF);
+	while(SPI0DAT != 0xFF)
+	{
+		SPI0DAT = 0xFF; while(SPIF == 0) ; 	SPIF = 0;
+	}
+
+	do
+	{
+		//CMD1 	
+		P3_2 = 1;
+		for (i = 0; i < 10; i++)
+		{
+			SPI0DAT = 0xFF; while(SPIF == 0) ; 	SPIF = 0;
+		}
+
+		P3_2 = 0;
+
+		SPI0DAT = 0x41; while(SPIF == 0) ; 	SPIF = 0;
+		SPI0DAT = 0x00; while(SPIF == 0) ; 	SPIF = 0;
+		SPI0DAT = 0x00; while(SPIF == 0) ; 	SPIF = 0;
+		SPI0DAT = 0x00; while(SPIF == 0) ; 	SPIF = 0;
+		SPI0DAT = 0x00; while(SPIF == 0) ; 	SPIF = 0;
+		SPI0DAT = 0xFF; while(SPIF == 0) ; 	SPIF = 0;
+   	b = SPI0DAT;
+		do
+		{
+			SPI0DAT = 0xFF; while(SPIF == 0) ; 	SPIF = 0;
+			b = SPI0DAT;
+		} while(b == 0xFF);
+	
+		while(SPI0DAT != 0xFF) 
+		{
+			SPI0DAT = 0xFF; while(SPIF == 0) ; 	SPIF = 0;
+		}	
+	
+		for (i2 = 0; i2 < 15; i2++)
+		{
+			for (i = 0; i < 65534; i++)
+			{
+				_nop_();
+			}
+		}
+	} while ((b & 0x01));
+	P3_2 = 1; 
+	SPI0DAT = 0xFF; while(SPIF == 0) ; 	SPIF = 0;
+	SFRPAGE = SFRPAGE_SAVE;
+	return;
+}
+
+//-----------------------------------------------------------------------
+void SD_init(void)
+{
+	xdata unsigned int i, i2;
+	xdata unsigned char b;
+
+	xdata char SFRPAGE_SAVE = SFRPAGE;
+	SFRPAGE = SPI0_PAGE;
+
+	P3_2 = 1;
+
+	for (i = 0; i < 10; i++)
+	{
+		SPI0DAT = 0xFF;	while(SPIF == 0) ;   SPIF = 0;
+	}
+
+	P3_2 = 0;
+//CMD0 
+	SPI0DAT = 0x40;	while(SPIF == 0) ;   SPIF = 0;
+	SPI0DAT = 0x00;   while(SPIF == 0) ;   SPIF = 0;
+	SPI0DAT = 0x00;   while(SPIF == 0) ;   SPIF = 0;
+	SPI0DAT = 0x00;   while(SPIF == 0) ;   SPIF = 0;
+	SPI0DAT = 0x00;	while(SPIF == 0) ;   SPIF = 0;
+	SPI0DAT = 0x95;   while(SPIF == 0) ;   SPIF = 0;
+	
+	do
+	{
+		SPI0DAT = 0xFF; while(SPIF == 0)	;	SPIF = 0;
+		b = SPI0DAT;
+	} while(b == 0xFF);
+
+	while(SPI0DAT != 0xFF)
+	{
+		SPI0DAT = 0xFF; while(SPIF == 0) ; 	SPIF = 0;
+	}
+
+	do
+	{
+		//CMD1 	
+		P3_2 = 1;
+		for (i = 0; i < 10; i++)
+		{
+			SPI0DAT = 0xFF; while(SPIF == 0) ; 	SPIF = 0;
+		}
+
+		P3_2 = 0;
+
+		SPI0DAT = 0x41; while(SPIF == 0) ; 	SPIF = 0;
+		SPI0DAT = 0x00; while(SPIF == 0) ; 	SPIF = 0;
+		SPI0DAT = 0x00; while(SPIF == 0) ; 	SPIF = 0;
+		SPI0DAT = 0x00; while(SPIF == 0) ; 	SPIF = 0;
+		SPI0DAT = 0x00; while(SPIF == 0) ; 	SPIF = 0;
+		SPI0DAT = 0xFF; while(SPIF == 0) ; 	SPIF = 0;
+   	b = SPI0DAT;
+		do
+		{
+			SPI0DAT = 0xFF; while(SPIF == 0) ; 	SPIF = 0;
+			b = SPI0DAT;
+		} while(b == 0xFF);
+	
+		while(SPI0DAT != 0xFF) 
+		{
+			SPI0DAT = 0xFF; while(SPIF == 0) ; 	SPIF = 0;
+		}	
+
+		//CMD55
+
+		SPI0DAT = 0x77; while(SPIF == 0) ; 	SPIF = 0;
+		SPI0DAT = 0x00; while(SPIF == 0) ; 	SPIF = 0;
+		SPI0DAT = 0x00; while(SPIF == 0) ; 	SPIF = 0;
+		SPI0DAT = 0x00; while(SPIF == 0) ; 	SPIF = 0;
+		SPI0DAT = 0x00; while(SPIF == 0) ; 	SPIF = 0;
+		SPI0DAT = 0xFF; while(SPIF == 0) ; 	SPIF = 0;
+   	b = SPI0DAT;
+		do
+		{
+			SPI0DAT = 0xFF; while(SPIF == 0) ; 	SPIF = 0;
+			b = SPI0DAT;
+		} while(b == 0xFF);
+	
+		while(SPI0DAT != 0xFF) 
+		{
+			SPI0DAT = 0xFF; while(SPIF == 0) ; 	SPIF = 0;
+		}	
+
+		//ACMD41
+
+		SPI0DAT = 0x69; while(SPIF == 0) ; 	SPIF = 0;
+		SPI0DAT = 0x00; while(SPIF == 0) ; 	SPIF = 0;
+		SPI0DAT = 0x00; while(SPIF == 0) ; 	SPIF = 0;
+		SPI0DAT = 0x00; while(SPIF == 0) ; 	SPIF = 0;
+		SPI0DAT = 0x00; while(SPIF == 0) ; 	SPIF = 0;
+		SPI0DAT = 0xFF; while(SPIF == 0) ; 	SPIF = 0;
+   	b = SPI0DAT;
+		do
+		{
+			SPI0DAT = 0xFF; while(SPIF == 0) ; 	SPIF = 0;
+			b = SPI0DAT;
+		} while(b == 0xFF);
+	
+		while(SPI0DAT != 0xFF) 
+		{
+			SPI0DAT = 0xFF; while(SPIF == 0) ; 	SPIF = 0;
+		}	
+
+		for (i2 = 0; i2 < 15; i2++)
+		{
+			for (i = 0; i < 65534; i++)
+			{
+				_nop_();
+			}
+		}
+	} while ((b & 0x01));
+
+	P3_2 = 1;
+	SPI0DAT = 0xFF; while(SPIF == 0) ; 	SPIF = 0;
+
+	for (i = 0; i < 65534; i++)
+	{
+		_nop_();
+	}
+
+	SFRPAGE = SFRPAGE_SAVE;
+	return;
+}
+//-----------------------------------------------------------------------
+void ReadMMC(unsigned long address)
+{
+	xdata unsigned int i, i2;
+	unsigned char b;
+
+	xdata char SFRPAGE_SAVE = SFRPAGE;
+	SFRPAGE = SPI0_PAGE;
+
+	SPI0DAT = 0xFF; while(SPIF == 0) ; 	SPIF = 0;	
+	P3_2 = 0;
+	SPI0DAT = 0x51; while(SPIF == 0) ; 	SPIF = 0;
+	SPI0DAT = (address & 0xff); while(SPIF == 0) ; 	SPIF = 0;
+	SPI0DAT = (address & 0xff00) >> 8; while(SPIF == 0) ; 	SPIF = 0;
+	SPI0DAT = (address & 0xff0000) >> 16; while(SPIF == 0) ; 	SPIF = 0;
+	SPI0DAT = (address & 0xff000000) >> 24; while(SPIF == 0) ; 	SPIF = 0;
+	SPI0DAT = 0xFF; while(SPIF == 0) ; 	SPIF = 0;
+	do
+	{
+		SPI0DAT = 0xFF; while(SPIF == 0) ; 	SPIF = 0;
+		b = SPI0DAT;	// 00-ok, 20-Adress Err, 60-Param Err
+	} while(b == 0xFF);
+	
+	while(SPI0DAT != 0xFF) 
+	{
+		SPI0DAT = 0xFF; while(SPIF == 0) ; 	SPIF = 0;
+	}	
+	do
+	{
+		SPI0DAT = 0xFF; while(SPIF == 0) ; 	SPIF = 0;
+		b = SPI0DAT;  // FE - DataToken, 08-Err Token Out Of Range
+	} while(b == 0xFF);
+	
+	for(i=0; i<512; i++)
+	{
+		SPI0DAT = 0xFF; while(SPIF == 0) ; 	SPIF = 0;
+		Buffer[i] = SPI0DAT;
+	}
+	b=SPI0DAT; //crc1
+	b=SPI0DAT; //crc0
+	while(SPI0DAT != 0xFF) 
+	{
+		SPI0DAT = 0xFF; while(SPIF == 0) ; 	SPIF = 0;
+	}
+	P3_2 = 1; 
+	SPI0DAT = 0xFF; while(SPIF == 0) ; 	SPIF = 0;
+
+		for (i2 = 0; i2 < 15; i2++)
+		{
+			for (i = 0; i < 65534; i++)
+			{
+				_nop_();
+			}
+		}
+
+	SPI0DAT = 0xFF; while(SPIF == 0) ; 	SPIF = 0;
+
+	SFRPAGE = SFRPAGE_SAVE;
+	return;
+	
+}
+
+//-----------------------------------------------------------------------
+void WriteMMC(unsigned long address)
+{
+	xdata unsigned int i, i2;
+	unsigned char b;
+	
+	xdata char SFRPAGE_SAVE = SFRPAGE;
+	SFRPAGE = SPI0_PAGE;
+
+	SPI0DAT = 0xFF; while(SPIF == 0) ; 	SPIF = 0;
+	P3_2 = 0;
+	SPI0DAT = 0x58; while(SPIF == 0) ; 	SPIF = 0;
+	SPI0DAT = (address & 0xff); while(SPIF == 0) ; 	SPIF = 0;
+	SPI0DAT = (address & 0xff00) >> 8; while(SPIF == 0) ; 	SPIF = 0;
+	SPI0DAT = (address & 0xff0000) >> 16; while(SPIF == 0) ; 	SPIF = 0;
+	SPI0DAT = (address & 0xff000000) >> 24; while(SPIF == 0) ; 	SPIF = 0;
+	SPI0DAT = 0xFF; while(SPIF == 0) ; 	SPIF = 0;
+	do
+	{
+		SPI0DAT = 0xFF; while(SPIF == 0) ; 	SPIF = 0;
+		b = SPI0DAT;	// 00-ok, 20-Adress Err, 40,60-Param Err
+	} while(b == 0xFF);
+	
+	while(SPI0DAT != 0xFF) 
+	{
+		SPI0DAT = 0xFF; while(SPIF == 0) ; 	SPIF = 0;
+	}
+	SPI0DAT = 0xFE; while(SPIF == 0) ; 	SPIF = 0;
+	for(i=0; i<512; i++)
+	{
+		SPI0DAT = Buffer[i]; while(SPIF == 0) ; 	SPIF = 0;
+	}
+	SPI0DAT = 0xFF; while(SPIF == 0) ; 	SPIF = 0; //crc1
+	SPI0DAT = 0xFF; while(SPIF == 0) ; 	SPIF = 0; //crc0
+	while(SPI0DAT != 0xFF) 
+	{
+		SPI0DAT = 0xFF; while(SPIF == 0) ; 	SPIF = 0;
+	}
+	P3_2 = 1; 
+	SPI0DAT = 0xFF; while(SPIF == 0) ; 	SPIF = 0;
+
+		for (i2 = 0; i2 < 15; i2++)
+		{
+			for (i = 0; i < 65534; i++)
+			{
+				_nop_();
+			}
+		}
+
+	SPI0DAT = 0xFF; while(SPIF == 0) ; 	SPIF = 0;
+
+	SFRPAGE = SFRPAGE_SAVE;
+	return;
+}

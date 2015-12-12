@@ -1,0 +1,325 @@
+Silicon Laboratories Development Kit CD Release V3.80 Release Notes
+Copyright (C) 2009 Silicon Laboratories, Inc.
+
+This release contains the following components:
+
+* Silicon Laboratories IDE (ide.exe) Version V3.80
+  Includes support for all Silicon Labs MCU devices.
+
+* FLASH Programming Utilities Version 3.50
+  Includes support for all Silicon Labs MCU devices.
+
+* Configuration Wizard 2 (config2.exe) Version 2.70
+  Includes support for all Silicon Labs MCU devices.
+
+* TCP/IP Configuration Wizard (TCPIP_config.exe) Version 3.23a
+  Includes support for F02x, F12x, F13x and F34x devices.
+
+* Keil uVision Debug Driver Version 3.20
+  Includes support for all Silicon Labs MCU devices.
+
+* Production Programmer Version 2.00
+  Includes support for all Silicon Labs MCU devices.
+
+* USBXpress Development Kit Version 3.1.1
+  Includes support for F32x, F34x and CP210x devices.
+
+* CP210x Virtual COM Port Drivers Version 5.40.24
+  Includes support for CP210x devices.
+
+* Battery Life Estimator Version 1.20
+  Includes support for F92x and F93x devices.
+
+* MCU Examples Directory
+  Includes support for all Silicon Labs MCU devices.
+
+* MCU Documentation Directory
+  Includes support for all Silicon Labs MCU devices.
+
+* Keil Evaluation 8051 Toolset Version 8.18
+  Includes support for all Silicon Labs MCU devices.
+
+
+
+Known Issues
+------------
+
+	The default target directory for the Silicon Laboratories development
+	tools is "SiLabs\MCU". If using a release version previous to v2.0, it 
+	will be necessary to copy the IDEfiles\C51 directory from your previous 
+	installation location to the new location in order to use the Keil 
+	toolchain.
+
+
+
+Release Dates
+-------------
+
+	Development Kit Tools CD Version V3.80 - October 28, 2009
+	Development Kit Tools CD Version V3.70 - June 3, 2009
+	Development Kit Tools CD Version V3.60 - April 27, 2009
+	Development Kit Tools CD Version V3.50 - March 2, 2009
+	Development Kit Tools CD Version V3.40 - July 28, 2008
+	Development Kit Tools CD Version V3.30 - April 15, 2008	
+	Development Kit Tools CD Version V3.20 - February 26, 2008
+	Development Kit Tools CD Version V3.10 - December 3, 2007
+	Development Kit Tools CD Version V3.00 - September 17, 2007
+	Development Kit Tools CD Version V2.91 - March 5, 2007
+	Development Kit Tools CD Version V2.90 - February 12, 2007
+	Development Kit Tools CD Version V2.82 - October 14, 2006
+
+
+Revision History
+----------------
+Version 3.80
+
+	New Features/Enhancements
+	-------------------------
+        Added support for C8051F800/1/2/3/4/5/6/7/8/9 devices.
+        Added support for C8051F810/1/2/3/4/5/6/7/8/9 devices.
+        Added support for C8051F820/1/2/3/4/5/6/7/8/9 devices.
+        Added support for C8051F830/1/2/3/4/5 devices.
+        Added support for C8051F901/2 devices.
+        Added support for C8051F911/2 devices.
+	
+        IDE Support updated to v 3.80
+	Production Programmer updated to v2.00.
+	FLASH Programming Utilities updated to v3.50
+	Keil uVision Debug Driver updated to v3.20
+	Configuration Wizard 2 updated to v2.70
+        CP210x Virtual COM Port Drivers updated to v5.40.24
+        Battery Life Estimator updated to v1.20
+
+Version 3.70
+	Added support for C8051F550/1/2/3/4/5/6/7 devices.
+	Added support for C8051F560/1/2/3/4/5/6/7/8/9 devices.
+	Added support for C8051F570/1/2/3/4/5 devices.
+	Added support for C8051F540/1/2/3/4/5/6/7 devices.
+
+        IDE Support updated to v 3.70
+	Production Programmer updated to v1.9.
+	FLASH Programming Utilities updated to v3.40
+	Keil uVision Debug Driver updated to v3.10
+	Configuration Wizard 2 updated to v2.60
+        Keil Evaluation 8051 Toolset updated to v8.18
+
+Version 3.60
+	Added support for C8051T606 device.
+
+	Production Programmer updated to v1.8.
+	FLASH Programming Utilities updated to v3.30
+	Keil uVision Debug Driver updated to v3.00
+	Configuration Wizard 2 updated to v2.50
+	
+Version 3.50
+	Added support for C8051F508/9 devices.
+	Added support for C8051F510/1 devices.
+	Added support for C8051F580/1/2/3/4/5/6/7/8/9 devices.
+	Added support for C8051F590/1 devices.
+	Added support for C8051F700/1/2/3/4/5/6/7/8/9 devices.
+	Added support for C8051F710/1/2/3/4/5 devices.
+
+	IDE updated to v3.50
+	Production Programmer updated to v1.7.
+	FLASH Programming Utilities updated to v3.20
+	Keil uVision Debug Driver updated to v2.90
+	Configuration Wizard 2 updated to v2.40
+	CP210x Virtual COM Port Drivers updated to v5.40
+
+Version 3.40
+	Support added for C8051F500/1/2/3/4/5/6/7 devices.
+
+	IDE updated to v3.40.
+	Production Programmer updated to v1.4.
+	FLASH Programming Utilities updated to v3.10
+	Keil uVision Debug Driver updated to v2.80
+	Configuration Wizard 2 updated to v2.30
+	TCP/IP Configuration wizard updated to v3.23a
+	Battery Life Estimator updated to v1.1
+	CP210x Virtual COM Port Drivers updated to v5.30
+
+Version 3.30
+	Support added for C8051F520A/1A/3A/4A/6A/7A devices.
+	Support added for C8051F530A/1A/3A/4A/6A/7A devices.
+
+	IDE updated to v3.30.
+	Production Programmer updated to v1.2.
+	FLASH Programming Utilities updated to v3.00
+	Keil uVision Debug Driver updated to v2.70
+	Configuration Wizard 2 updated to v2.20
+
+Version 3.20
+	Support added for C8051T630/1/2/3/4/5 devices.
+	Support added for C8051F930/1 devices.
+	Support added for C8051F920/1 devices.
+
+	IDE updated to v3.20.
+	FLASH Programming Utilities updated to v2.90
+	Keil uVision Debug Driver updated to v2.60
+	Configuration Wizard 2 updated to v2.10
+	CP210x Virtual COM Port Drivers updated to v5.2.1
+
+	Battery Life Estimator tool v1.0 added to CD. Included 
+	with installation of C8051F930-DK kit.
+
+
+Version 3.10
+	Support added for C8051T610/1/2/3/4/5/6/7 devices.
+
+	IDE updated to v3.10
+	FLASH Programming Utilities updated to v2.80
+	Keil uVision Debug Driver updated to v2.51
+	Configuration Wizard 2 updated to v2.00
+	CP210x Virtual COM Port Drivers updated to v5.1a
+
+	Evaluation Keil tools have been removed from the Silicon Labs IDE installation.
+
+
+Version 3.00
+	Support added for C8051F336/7/8/9 devices
+	Support added for the C8051F336 Development Kit
+
+	Evaluation Keil tools are no longer included in their own installer.
+	They are now included with the installation of the Silicon Labs IDE. 
+
+	Device examples have been added to demonstrate the use of many device
+	peripherals. See the Examples\<Device Family> directories for new examples.
+
+	IDE updated to v3.00
+	FLASH Programming Utilities updated to v2.70
+	Keil uVision Debug Driver updated to v2.40
+	Configuration Wizard 2 updated to v1.90
+	TCP/IP Configuration Wizard updated to v3.23
+	USBXpress Development Kit updated v3.1.1
+	CP210x Virtual COM Port Drivers updated to v5.00
+
+
+
+Version 2.91
+	Support added for C8051T600/1/2/3/4/5 devices
+	Support added for the C8051T600 Development Kit
+
+	IDE updated to v2.91
+	FLASH Programming Utilities updated to v2.61
+	Keil uVision Debug Driver updated to v2.31
+	Configuration Wizard 2 updated to v1.81
+
+	Support removed for Si825x devices. These devices have
+	become obsolete.
+
+
+Version 2.90
+	Support added for C8051F360/1/2/3/4/5/6/7/8/9 devices
+	Support added for the C8051F360 Development Kit
+
+	IDE updated to v2.90
+	FLASH Programming Utilities updated to v2.60
+	Keil uVision Debug Driver updated to v2.30
+	USBXpress updated to v3.0.5
+	TCP/IP Configuration Wizard updated to v3.21
+
+
+Version 2.82
+	Support added for C8051F520/1/3/4/6/7 devices
+	Support added for C8051F530/1/3/4/6/7 devices
+	Support added for the C8051F530 Development Kit
+
+	IDE updated to v2.82
+	FLASH Programming Utilities updated to v2.51
+	Keil uVision Debug Driver updated to v2.21
+	Configuration Wizard (config.exe) Version 2.07 removed
+	Configuration Wizard 2 updated to v1.72
+	TCP/IP Configuration Wizard updated to v3.21
+
+
+Version 2.7
+
+	Support added for C8051F410/1/2/3 devices.
+	IDE updated to v2.7.
+	FLASH Programming Utilities updated to v2.4.
+	Keil uVision Debug Driver updated to v2.0.
+
+
+Version 2.61 
+
+	Added support for the Ethernet Development Kit, featuring
+	the CP2200 AB4 Ethernet Adapter Board.
+
+	Support added for C8051F326/7 devices.
+	Support added for C8051F340/1/2/3/4/5/6/7 devices. 
+	IDE updated to v2.6.
+	FLASH Programming Utilities updated to v2.3.
+	Keil uVision Debug Driver updated to v1.9.
+	USBXpress Development Kit updated to v2.4.
+
+	Si825x Application Builder updated to v1.5.
+	PMBus Monitor updated to v1.1.
+
+	TCP/IP Configuration Wizard updated to v3.0 adding support
+	for CP2200, C8051F02x and C8051F34x devices.
+	
+	Installation option added for Keil uVision Debug Driver 
+	supporting Keil's uVision3 IDE. 
+
+	Installation strategy changed to include individual installers
+	for each Development Tool included in the kit. 
+	See UpgradeNotes.txt for more information. 
+
+	Evaluation Keil uVision2 debugger installation removed from this 
+	development kit CD. The latest version of uVision2 and uVision3
+	can be downloaded from the Keil website at www.keil.com.
+
+
+Version 2.52
+
+	TCP/IP Configuration Wizard updated from version 1.0 to version 2.0. This
+	version supports Ethernet applications for the Embedded Ethernet
+	Development Kit. 
+
+	TCP/IP Ethernet Examples have been included in the 
+	C:\Silabs\MCU\Examples\Ethernet directory. These examples are designed to be 
+	used with the TCP/IP Configuration Wizard version 2.0 and the Embedded 
+	Ethernet Development Kit.
+
+
+
+Version 2.51
+
+	IDE updated to Version 2.51.
+
+
+Version 2.50
+
+	Support added for Si825x devices. 
+	Support added for C8051F316/7 devices.
+
+	IDE updated to Version 2.50.
+
+	Firmware for the EC2 Serial Adapter has been updated to Version 18.
+	Firmware for the USB Debug Adapter has been updated to version 7.
+	The new firmware versions include speed improvements for JTAG devices.
+
+	The USBHID.DLL has been updated to version 1.1.0.0. Version 2.5 of the 
+	IDE requires this version of the USBHID.DLL and will not work with older
+	versions.
+
+
+Version 2.4
+
+	Firmware for the EC2 Serial Adapter has been updated to Version 16.
+
+	IDE updated to version 2.4.
+
+	KEIL Evaluation BL51 Linker updated to Version 5.15.
+
+	The TCP/IP Configuration Wizard has been added. This utility generates 
+	initialization code to configure on-chip resources for TCP/IP applications. 
+	Support is currently includes for the 'F12x and 'F13x MCU Families. The 
+	wizard is designed to be used with the Embedded Modem Development Kit. 
+
+	TCP/IP Examples have been included in the C:\Silabs\MCU\Examples\Modem 
+	directory. These examples are designed to be used with the TCP/IP 
+	Configuration Wizard and the Embedded Modem Development Kit.
+
+	
+

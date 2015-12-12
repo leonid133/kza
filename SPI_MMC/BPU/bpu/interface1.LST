@@ -1,0 +1,39 @@
+C51 COMPILER V9.00   INTERFACE1                                                            07/06/2011 11:11:05 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE INTERFACE1
+OBJECT MODULE PLACED IN interface1.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.exe interface1.h DB OE BR
+
+line level    source
+
+   1          #ifndef  INTERFACE1H
+   2          #define INTERFACE1H
+   3          
+   4          #define SIZE_BUFFER0    528
+   5          extern xdata char BufferInModem[]; // Для отправки в последовательный порт
+   6          extern xdata int r0, rk;
+   7          extern bit flTransmiter;        
+   8          
+   9          void OutModem20(void);
+  10          void OutModem21(void);
+  11          void OutModem1(unsigned char Data, char i);
+  12          void OutModem2(unsigned int Data, char i);
+  13          void OutModem4(unsigned long int Data, char i);
+  14          char ContrlSumma(char *Array, char NByteContrlSumma);
+  15          
+  16          #endif
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   ----    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

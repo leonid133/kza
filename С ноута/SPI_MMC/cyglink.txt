@@ -1,0 +1,4 @@
+"C:\ivan\KNPP\VR\SPI_MMC\init.obj",
+"C:\ivan\KNPP\VR\SPI_MMC\servo.obj",
+"C:\ivan\KNPP\VR\SPI_MMC\tarservo.obj",
+"C:\ivan\KNPP\VR\SPI_MMC\mmcflash5.obj"  TO "C:\ivan\KNPP\VR\SPI_MMC\2.omf" RS(256) PL(68) PW(78) 

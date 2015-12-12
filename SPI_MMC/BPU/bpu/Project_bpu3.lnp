@@ -1,0 +1,3 @@
+"bpu.obj" 
+TO "Project_bpu3" 
+RAMSIZE(256) 

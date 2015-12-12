@@ -1,0 +1,12 @@
+
+BL51 BANKED LINKER/LOCATER V6.22 - SN: K1SMC-S3H2GC
+COPYRIGHT KEIL ELEKTRONIK GmbH 1987 - 2009
+"C:\Leonid 7\WorkDirectory\kza\TarServ - копия\init.obj",
+"C:\Leonid 7\WorkDirectory\kza\TarServ - копия\servo.obj",
+"C:\Leonid 7\WorkDirectory\kza\TarServ - копия\tarservo.obj"  TO "C:\Leonid 7\WorkDirectory\kza\TarServ - копия\1" RS(256) PL(68) PW(78)  
+
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_READ?SERVO
+
+Program Size: data=11.0 xdata=87 code=1009
+LINK/LOCATE RUN COMPLETE.  1 WARNING(S),  0 ERROR(S)

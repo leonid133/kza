@@ -1,0 +1,25 @@
+<html>
+<body>
+<pre>
+<h1>µVision Build Log</h1>
+<h2>Project:</h2>
+C:\ivan\KNPP\VR\BPU\bpu\Project_bpu3.uvproj
+Project File Date:  06/17/2011
+
+<h2>Output:</h2>
+compiling bpu.c...
+bpu.c - 0 Error(s), 0 Warning(s).
+Build target 'Target 1'
+linking...
+Program Size: data=26.7 xdata=2010 code=18301
+"Project_bpu3" - 0 Error(s), 0 Warning(s).
+Build target 'Target 1'
+compiling bpu.c...
+linking...
+Program Size: data=26.7 xdata=2010 code=18301
+"Project_bpu3" - 0 Error(s), 0 Warning(s).
+Build target 'Target 1'
+compiling bpu.c...
+linking...
+Program Size: data=26.7 xdata=2010 code=18301
+"Project_bpu3" - 0 Error(s), 0 Warning(s).

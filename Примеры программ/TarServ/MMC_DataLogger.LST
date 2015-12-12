@@ -1,0 +1,1817 @@
+C51 COMPILER V9.00   MMC_DATALOGGER                                                        03/27/2012 11:30:16 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE MMC_DATALOGGER
+OBJECT MODULE PLACED IN MMC_DataLogger.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.exe MMC_DataLogger.c DB OE BR
+
+line level    source
+
+   1          //-----------------------------------------------------------------------------
+   2          // MMC_DataLogger.c
+   3          //-----------------------------------------------------------------------------
+   4          // Copyright 2004 Silicon Laboratories
+   5          //
+   6          // AUTH: BW / JS / GV
+   7          // DATE: 08 MAR 04
+   8          //
+   9          // This program shows an example of a data logging application that maintains
+  10          // the log on an MMC card.
+  11          //
+  12          // Control Function:
+  13          //
+  14          // The system is controlled via the hardware UART, operating at a baud rate
+  15          // determined by the constant <BAUDRATE>, using Timer1 overflows as the baud
+  16          // rate source.  The commands are as follows (not case sensitive):
+  17          //  'c' - Clear Log
+  18          //  'd' - Display Log
+  19          //  'i' - Init RTC
+  20          //  'p' - Stop Logging
+  21          //  's' - Start Logging
+  22          //  '?' - List Commands
+  23          //
+  24          // Sampling Function:
+  25          //
+  26          // The ADC is configured to sample the on-chip temperature sensor at 4.096kHz,
+  27          // using Timer0 (in 8-bit auto-reload mode) as the start-of-conversion source.
+  28          // The ADC result is accumulated and decimated by a factor of 4096, yielding
+  29          // a 16-bit resolution quantitity from the original 10-bit sample at an
+  30          // effective output word rate of about 1Hz.  This decimated value is
+  31          // stored in the global variable <result>.
+  32          //
+  33          // A note about oversampling and averaging as it applies to this temp
+  34          // sensor example:  The transfer characteristic of the temp sensor on the
+  35          // 'F320 family of devices is 2.86mV/C.  The LSB size of the ADC using the
+  36          // internal VREF (2.43V) as its voltage reference is 2.3mV/code.
+  37          // This means that adjacent ADC codes are about ~1 degrees C apart.
+  38          //
+  39          // If we desire a higher temperature resolution, we can achieve it by
+  40          // oversampling and averaging (See AN118 on the Silicon Labs website).  For 
+  41          // each additional bit of resolution required, we must oversample by a power
+  42          // of 4.  For example, increasing the resolution by 4 bits requires
+  43          // oversampling by a factor of 4^4, or 256.
+  44          //
+  45          // By what factor must we oversample to achieve a temperature resolution to
+  46          // the nearest hundredth of a degree C?  In other words, "How may bits of
+  47          // resolution do we need to add?"  The difference between 1 degrees C and
+  48          // 0.01 degrees C is a factor of 100 (100 is between 2^6 and 2^7, so we need
+  49          // somewhere between 6 and 7 more bits of resolution).  Choosing '6 bits',
+  50          // we calculate our oversampling ratio to be 4^6, or 4096.
+  51          //
+  52          // A note about accuracy:  oversampling and averaging provides a method to
+  53          // increase the 'resolution' of a measurement.  The technique does nothing
+  54          // to improve a measurement's 'accuracy'.  Just because we can measure a
+  55          // 0.01 degree change in temperature does not mean that the measurements
+C51 COMPILER V9.00   MMC_DATALOGGER                                                        03/27/2012 11:30:16 PAGE 2   
+
+  56          // are accurate to 0.01 degrees.  Some possible sources of inaccuracies in
+  57          // this system are:
+  58          //  1. manufacturing tolerances in the temperature sensor itself (transfer
+  59          //     characteristic variation)
+  60          //  2. VDD or VREF tolerance
+  61          //  3. ADC offset, gain, and linearity variations
+  62          //  4. Device self-heating
+  63          //
+  64          // Temperature Clock Function:
+  65          //
+  66          // The temperature clock maintains a record of days, hours, minutes, and 
+  67          // seconds.  The current time record is stored with the temperature value
+  68          // in each log entry.  Clock updates are performed in the ADC end-of-conversion
+  69          // ISR at approximately once every second.
+  70          //
+  71          // Storage Function:
+  72          //
+  73          // MMC FLASH is used for storing the log entries.  Each entry contains
+  74          // the temperature in hundredths of a degree C, the day, hour, minute, and
+  75          // second that the reading was taken.  The LogUpdate function stores log
+  76          // entries in an external memory buffer and then writes that buffer out to the
+  77          // MMC when it is full.  Communication with the MMC is performed through the 
+  78          // MMC access functions.  These functions provide transparent MMC access to 
+  79          // the higher level functions (logging functions).  The MMC interface is broken
+  80          // into two pieces.  The high level piece consists of the user callable MMC
+  81          // access functions (MMC_FLASH_Read, MMC_FLASH_Write, MMC_FLASH_Clear, 
+  82          // MMC_FLASH_MassErase).  These functions are called by the user to execute
+  83          // data operations on the MMC.  They break down the data operations into MMC
+  84          // commands.  The low level piece consists of a single command execution
+  85          // function (MMC_Command_Exec) which is called by the MMC data manipulation
+  86          // functions.  This function is called every time a command must be sent to the
+  87          // MMC.  It handles all of the required SPI traffic between the Silicon Labs
+  88          // device and the MMC.
+  89          //
+  90          // Target: C8051F32x
+  91          // Tool chain: KEIL C51 6.03 / KEIL EVAL C51
+  92          //
+  93          
+  94          //-----------------------------------------------------------------------------
+  95          // Includes
+  96          //-----------------------------------------------------------------------------
+  97          
+  98          #include <c8051f120.h>                 // SFR declarations
+  99          #include <stdio.h>                     // printf() and getchar()
+ 100          #include <ctype.h>                     // tolower()
+ 101          
+ 102          //-----------------------------------------------------------------------------
+ 103          // 16-bit SFR Definitions for 'F32x
+ 104          //-----------------------------------------------------------------------------
+ 105          
+ 106          sfr16 DP       = 0x82;                 // data pointer
+ 107          sfr16 TMR2RL   = 0xca;                 // Timer2 reload value
+ 108          sfr16 TMR2     = 0xcc;                 // Timer2 counter
+ 109          sfr16 PCA0CP1  = 0xe9;                 // PCA0 Module 1 Capture/Compare
+ 110          sfr16 PCA0CP2  = 0xeb;                 // PCA0 Module 2 Capture/Compare
+ 111          sfr16 PCA0     = 0xf9;                 // PCA0 counter
+ 112          sfr16 PCA0CP0  = 0xfb;                 // PCA0 Module 0 Capture/Compare
+ 113          sfr16 ADC0     = 0xbd;                 // ADC0 Data
+ 114          
+ 115          //-----------------------------------------------------------------------------
+ 116          // Global CONSTANTS
+ 117          //-----------------------------------------------------------------------------
+C51 COMPILER V9.00   MMC_DATALOGGER                                                        03/27/2012 11:30:16 PAGE 3   
+
+ 118          #define VERSION      "1.0"             // version identifier
+ 119          #define TRUE         1
+ 120          #define FALSE        0
+ 121          
+ 122          #define START_SYSCLK 12000000
+ 123          #define SYSCLK       START_SYSCLK * 2  // SYSCLK frequency in Hz
+ 124          #define BAUDRATE     115200            // Baud rate of UART in bps
+ 125          #define SAMPLE_RATE  4096              // Sample frequency in Hz
+ 126          #define INT_DEC      4096              // integrate and decimate ratio
+ 127          #define FULL_SCALE   65536             // Full scale ADC0 value
+ 128          #define PREC_FACTOR  1024              // This constant is used to preserve
+ 129                                                 // precision during temperature calc;
+ 130                                                 // VREF offset constant used (.01 mV)
+ 131          #define VREF         243000
+ 132                                                 // in conversion of ADC sample to temp
+ 133                                                 // value;
+ 134                                                 // Temp sensor offset constant used
+ 135          #define V_OFFSET     77600 
+ 136                                                 // in conversion of ADC sample to temp
+ 137                                                 // value (.01 mV);
+ 138          #define TEMP_SLOPE   2.86              // Temp sensor slope constant used
+ 139                                                 // in conversion of ADC sample to temp
+ 140                                                 // value;
+ 141          
+ 142          // Constants that define available card sizes, 8MB through 128MB                                       
+ 143          #define PS_8MB       8388608L
+ 144          #define PS_16MB      16777216L
+ 145          #define PS_32MB      33554432L
+ 146          #define PS_64MB      67108864L
+ 147          #define PS_128MB     134217728L
+ 148          
+ 149          // Physical size in bytes of one MMC FLASH sector
+ 150          #define PHYSICAL_BLOCK_SIZE     512    
+ 151          
+ 152          // Erase group size = 16 MMC FLASH sectors
+ 153          #define PHYSICAL_GROUP_SIZE     PHYSICAL_BLOCK_SIZE * 16
+ 154          
+ 155          // Log table start address in MMC FLASH
+ 156          #define LOG_ADDR     0x00000000
+ 157          
+ 158          // Size in bytes for each log entry
+ 159          #define LOG_ENTRY_SIZE sizeof(LOG_ENTRY)
+ 160          
+ 161          #define BUFFER_ENTRIES 32
+ 162          
+ 163          // Size of XRAM memory buffer that stores table entries
+ 164          // before they are written to MMC
+ 165          #define BUFFER_SIZE  LOG_ENTRY_SIZE * BUFFER_ENTRIES
+ 166          
+ 167          // Command table value definitions
+ 168          // Used in the MMC_Command_Exec function to 
+ 169          // decode and execute MMC command requests
+ 170          #define     EMPTY  0
+ 171          #define     YES   1
+ 172          #define     NO    0
+ 173          #define     CMD   0
+ 174          #define     RD    1
+ 175          #define     WR    2
+ 176          #define     R1    0
+ 177          #define     R1b   1
+ 178          #define     R2    2
+ 179          #define     R3    3
+C51 COMPILER V9.00   MMC_DATALOGGER                                                        03/27/2012 11:30:16 PAGE 4   
+
+ 180          
+ 181          // Start and stop data tokens for single and multiple
+ 182          // block MMC data operations
+ 183          #define     START_SBR      0xFE
+ 184          #define     START_MBR      0xFE
+ 185          #define     START_SBW      0xFE
+ 186          #define     START_MBW      0xFC
+ 187          #define     STOP_MBW       0xFD
+ 188          
+ 189          // Mask for data response token after an MMC write
+ 190          #define     DATA_RESP_MASK 0x11
+ 191          
+ 192          // Mask for busy token in R1b response
+ 193          #define     BUSY_BIT       0x80
+ 194          
+ 195          // Command Table Index Constants:
+ 196          // Definitions for each table entry in the command table.
+ 197          // These allow the MMC_Command_Exec function to be called with a
+ 198          // meaningful parameter rather than a number.
+ 199          #define     GO_IDLE_STATE            0
+ 200          #define     SEND_OP_COND             1
+ 201          #define     SEND_CSD                 2
+ 202          #define     SEND_CID                 3
+ 203          #define     STOP_TRANSMISSION        4
+ 204          #define     SEND_STATUS              5
+ 205          #define     SET_BLOCKLEN             6
+ 206          #define     READ_SINGLE_BLOCK        7
+ 207          #define     READ_MULTIPLE_BLOCK      8
+ 208          #define     WRITE_BLOCK              9
+ 209          #define     WRITE_MULTIPLE_BLOCK    10
+ 210          #define     PROGRAM_CSD             11
+ 211          #define     SET_WRITE_PROT          12
+ 212          #define     CLR_WRITE_PROT          13
+ 213          #define     SEND_WRITE_PROT         14
+ 214          #define     TAG_SECTOR_START        15
+ 215          #define     TAG_SECTOR_END          16
+ 216          #define     UNTAG_SECTOR            17
+ 217          #define     TAG_ERASE_GROUP_START   18
+ 218          #define     TAG_ERASE_GROUP_END     19
+ 219          #define     UNTAG_ERASE_GROUP       20
+ 220          #define     ERASE                   21
+ 221          #define     LOCK_UNLOCK             22
+ 222          #define     READ_OCR                23
+ 223          #define     CRC_ON_OFF              24
+ 224          
+ 225          
+ 226          sbit LED = P2^2;                       // LED='1' means ON
+ 227          sbit SW2 = P2^0;                       // SW2='0' means switch pressed
+ 228          sbit TX0 = P0^4;                       // UART0 TX pin
+ 229          sbit RX0 = P0^5;                       // UART0 RX pin
+ 230          
+ 231          
+ 232          //-----------------------------------------------------------------------------
+ 233          // UNIONs, STRUCTUREs, and ENUMs
+ 234          //-----------------------------------------------------------------------------
+ 235          typedef union LONG {                   // byte-addressable LONG
+ 236             long l;
+ 237             unsigned char b[4];
+ 238          } LONG;
+ 239          
+ 240          typedef union INT {                    // byte-addressable INT
+ 241             int i;
+C51 COMPILER V9.00   MMC_DATALOGGER                                                        03/27/2012 11:30:16 PAGE 5   
+
+ 242             unsigned char b[2];
+ 243          } INT;
+ 244          
+ 245          typedef union {                        // byte-addressable unsigned long
+ 246                unsigned long l;
+ 247                unsigned char b[4];
+ 248                        } ULONG;
+ 249          
+ 250          typedef union {                        // byte-addressable unsigned int
+ 251                unsigned int i;
+ 252                unsigned char b[2];
+ 253                        } UINT;
+ 254          
+ 255          typedef struct LOG_ENTRY {             // (7 bytes per entry)
+ 256             int wTemp;                          // temperature in hundredths of a
+ 257                                                 // degree
+ 258             unsigned int uDay;                  // day of entry
+ 259             unsigned char bHour;                // hour of entry
+ 260             unsigned char bMin;                 // minute of entry
+ 261             unsigned char bSec;                 // second of entry
+ 262             unsigned char pad;                  // dummy byte to ensure aligned access;
+ 263          } LOG_ENTRY;
+ 264               
+ 265          // The states listed below represent various phases of 
+ 266          // operation;
+ 267          typedef enum STATE {
+ 268             RESET,                              // Device reset has occurred;
+ 269             RUNNING,                            // Data is being logged normally;
+ 270             FINISHED,                           // Logging stopped, store buffer;
+ 271             STOPPED                             // Logging completed, buffer stored;
+ 272             } STATE;
+ 273          
+ 274          // This structure defines entries into the command table;
+ 275          typedef struct {
+ 276                unsigned char command_byte;      // OpCode;
+ 277                unsigned char arg_required;      // Indicates argument requirement;
+ 278                unsigned char CRC;               // Holds CRC for command if necessary;
+ 279                unsigned char trans_type;        // Indicates command transfer type;
+ 280                unsigned char response;          // Indicates expected response;
+ 281                unsigned char var_length;        // Indicates varialble length transfer;
+ 282                         } COMMAND;
+ 283          
+ 284          // Command table for MMC.  This table contains all commands available in SPI
+ 285          // mode;  Format of command entries is described above in command structure
+ 286          // definition;
+ 287          COMMAND code commandlist[25] = {
+ 288                { 0,NO ,0x95,CMD,R1 ,NO },    // CMD0;  GO_IDLE_STATE: reset card;
+ 289                { 1,NO ,0xFF,CMD,R1 ,NO },    // CMD1;  SEND_OP_COND: initialize card;
+ 290                { 9,NO ,0xFF,RD ,R1 ,NO },    // CMD9;  SEND_CSD: get card specific data;
+ 291                {10,NO ,0xFF,RD ,R1 ,NO },    // CMD10; SEND_CID: get card identifier;
+ 292                {12,NO ,0xFF,CMD,R1 ,NO },    // CMD12; STOP_TRANSMISSION: end read;
+ 293                {13,NO ,0xFF,CMD,R2 ,NO },    // CMD13; SEND_STATUS: read card status;
+ 294                {16,YES,0xFF,CMD,R1 ,NO },    // CMD16; SET_BLOCKLEN: set block size;
+ 295                {17,YES,0xFF,RD ,R1 ,NO },    // CMD17; READ_SINGLE_BLOCK: read 1 block;
+ 296                {18,YES,0xFF,RD ,R1 ,YES},    // CMD18; READ_MULTIPLE_BLOCK: read > 1;
+ 297                {24,YES,0xFF,WR ,R1 ,NO },    // CMD24; WRITE_BLOCK: write 1 block;
+ 298                {25,YES,0xFF,WR ,R1 ,YES},    // CMD25; WRITE_MULTIPLE_BLOCK: write > 1;
+ 299                {27,NO ,0xFF,CMD,R1 ,NO },    // CMD27; PROGRAM_CSD: program CSD;
+ 300                {28,YES,0xFF,CMD,R1b,NO },    // CMD28; SET_WRITE_PROT: set wp for group;
+ 301                {29,YES,0xFF,CMD,R1b,NO },    // CMD29; CLR_WRITE_PROT: clear group wp;
+ 302                {30,YES,0xFF,CMD,R1 ,NO },    // CMD30; SEND_WRITE_PROT: check wp status;
+ 303                {32,YES,0xFF,CMD,R1 ,NO },    // CMD32; TAG_SECTOR_START: tag 1st erase;
+C51 COMPILER V9.00   MMC_DATALOGGER                                                        03/27/2012 11:30:16 PAGE 6   
+
+ 304                {33,YES,0xFF,CMD,R1 ,NO },    // CMD33; TAG_SECTOR_END: tag end(single);
+ 305                {34,YES,0xFF,CMD,R1 ,NO },    // CMD34; UNTAG_SECTOR: deselect for erase;
+ 306                {35,YES,0xFF,CMD,R1 ,NO },    // CMD35; TAG_ERASE_GROUP_START;
+ 307                {36,YES,0xFF,CMD,R1 ,NO },    // CMD36; TAG_ERASE_GROUP_END;
+ 308                {37,YES,0xFF,CMD,R1 ,NO },    // CMD37; UNTAG_ERASE_GROUP;
+ 309                {38,YES,0xFF,CMD,R1b,NO },    // CMD38; ERASE: erase all tagged sectors;
+ 310                {42,YES,0xFF,CMD,R1b,NO },    // CMD42; LOCK_UNLOCK;
+ 311                {58,NO ,0xFF,CMD,R3 ,NO },    // CMD58; READ_OCR: read OCR register;
+ 312                {59,YES,0xFF,CMD,R1 ,NO }    // CMD59; CRC_ON_OFF: toggles CRC checking;
+ 313                                        };
+ 314          
+ 315          //-----------------------------------------------------------------------------
+ 316          // Global VARIABLES
+ 317          //-----------------------------------------------------------------------------
+ 318          
+ 319          xdata LONG Result = {0L};              // ADC0 decimated value
+ 320          
+ 321          xdata LOG_ENTRY LogRecord;             // Memory space for each log entry
+ 322          xdata unsigned long uLogCount;         // Current number of table entries
+ 323          LOG_ENTRY xdata *pLogTable;            // Pointer to buffer for table entries
+ 324          xdata STATE State = RESET;             // System state variable;  Determines
+ 325                                                 // how log update function will exec;
+ 326          xdata unsigned long PHYSICAL_SIZE;     // MMC size variable;  Set during
+ 327                                                 // initialization;
+ 328          xdata unsigned long LOG_SIZE;          // Available number of bytes for log
+ 329                                                 // table;
+ 330          
+ 331          xdata unsigned long PHYSICAL_BLOCKS;   // MMC block number;  Computed during
+ 332                                                 // initialization;
+ 333          
+ 334          xdata char LOCAL_BLOCK[BUFFER_SIZE]; 
+ 335          xdata char SCRATCH_BLOCK[PHYSICAL_BLOCK_SIZE];
+ 336          
+ 337          xdata char error;
+ 338          //-----------------------------------------------------------------------------
+ 339          // Function PROTOTYPES
+ 340          //-----------------------------------------------------------------------------
+ 341          
+ 342          void main (void);
+ 343          
+ 344          // Support Subroutines
+ 345          void MENU_ListCommands (void);         // Outputs user menu choices via UART
+ 346          
+ 347          
+ 348          // Logging Subroutines
+ 349          void LogUpdate (void);                 // Builds MMC log table
+ 350          unsigned long LogFindCount();          // Returns current number of log entries
+ 351          void LogErase (void);                  // Erases entire log table
+ 352          void LogPrint (void);                  // Prints log through UART
+ 353          void LogInit (LOG_ENTRY *pEntry);      // Initializes area for building entries
+ 354          
+ 355          // High Level MMC_FLASH Functions
+ 356          
+ 357          void MMC_FLASH_Init (void);            // Initializes MMC and configures it to 
+ 358                                                 // accept SPI commands;
+ 359          
+ 360                                                 // Reads <length> bytes starting at 
+ 361                                                 // <address> and stores them at <pchar>;
+ 362          unsigned char MMC_FLASH_Read (unsigned long address, unsigned char *pchar,
+ 363                                   unsigned int length);
+ 364          
+ 365                                                 // Clears <length> bytes starting at 
+C51 COMPILER V9.00   MMC_DATALOGGER                                                        03/27/2012 11:30:16 PAGE 7   
+
+ 366                                                 // <address>; uses memory at <scratch>
+ 367                                                 // for temporary storage;
+ 368          unsigned char MMC_FLASH_Clear (unsigned long address, unsigned char *scratch,
+ 369                                    unsigned int length);
+ 370          
+ 371                                                 // Writes <length> bytes of data at
+ 372                                                 // <wdata> to <address> in MMC;
+ 373                                                 // <scratch> provides temporary storage;
+ 374          unsigned char MMC_FLASH_Write (unsigned long address, unsigned char *scratch,
+ 375                                    unsigned char *wdata, unsigned int length);
+ 376          
+ 377                                                 // Clears <length> bytes of FLASH 
+ 378                                                 // starting at <address1>; Requires that
+ 379                                                 // desired erase area be sector aligned;
+ 380          unsigned char MMC_FLASH_MassErase (unsigned long address1, 
+ 381                                             unsigned long length);
+ 382          
+ 383          // Low Level MMC_FLASH_ Functions
+ 384          
+ 385                                                 // Decodes and executes MMC commands;  
+ 386                                                 // <cmd> is an index into the command
+ 387                                                 // table and <argument> contains a 
+ 388                                                 // 32-bit argument if necessary;  If a 
+ 389                                                 // data operation is taking place, the
+ 390                                                 // data will be stored to or read from
+ 391                                                 // the location pointed to by <pchar>;
+ 392          unsigned int MMC_Command_Exec (unsigned char cmd, unsigned long argument,
+ 393                                     unsigned char *pchar);
+ 394          
+ 395          
+ 396          // Initialization Subroutines
+ 397          
+ 398          void SYSCLK_Init (void);
+ 399          void PORT_Init (void);
+ 400          void UART0_Init (void);
+ 401          void ADC0_Init (void);
+ 402          void Soft_Init (void);
+ 403          void Timer0_Init (int counts);
+ 404          void Timer2_Init (int counts);
+ 405          void SPI_Init (void);
+ 406          
+ 407          // Interrupt Service Routines
+ 408          
+ 409          void ADC0_ISR (void);
+ 410          void Soft_ISR (void);
+ 411          
+ 412          //-----------------------------------------------------------------------------
+ 413          // MAIN Routine
+ 414          //-----------------------------------------------------------------------------
+ 415          /*
+ 416          void main (void) {
+ 417             idata char key_press;               // Input character from UART;
+ 418             // Disable Watchdog timer
+ 419             PCA0MD &= ~0x40;                    // WDTE = 0 (clear watchdog timer
+ 420                                                 // enable);
+ 421          
+ 422             PORT_Init ();                       // Initialize crossbar and GPIO;
+ 423             SYSCLK_Init ();                     // Initialize oscillator;
+ 424             UART0_Init ();                      // Initialize UART0;
+ 425             SPI_Init ();                        // Initialize SPI0;
+ 426             Timer2_Init (SYSCLK/SAMPLE_RATE);   // Init Timer2 for 16-bit autoreload;
+ 427             ADC0_Init ();                       // Init ADC0;
+C51 COMPILER V9.00   MMC_DATALOGGER                                                        03/27/2012 11:30:16 PAGE 8   
+
+ 428             Soft_Init ();                       // Initialize software interrupts;
+ 429             MMC_FLASH_Init();                   // Initialize MMC card;
+ 430             AD0EN = 1;                          // enable ADC0;
+ 431          
+ 432             State = RESET;                      // Set global state machine to reset
+ 433                                                 // state;
+ 434          
+ 435                                                 // Initialize log table buffer pointer
+ 436             pLogTable = (LOG_ENTRY xdata *)LOCAL_BLOCK;
+ 437             uLogCount = LogFindCount();         // Find current number of log table
+ 438                                                 // entries;
+ 439          
+ 440             printf ("\n");                      // Print list of commands;
+ 441             MENU_ListCommands ();
+ 442          
+ 443             State = STOPPED;                    // Global state is STOPPED; no data
+ 444                                                 // is being logged;
+ 445             EA = 1;                             // Enable global interrupts;
+ 446          
+ 447                  while (1)                           // Serial port command decoder;
+ 448             {
+ 449                key_press = getchar();           // Get command character;
+ 450                key_press = tolower(key_press);  // Convert to lower case;
+ 451          
+ 452                switch (key_press) 
+ 453                {
+ 454                   case 'c':                     // Clear log;
+ 455                     if(State == STOPPED)        // Only execute if not logging;
+ 456                     {
+ 457                      printf ("\n Clear Log\n");
+ 458                      LogErase();                // erase log entries;
+ 459                      uLogCount = LogFindCount();// update global log entry count;
+ 460                     }
+ 461                     break;
+ 462                   case 'd':                     // Display log;
+ 463                     if(State == STOPPED)        // Only execute if not logging;
+ 464                     {
+ 465                      printf ("\n Display Log\n");
+ 466                      LogPrint();                // Print the log entries;
+ 467                     }
+ 468                     break;
+ 469                   case 'i':                     // Init RTC;
+ 470                     if(State == STOPPED)        // Only execute if not logging;
+ 471                     {
+ 472                      printf ("\n Init RTC values\n");
+ 473                      EA = 0;                    // Disable interrupts;
+ 474                      LogInit(&LogRecord);       // Clear current time;
+ 475                      EA = 1;                    // Reenable interrupts;
+ 476                     }
+ 477                     break;
+ 478                   case 'p':                     // Stop logging;
+ 479                     if(State != STOPPED)        // Only execute if not stopped already;
+ 480                     {
+ 481                      State = FINISHED;          // Set state to FINISHED
+ 482                      printf ("\n Stop Logging\n");
+ 483                      while(State != STOPPED){}  // Wait for State = STOPPED;
+ 484                     }
+ 485                     break;
+ 486                   case 's':                     // Start logging
+ 487                     if(State == STOPPED)        // Only execute if not logging;
+ 488                     {
+ 489                      printf ("\n Start Logging\n");
+C51 COMPILER V9.00   MMC_DATALOGGER                                                        03/27/2012 11:30:16 PAGE 9   
+
+ 490                      State = RUNNING;           // Start logging data
+ 491                     }
+ 492                     break;
+ 493                   case '?':                     // List commands;
+ 494                     if(State == STOPPED)        // Only execute if not logging;
+ 495                     {
+ 496                      printf ("\n List Commands\n");
+ 497                      MENU_ListCommands();       // List Commands
+ 498                     }
+ 499                     break;
+ 500                   default:                      // Indicate unknown command;
+ 501                     if(State == STOPPED)        // Only execute if not logging;
+ 502                     {
+ 503                      printf ("\n Unknown command: '%x'\n", key_press);
+ 504                      MENU_ListCommands();       // Print Menu again;
+ 505                     }
+ 506                     break;
+ 507                } // switch
+ 508             } // while
+ 509          }
+ 510          */
+ 511          //-----------------------------------------------------------------------------
+ 512          // Support Subroutines
+ 513          //-----------------------------------------------------------------------------
+ 514          
+ 515          //-----------------------------------------------------------------------------
+ 516          // MENU_ListCommands
+ 517          //-----------------------------------------------------------------------------
+ 518          // This routine prints a list of available commands.
+ 519          //
+ 520          void MENU_ListCommands (void)
+ 521          {
+ 522   1         printf ("\nData logging example version %s\n", VERSION);
+ 523   1         printf ("Copyright 2004 Silicon Laboratories.\n\n");
+ 524   1         printf ("Command List\n");
+ 525   1         printf ("===============================================\n");
+ 526   1         printf (" 'c' - Clear Log\n");
+ 527   1         printf (" 'd' - Display Log\n");
+ 528   1         printf (" 'i' - Init RTC\n");
+ 529   1         printf (" 'p' - Stop Logging\n");
+ 530   1         printf (" 's' - Start Logging\n");
+ 531   1         printf (" '?' - List Commands\n");
+ 532   1         printf ("\n");
+ 533   1      }
+ 534          
+ 535          //-----------------------------------------------------------------------------
+ 536          // Logging Subroutines
+ 537          //-----------------------------------------------------------------------------
+ 538          
+ 539          
+ 540          //-----------------------------------------------------------------------------
+ 541          // LogUpdate()
+ 542          //-----------------------------------------------------------------------------
+ 543          // This routine is called by the ADC ISR at ~1Hz if State == RUNNING or 
+ 544          // FINISHED.  Here we read the decimated ADC value, convert it to temperature 
+ 545          // in hundredths of a degree C, and add the log entry to the log table buffer.  
+ 546          // If the buffer is full, or the user has stopped the logger, we must commit 
+ 547          // the buffer to the MMC FLASH.  <State> determines if the system is logging 
+ 548          // normally (State == RUNNING), or if the user has stopped the logging 
+ 549          // process (State == FINISHED).  
+ 550          //
+ 551          //
+C51 COMPILER V9.00   MMC_DATALOGGER                                                        03/27/2012 11:30:16 PAGE 10  
+
+ 552          void LogUpdate (void)
+ 553          {
+ 554   1         idata ULONG voltage;                // Long voltage value;
+ 555   1         idata int temp_int, temp_frac;      // Integer and fractional portions of
+ 556   1                                             // Temperature;
+ 557   1                                             // Count variable for number of 
+ 558   1                                             // Log entries in local buffer;
+ 559   1         static idata unsigned int lLogCount = 0;
+ 560   1      
+ 561   1         EA = 0;                             // Disable interrupts (precautionary);
+ 562   1         voltage.l = Result.l;               // Retrieve 32-bit ADC value;
+ 563   1         EA = 1;                             // Re-enable interrupts;
+ 564   1                                             // Calculate voltage in .01 millivolt;
+ 565   1                                             // units;
+ 566   1         voltage.l = voltage.l * ((VREF*PREC_FACTOR) / FULL_SCALE / TEMP_SLOPE);
+ 567   1                                             // Handle temp sensor voltage offset;
+ 568   1         voltage.l = voltage.l - ((V_OFFSET*PREC_FACTOR / TEMP_SLOPE));                          
+ 569   1         voltage.b[4] = voltage.b[3];        // Scale down by PREC_FACTOR with a
+ 570   1         voltage.b[3] = voltage.b[2];        // 10-bit shift;  <voltage> now contains
+ 571   1         voltage.b[2] = voltage.b[1];        // temperature value;
+ 572   1         voltage.b[1] = voltage.b[0];
+ 573   1         voltage.b[0] = 0;
+ 574   1         voltage.l = voltage.l >> 2;                                               
+ 575   1         LogRecord.wTemp = (int)voltage.l;   // Store temp value in temporary log
+ 576   1                                             // entry;
+ 577   1      
+ 578   1         if(uLogCount == 0)                  // If the FLASH table has been cleared,
+ 579   1            {                                // The local buffer is reset;
+ 580   2            lLogCount = 0;                   // Reset number of local table entries;
+ 581   2                                             // Reset local buffer pointer;
+ 582   2            pLogTable = (LOG_ENTRY xdata *)LOCAL_BLOCK;
+ 583   2            }
+ 584   1         if(State == RUNNING)                // Execute the following if the logger
+ 585   1         {                                   // is logging normally;
+ 586   2                                             // Check to see if the log table is
+ 587   2                                             // full;
+ 588   2            if ((uLogCount*LOG_ENTRY_SIZE) < LOG_SIZE)
+ 589   2            {
+ 590   3      
+ 591   3               *pLogTable = LogRecord;       // Copy temporary log entry to buffer;
+ 592   3               pLogTable++;                  // Increment buffer pointer;
+ 593   3               lLogCount++;                  // Increment local log entry count;
+ 594   3               uLogCount++;                  // Increment global log entry count;
+ 595   3                                             // If the buffer is full, it must be
+ 596   3                                             // written to FLASH;
+ 597   3               if(lLogCount == (unsigned int)(BUFFER_SIZE / LOG_ENTRY_SIZE))
+ 598   3               {
+ 599   4                                             // Call FLASH Write function;  Write to
+ 600   4                                             // address pointed at by the global
+ 601   4                                             // entry count less the local buffer
+ 602   4                                             // count;
+ 603   4                  MMC_FLASH_Write((uLogCount - 
+ 604   4                                  (unsigned long)lLogCount)*LOG_ENTRY_SIZE, 
+ 605   4                                  (unsigned char xdata * )SCRATCH_BLOCK, 
+ 606   4                                  (unsigned char xdata *)LOCAL_BLOCK, BUFFER_SIZE);
+ 607   4                  lLogCount = 0;             // Reset the local buffer size
+ 608   4                                             // and pointer;
+ 609   4                  pLogTable = (LOG_ENTRY xdata *)LOCAL_BLOCK;
+ 610   4               }
+ 611   3                                             // Update display;
+ 612   3               temp_int = LogRecord.wTemp / 100;
+ 613   3               temp_frac = LogRecord.wTemp - ((long) temp_int * 100L);
+C51 COMPILER V9.00   MMC_DATALOGGER                                                        03/27/2012 11:30:16 PAGE 11  
+
+ 614   3      
+ 615   3                 printf (" %08lu\t", uLogCount);
+ 616   3               printf ("%02u: ",(unsigned)LogRecord.uDay);
+ 617   3               printf ("%02u:",(unsigned) LogRecord.bHour);
+ 618   3               printf ("%02u:",(unsigned) LogRecord.bMin);
+ 619   3               printf ("%02u ",(unsigned) LogRecord.bSec);
+ 620   3               printf ("%+02d.%02d\n", temp_int, temp_frac);
+ 621   3      
+ 622   3      
+ 623   3            }
+ 624   2      
+ 625   2            else                             // If the FLASH table is full, stop
+ 626   2            {                                // logging data and print the full
+ 627   3               State = STOPPED;              // message;
+ 628   3               printf ("Log is full\n");
+ 629   3            }
+ 630   2         }
+ 631   1         else if(State == FINISHED)          // If the data logger has been stopped
+ 632   1         {                                   // by the user, write the local buffer
+ 633   2                                             // to FLASH;
+ 634   2            MMC_FLASH_Write((uLogCount - (unsigned long)lLogCount)*LOG_ENTRY_SIZE,
+ 635   2                                         (unsigned char xdata * )SCRATCH_BLOCK, 
+ 636   2                                         (unsigned char xdata *)LOCAL_BLOCK, 
+ 637   2                                         lLogCount*LOG_ENTRY_SIZE);
+ 638   2            lLogCount = 0;                   // Reset the local buffer size;
+ 639   2                                             // and pointer;
+ 640   2            pLogTable = (LOG_ENTRY xdata *)LOCAL_BLOCK;
+ 641   2            State = STOPPED;                 // Set the state to STOPPED;
+ 642   2         }
+ 643   1      }
+ 644          
+ 645          //-----------------------------------------------------------------------------
+ 646          // LogFindCount()
+ 647          //-----------------------------------------------------------------------------
+ 648          // This function finds the number of entries already stored in the MMC log;
+ 649          //
+ 650          unsigned long LogFindCount()
+ 651          {
+ 652   1         unsigned long Count = 0;            // Count variable, incremented as table
+ 653   1                                             // entries are read;
+ 654   1         unsigned long i = 0;                // Address variable, used to read table
+ 655   1                                             // table entries from FLASH;
+ 656   1         LOG_ENTRY xdata *TempEntry;         // Temporary log entry space;
+ 657   1      
+ 658   1                                             // Initialize temp space in 
+ 659   1                                             // SCRATCH_BLOCK of external memory;
+ 660   1         TempEntry = (LOG_ENTRY xdata *)SCRATCH_BLOCK;
+ 661   1      
+ 662   1                                             // Loop through the table looking for a
+ 663   1                                             // blank entry;
+ 664   1         for (i=LOG_ADDR;i<LOG_SIZE;i += LOG_ENTRY_SIZE)
+ 665   1         {
+ 666   2                                             // Read one entry from address i of
+ 667   2                                             // FLASH;
+ 668   2            MMC_FLASH_Read((unsigned long)(i),(unsigned char xdata *) SCRATCH_BLOCK,
+ 669   2               (unsigned int)LOG_ENTRY_SIZE);
+ 670   2      
+ 671   2                                             // Check if entry is blank;
+ 672   2            if ((TempEntry->bSec == 0x00)&&(TempEntry->bMin == 0x00) 
+ 673   2                 && (TempEntry->bHour == 0x00))
+ 674   2            {
+ 675   3                                             // If entry is blank, set Count;
+C51 COMPILER V9.00   MMC_DATALOGGER                                                        03/27/2012 11:30:16 PAGE 12  
+
+ 676   3               Count = (i/LOG_ENTRY_SIZE) - LOG_ADDR;
+ 677   3               break;                        // Break out of loop;
+ 678   3            }
+ 679   2         }
+ 680   1         return Count;                       // Return entry count;
+ 681   1      }
+ 682          
+ 683          //-----------------------------------------------------------------------------
+ 684          // LogErase
+ 685          //-----------------------------------------------------------------------------
+ 686          // This function clears the log table using the FLASH Mass Erase capability.
+ 687          //
+ 688          void LogErase (void)
+ 689          {
+ 690   1                                             // Call Mass Erase function with start
+ 691   1                                             // of table as address and log size as
+ 692   1                                             // length;
+ 693   1         MMC_FLASH_MassErase(LOG_ADDR, LOG_SIZE);
+ 694   1         uLogCount = 0;                      // Reset global count;
+ 695   1      }
+ 696          
+ 697          //-----------------------------------------------------------------------------
+ 698          // LogPrint
+ 699          //-----------------------------------------------------------------------------
+ 700          // This function prints the log table.  Entries are read one at a time, temp
+ 701          // is broken into the integer and fractional portions, and the log entry is
+ 702          // displayed on the PC through UART.
+ 703          //
+ 704          void LogPrint (void)
+ 705          {
+ 706   1         idata long temp_int, temp_frac;     // Integer and fractional portions of
+ 707   1                                             // temperature;
+ 708   1         idata unsigned long i;              // Log index;
+ 709   1         unsigned char xdata *pchar;         // Pointer to external mem space for 
+ 710   1                                             // FLASH Read function;
+ 711   1         LOG_ENTRY xdata *TempEntry;
+ 712   1      
+ 713   1      
+ 714   1         printf ("Entry#\tTime\t\tResult\n");// Print display column headers;
+ 715   1                                             // Assign pointers to local block;
+ 716   1                                             // FLASHRead function stores incoming
+ 717   1                                             // data at pchar, and then that data can
+ 718   1                                             // be accessed as log entries through
+ 719   1                                             // TempEntry;
+ 720   1         pchar = (unsigned char xdata *)LOCAL_BLOCK;
+ 721   1         TempEntry = (LOG_ENTRY xdata *)LOCAL_BLOCK;
+ 722   1      
+ 723   1         for (i = 0; i < uLogCount; i++)     // For each entry in the table,
+ 724   1         {                                   // do the following;
+ 725   2                                             // Read the entry from FLASH;
+ 726   2            MMC_FLASH_Read((unsigned long)(LOG_ADDR + i*LOG_ENTRY_SIZE), pchar,
+ 727   2               (unsigned int)LOG_ENTRY_SIZE);
+ 728   2      
+ 729   2            // break temperature into integer and fractional components
+ 730   2            temp_int = (long) (TempEntry->wTemp) / 100L;
+ 731   2            temp_frac = (long) (TempEntry->wTemp) - ((long) temp_int * 100L);
+ 732   2      
+ 733   2            // display log entry
+ 734   2            printf (" %lu\t%03u: %02u:%02u:%02u ", (i + 1),
+ 735   2               TempEntry->uDay, (unsigned) TempEntry->bHour, 
+ 736   2               (unsigned) TempEntry->bMin,
+ 737   2               (unsigned) TempEntry->bSec);
+C51 COMPILER V9.00   MMC_DATALOGGER                                                        03/27/2012 11:30:16 PAGE 13  
+
+ 738   2            printf ("%+02ld.%02ld\n", temp_int, temp_frac);
+ 739   2      
+ 740   2         }
+ 741   1      }
+ 742          
+ 743          
+ 744          //-----------------------------------------------------------------------------
+ 745          // LogInit
+ 746          //-----------------------------------------------------------------------------
+ 747          // Initialize the Log Entry space (all zeros);
+ 748          //
+ 749          void LogInit (LOG_ENTRY *pEntry)
+ 750          {
+ 751   1         pEntry->wTemp = 0;
+ 752   1         pEntry->uDay = 0;
+ 753   1         pEntry->bHour = 0;
+ 754   1         pEntry->bMin = 0;
+ 755   1         pEntry->bSec = 0;
+ 756   1      }
+ 757          
+ 758          
+ 759          //-----------------------------------------------------------------------------
+ 760          // MMC_Command_Exec
+ 761          //-----------------------------------------------------------------------------
+ 762          //
+ 763          // This function generates the necessary SPI traffic for all MMC SPI commands.
+ 764          // The three parameters are described below:
+ 765          // 
+ 766          // cmd:      This parameter is used to index into the command table and read 
+ 767          //           the desired command.  The Command Table Index Constants allow the
+ 768          //           caller to use a meaningful constant name in the cmd parameter 
+ 769          //           instead of a simple index number.  For example, instead of calling 
+ 770          //           MMC_Command_Exec (0, argument, pchar) to send the MMC into idle 
+ 771          //           state, the user can call 
+ 772          //           MMC_Command_Exec (GO_IDLE_STATE, argument, pchar);
+ 773          //
+ 774          // argument: This parameter is used for MMC commands that require an argument.
+ 775          //           MMC arguments are 32-bits long and can be values such as an
+ 776          //           an address, a block length setting, or register settings for the
+ 777          //           MMC.
+ 778          //
+ 779          // pchar:    This parameter is a pointer to the local data location for MMC 
+ 780          //           data operations.  When a read or write occurs, data will be stored
+ 781          //           or retrieved from the location pointed to by pchar.
+ 782          //
+ 783          // The MMC_Command_Exec function indexes the command table using the cmd 
+ 784          // parameter. It reads the command table entry into memory and uses information
+ 785          // from that entry to determine how to proceed.  Returns the 16-bit card 
+ 786          // response value;
+ 787          //
+ 788          
+ 789          unsigned int MMC_Command_Exec (unsigned char cmd, unsigned long argument,
+ 790                                     unsigned char *pchar)
+ 791          {
+ 792   1         idata COMMAND current_command;      // Local space for the command table 
+ 793   1                                             // entry;
+ 794   1         idata ULONG long_arg;               // Union variable for easy byte 
+ 795   1                                             // transfers of the argument;
+ 796   1                                             // Static variable that holds the 
+ 797   1                                             // current data block length;
+ 798   1         static unsigned long current_blklen = 512;
+ 799   1         unsigned long old_blklen = 512;     // Temp variable to preserve data block
+C51 COMPILER V9.00   MMC_DATALOGGER                                                        03/27/2012 11:30:16 PAGE 14  
+
+ 800   1                                             // length during temporary changes;
+ 801   1         idata unsigned int counter = 0;     // Byte counter for multi-byte fields;
+ 802   1         idata UINT card_response;           // Variable for storing card response;
+ 803   1         idata unsigned char data_resp;      // Variable for storing data response;
+ 804   1         idata unsigned char dummy_CRC;      // Dummy variable for storing CRC field;
+ 805   1      
+ 806   1                                             
+ 807   1         current_command = commandlist[cmd]; // Retrieve desired command table entry
+ 808   1                                             // from code space;
+ 809   1         SPI0DAT = 0xFF;                     // Send buffer SPI clocks to ensure no
+ 810   1         while(!SPIF){}                      // MMC operations are pending;
+ 811   1         SPIF = 0;
+ 812   1         NSSMD0 = 0;                         // Select MMC by pulling CS low;
+ 813   1         SPI0DAT = 0xFF;                     // Send another byte of SPI clocks;
+ 814   1         while(!SPIF){}
+ 815   1         SPIF = 0;
+ 816   1                                             // Issue command opcode;
+ 817   1         SPI0DAT = (current_command.command_byte | 0x40);
+ 818   1         long_arg.l = argument;              // Make argument byte addressable;
+ 819   1                                             // If current command changes block
+ 820   1                                             // length, update block length variable
+ 821   1                                             // to keep track;
+ 822   1                                             // Command byte = 16 means that a set
+ 823   1                                             // block length command is taking place
+ 824   1                                             // and block length variable must be
+ 825   1                                             // set;
+ 826   1         if(current_command.command_byte == 16)
+ 827   1         {
+ 828   2            current_blklen = argument;       
+ 829   2         }                                
+ 830   1                                             // Command byte = 9 or 10 means that a
+ 831   1                                             // 16-byte register value is being read
+ 832   1                                             // from the card, block length must be
+ 833   1                                             // set to 16 bytes, and restored at the
+ 834   1                                             // end of the transfer;
+ 835   1         if((current_command.command_byte == 9)||
+ 836   1            (current_command.command_byte == 10))
+ 837   1         {
+ 838   2            old_blklen = current_blklen;     // Command is a GET_CSD or GET_CID,
+ 839   2            current_blklen = 16;             // set block length to 16-bytes;
+ 840   2         }
+ 841   1         while(!SPIF){}                      // Wait for initial SPI transfer to end;
+ 842   1         SPIF = 0;                           // Clear SPI Interrupt flag;
+ 843   1      
+ 844   1                                             // If an argument is required, transmit
+ 845   1                                             // one, otherwise transmit 4 bytes of
+ 846   1                                             // 0x00;
+ 847   1         if(current_command.arg_required == YES)
+ 848   1         {
+ 849   2            counter = 0;
+ 850   2            while(counter <= 3)
+ 851   2            {
+ 852   3               SPI0DAT = long_arg.b[counter];
+ 853   3               counter++;
+ 854   3               while(!SPIF){}
+ 855   3               SPIF = 0;
+ 856   3            }
+ 857   2         }
+ 858   1         else
+ 859   1         {
+ 860   2            counter = 0;
+ 861   2            while(counter <= 3)
+C51 COMPILER V9.00   MMC_DATALOGGER                                                        03/27/2012 11:30:16 PAGE 15  
+
+ 862   2            {
+ 863   3               SPI0DAT = 0x00;
+ 864   3               counter++;
+ 865   3               while(!SPIF){}
+ 866   3               SPIF = 0;
+ 867   3            }
+ 868   2         }
+ 869   1         SPI0DAT = current_command.CRC;      // Transmit CRC byte;  In all cases
+ 870   1         while(!SPIF){}                      // except CMD0, this will be a dummy
+ 871   1         SPIF = 0;                           // character;
+ 872   1      
+ 873   1                                             // The command table entry will indicate
+ 874   1                                             // what type of response to expect for
+ 875   1                                             // a given command;  The following 
+ 876   1                                             // conditional handles the MMC response;
+ 877   1         if(current_command.response == R1)  // Read the R1 response from the card;
+ 878   1         {
+ 879   2            do
+ 880   2            {
+ 881   3               SPI0DAT = 0xFF;               // Write dummy value to SPI so that 
+ 882   3               while(!SPIF){}                // the response byte will be shifted in;
+ 883   3               SPIF = 0;
+ 884   3               card_response.b[0] = SPI0DAT; // Save the response;
+ 885   3            }
+ 886   2            while((card_response.b[0] & BUSY_BIT));
+ 887   2         }
+ 888   1                                             // Read the R1b response;
+ 889   1         else if(current_command.response == R1b)
+ 890   1         {
+ 891   2            do
+ 892   2            {
+ 893   3               SPI0DAT = 0xFF;               // Start SPI transfer;
+ 894   3               while(!SPIF){}
+ 895   3               SPIF = 0;
+ 896   3               card_response.b[0] = SPI0DAT; // Save card response
+ 897   3            }
+ 898   2            while((card_response.b[0] & BUSY_BIT));
+ 899   2            do                               // Wait for busy signal to end;
+ 900   2            {
+ 901   3               SPI0DAT = 0xFF;               
+ 902   3               while(!SPIF){}
+ 903   3               SPIF = 0;
+ 904   3            }
+ 905   2            while(SPI0DAT == 0x00);          // When byte from card is non-zero,
+ 906   2         }                                   // card is no longer busy;
+ 907   1                                             // Read R2 response
+ 908   1         else if(current_command.response == R2)
+ 909   1         {
+ 910   2            do
+ 911   2            {
+ 912   3               SPI0DAT = 0xFF;               // Start SPI transfer;
+ 913   3               while(!SPIF){}
+ 914   3               SPIF = 0;
+ 915   3               card_response.b[0] = SPI0DAT; // Read first byte of response;
+ 916   3            }
+ 917   2            while((card_response.b[0] & BUSY_BIT));
+ 918   2            SPI0DAT = 0xFF;
+ 919   2            while(!SPIF){}
+ 920   2            SPIF = 0;
+ 921   2            card_response.b[1] = SPI0DAT;    // Read second byte of response;
+ 922   2         }
+ 923   1         else                                // Read R3 response;
+C51 COMPILER V9.00   MMC_DATALOGGER                                                        03/27/2012 11:30:16 PAGE 16  
+
+ 924   1         {
+ 925   2            do
+ 926   2            {
+ 927   3               SPI0DAT = 0xFF;               // Start SPI transfer;
+ 928   3               while(!SPIF){}
+ 929   3               SPIF = 0;
+ 930   3               card_response.b[0] = SPI0DAT; // Read first byte of response;
+ 931   3            }
+ 932   2            while((card_response.b[0] & BUSY_BIT));
+ 933   2            counter = 0;
+ 934   2            while(counter <= 3)              // Read next three bytes and store them
+ 935   2            {                                // in local memory;  These bytes make up
+ 936   3               counter++;                    // the Operating Conditions Register
+ 937   3               SPI0DAT = 0xFF;               // (OCR);
+ 938   3               while(!SPIF){}
+ 939   3               SPIF = 0;
+ 940   3               *pchar++ = SPI0DAT;
+ 941   3            }
+ 942   2         }
+ 943   1         switch(current_command.trans_type)  // This conditional handles all data 
+ 944   1         {                                   // operations;  The command entry
+ 945   2                                             // determines what type, if any, data
+ 946   2                                             // operations need to occur;
+ 947   2            case RD:                         // Read data from the MMC;
+ 948   2               do                            // Wait for a start read token from
+ 949   2               {                             // the MMC;
+ 950   3                  SPI0DAT = 0xFF;            // Start a SPI transfer;
+ 951   3                  while(!SPIF){}
+ 952   3                  SPIF = 0;
+ 953   3               }
+ 954   2               while(SPI0DAT != START_SBR);  // Check for a start read token;
+ 955   2               counter = 0;                  // Reset byte counter;
+ 956   2                                             // Read <current_blklen> bytes;
+ 957   2               while(counter < (unsigned int)current_blklen)
+ 958   2               {
+ 959   3                  SPI0DAT = 0x00;            // Start SPI transfer;
+ 960   3                  while(!SPIF){}
+ 961   3                  SPIF = 0;
+ 962   3                  *pchar++ = SPI0DAT;        // Store data byte in local memory;
+ 963   3                  counter++;                 // Increment data byte counter;
+ 964   3               }
+ 965   2               SPI0DAT = 0x00;               // After all data is read, read the two
+ 966   2               while(!SPIF){}                // CRC bytes;  These bytes are not used
+ 967   2               SPIF = 0;                     // in this mode, but the placeholders 
+ 968   2               dummy_CRC = SPI0DAT;          // must be read anyway;
+ 969   2               SPI0DAT = 0x00;
+ 970   2               while(!SPIF){}
+ 971   2               SPIF = 0;
+ 972   2               dummy_CRC = SPI0DAT;
+ 973   2               break;
+ 974   2            case WR:                         // Write data to the MMC;
+ 975   2               SPI0DAT = 0xFF;               // Start by sending 8 SPI clocks so
+ 976   2               while(!SPIF){}                // the MMC can prepare for the write;
+ 977   2               SPIF = 0;
+ 978   2               SPI0DAT = START_SBW;          // Send the start write block token;
+ 979   2               while(!SPIF){}
+ 980   2               SPIF = 0;
+ 981   2               counter = 0;                  // Reset byte counter;
+ 982   2                                             // Write <current_blklen> bytes to MMC;
+ 983   2               while(counter < (unsigned int)current_blklen)
+ 984   2               {
+ 985   3                  SPI0DAT = *pchar++;        // Write data byte out through SPI;
+C51 COMPILER V9.00   MMC_DATALOGGER                                                        03/27/2012 11:30:16 PAGE 17  
+
+ 986   3                  while(!SPIF){}
+ 987   3                  SPIF = 0;
+ 988   3                  counter++;                 // Increment byte counter;
+ 989   3               }
+ 990   2      
+ 991   2               SPI0DAT = 0xFF;               // Write CRC bytes (don't cares);
+ 992   2               while(!SPIF){}
+ 993   2               SPIF = 0;
+ 994   2               SPI0DAT = 0xFF;
+ 995   2               while(!SPIF){}
+ 996   2               SPIF = 0;
+ 997   2      
+ 998   2               do                            // Read Data Response from card;
+ 999   2               {                             
+1000   3                  SPI0DAT = 0xFF;
+1001   3                  while(!SPIF){}
+1002   3                  SPIF = 0;
+1003   3                  data_resp = SPI0DAT;
+1004   3               }                             // When bit 0 of the MMC response
+1005   2                                             // is clear, a valid data response
+1006   2                                             // has been received;
+1007   2               while((data_resp & DATA_RESP_MASK) != 0x01);
+1008   2      
+1009   2               do                            // Wait for end of busy signal;
+1010   2               {
+1011   3                  SPI0DAT = 0xFF;            // Start SPI transfer to receive
+1012   3                  while(!SPIF){}             // busy tokens;
+1013   3                  SPIF = 0;
+1014   3               }
+1015   2               while(SPI0DAT == 0x00);       // When a non-zero token is returned,
+1016   2                                             // card is no longer busy;
+1017   2               SPI0DAT = 0xFF;               // Issue 8 SPI clocks so that all card
+1018   2               while(!SPIF){}                // operations can complete;
+1019   2               SPIF = 0;
+1020   2               break;
+1021   2            default: break;
+1022   2         }
+1023   1         SPI0DAT = 0xFF;
+1024   1         while(!SPIF){}
+1025   1         SPIF = 0;
+1026   1      
+1027   1      
+1028   1         NSSMD0 = 1;                         // Deselect memory card;
+1029   1         SPI0DAT = 0xFF;                     // Send 8 more SPI clocks to ensure
+1030   1         while(!SPIF){}                      // the card has finished all necessary
+1031   1         SPIF = 0;                           // operations;
+1032   1                                             // Restore old block length if needed;
+1033   1         if((current_command.command_byte == 9)||
+1034   1            (current_command.command_byte == 10))
+1035   1         {
+1036   2            current_blklen = old_blklen;
+1037   2         }
+1038   1         return card_response.i;
+1039   1      }
+1040          
+1041          
+1042          //-----------------------------------------------------------------------------
+1043          // MMC_FLASH_Init
+1044          //-----------------------------------------------------------------------------
+1045          //
+1046          // This function initializes the flash card, configures it to operate in SPI
+1047          // mode, and reads the operating conditions register to ensure that the device
+C51 COMPILER V9.00   MMC_DATALOGGER                                                        03/27/2012 11:30:16 PAGE 18  
+
+1048          // has initialized correctly.  It also determines the size of the card by 
+1049          // reading the Card Specific Data Register (CSD).
+1050          
+1051          void MMC_FLASH_Init (void)
+1052          {
+1053   1         idata UINT card_status;             // Stores card status returned from 
+1054   1                                             // MMC function calls(MMC_Command_Exec);
+1055   1         idata unsigned char counter = 0;    // SPI byte counter;
+1056   1         idata unsigned int size;            // Stores size variable from card;
+1057   1         unsigned char xdata *pchar;         // Xdata pointer for storing MMC 
+1058   1                                             // register values;
+1059   1                                             // Transmit at least 64 SPI clocks
+1060   1                                             // before any bus comm occurs.
+1061   1         pchar = (unsigned char xdata*)LOCAL_BLOCK;
+1062   1         for(counter = 0; counter < 8; counter++)
+1063   1         {
+1064   2            SPI0DAT = 0xFF;
+1065   2            while(!SPIF){}
+1066   2            SPIF = 0;
+1067   2         }
+1068   1         NSSMD0 = 0;                         // Select the MMC with the CS pin;
+1069   1                                             // Send 16 more SPI clocks to 
+1070   1                                             // ensure proper startup;
+1071   1         for(counter = 0; counter < 2; counter++)
+1072   1         {
+1073   2            SPI0DAT = 0xFF;
+1074   2            while(!SPIF){}
+1075   2            SPIF = 0;
+1076   2         }
+1077   1                                             // Send the GO_IDLE_STATE command with
+1078   1                                             // CS driven low;  This causes the MMC
+1079   1                                             // to enter SPI mode;
+1080   1         card_status.i = MMC_Command_Exec(GO_IDLE_STATE,EMPTY,EMPTY);
+1081   1                                             // Send the SEND_OP_COND command
+1082   1         do                                  // until the MMC indicates that it is
+1083   1         {                                   // no longer busy (ready for commands);
+1084   2            SPI0DAT = 0xFF;
+1085   2            while(!SPIF){}
+1086   2            SPIF = 0;
+1087   2            card_status.i = MMC_Command_Exec(SEND_OP_COND,EMPTY,EMPTY);
+1088   2         }
+1089   1         while ((card_status.b[0] & 0x01));
+1090   1         SPI0DAT = 0xFF;                     // Send 8 more SPI clocks to complete
+1091   1         while(!SPIF){}                      // the initialization sequence;
+1092   1         SPIF = 0;
+1093   1         do                                  // Read the Operating Conditions 
+1094   1         {                                   // Register (OCR);
+1095   2            card_status.i = MMC_Command_Exec(READ_OCR,EMPTY,pchar);
+1096   2         }
+1097   1         while(!(*pchar&0x80));              // Check the card busy bit of the OCR;
+1098   1      
+1099   1         card_status.i = MMC_Command_Exec(SEND_STATUS,EMPTY,EMPTY);
+1100   1                                             // Get the Card Specific Data (CSD)
+1101   1                                             // register to determine the size of the
+1102   1                                             // MMC;
+1103   1         card_status.i = MMC_Command_Exec(SEND_CSD,EMPTY,pchar);
+1104   1         pchar += 9;                         // Size indicator is in the 9th byte of
+1105   1                                             // CSD register;
+1106   1                                             // Extract size indicator bits;
+1107   1         size = (unsigned int)((((*pchar) & 0x03) << 1) | 
+1108   1                               (((*(pchar+1)) & 0x80) >> 7));
+1109   1         switch(size)                        // Assign PHYSICAL_SIZE variable to 
+C51 COMPILER V9.00   MMC_DATALOGGER                                                        03/27/2012 11:30:16 PAGE 19  
+
+1110   1         {                                   // appropriate size constant;
+1111   2            case 1: PHYSICAL_SIZE = PS_8MB; break;
+1112   2            case 2: PHYSICAL_SIZE = PS_16MB; break;
+1113   2            case 3: PHYSICAL_SIZE = PS_32MB; break;
+1114   2            case 4: PHYSICAL_SIZE = PS_64MB; break;
+1115   2            case 5: PHYSICAL_SIZE = PS_128MB; break;
+1116   2            default: break;
+1117   2         }
+1118   1                                             // Determine the number of MMC sectors;
+1119   1         PHYSICAL_BLOCKS = PHYSICAL_SIZE / PHYSICAL_BLOCK_SIZE;
+1120   1         LOG_SIZE = PHYSICAL_SIZE - LOG_ADDR;
+1121   1      }
+1122          //-----------------------------------------------------------------------------
+1123          // MMC_FLASH_Read
+1124          //-----------------------------------------------------------------------------
+1125          //
+1126          // This function reads <length> bytes of FLASH from MMC address <address>, and
+1127          // stores them in external RAM at the location pointed to by <pchar>.
+1128          // There are two cases that must be considered when performing a read.  If the
+1129          // requested data is located entirely in a single FLASH block, the function
+1130          // sets the read length appropriately and issues a read command.  If requested
+1131          // data crosses a FLASH block boundary, the read operation is broken into two
+1132          // parts.  The first part reads data from the starting address to the end of 
+1133          // the starting block, and then reads from the start of the next block to the
+1134          // end of the requested data.  Before each read, the read length must be set
+1135          // to the proper value.
+1136          unsigned char MMC_FLASH_Read (unsigned long address, unsigned char *pchar,
+1137                                   unsigned int length)
+1138          {
+1139   1         idata unsigned long flash_page_1;   // Stores address of first FLASH page;
+1140   1         idata unsigned long flash_page_2;   // Stores address of second FLASH page;
+1141   1         idata unsigned int card_status;     // Stores MMC status after each MMC
+1142   1                                             // command;
+1143   1      
+1144   1         if(length > 512) return 0;          // Test for valid data length;  Length
+1145   1                                             // must be less than 512 bytes;
+1146   1                                             // Find address of first FLASH block;
+1147   1         flash_page_1 = address & ~(PHYSICAL_BLOCK_SIZE-1);
+1148   1                                             // Find address of second FLASH block;
+1149   1         flash_page_2 = (address+length-1) & ~(PHYSICAL_BLOCK_SIZE-1);
+1150   1         if(flash_page_1 == flash_page_2)    // Execute the following if data is 
+1151   1         {                                   // located within one FLASH block;
+1152   2                                             // Set read length to requested data
+1153   2                                             // length;
+1154   2            card_status = MMC_Command_Exec(SET_BLOCKLEN,(unsigned long)length,
+1155   2                                       EMPTY);
+1156   2                                             // Issue read command;
+1157   2            card_status = MMC_Command_Exec(READ_SINGLE_BLOCK,address,pchar);
+1158   2         }
+1159   1         else                                // Execute the following if data crosses
+1160   1         {                                   // MMC block boundary;
+1161   2                                             // Set the read length to the length
+1162   2                                             // from the starting address to the
+1163   2                                             // end of the first FLASH page;
+1164   2            card_status = MMC_Command_Exec(SET_BLOCKLEN,
+1165   2                                      (unsigned long)(flash_page_2 - address),
+1166   2                                       EMPTY);
+1167   2                                             // Issue read command;
+1168   2            card_status = MMC_Command_Exec(READ_SINGLE_BLOCK,address,pchar);
+1169   2                                             // Set read length to the length from
+1170   2                                             // the start of the second FLASH page
+1171   2                                             // to the end of the data;
+C51 COMPILER V9.00   MMC_DATALOGGER                                                        03/27/2012 11:30:16 PAGE 20  
+
+1172   2            card_status = MMC_Command_Exec(SET_BLOCKLEN,
+1173   2                                      (unsigned long)length - 
+1174   2                                      (flash_page_2 - address),
+1175   2                                       EMPTY);
+1176   2                                             // Issue second read command;  Notice
+1177   2                                             // that the incoming data stored in 
+1178   2                                             // external RAM must be offset from the
+1179   2                                             // original pointer value by the length
+1180   2                                             // of data stored during the first read 
+1181   2                                             // operation;
+1182   2            card_status = MMC_Command_Exec(READ_SINGLE_BLOCK,flash_page_2,
+1183   2                                       pchar + (flash_page_2 - address));
+1184   2         }
+1185   1      }
+1186          
+1187          //-----------------------------------------------------------------------------
+1188          // MMC_FLASH_Clear
+1189          //-----------------------------------------------------------------------------
+1190          //
+1191          // This function erases <length> bytes of flash starting at address <address>.
+1192          // The <scratch> pointer points to a 512 byte area of XRAM that can
+1193          // be used as temporary storage space.  The flow of this function is similar
+1194          // to the FLASH_Read function in that there are two possible cases.  If the
+1195          // space to be cleared is contained within one MMC block, the block can be
+1196          // stored locally and erased from the MMC.  Then the desired area can be 
+1197          // cleared in the local copy and the block can be written back to the MMC.  If 
+1198          // the desired clear area crosses a FLASH block boundary, the previous steps 
+1199          // must be executed seperately for both blocks.
+1200          unsigned char MMC_FLASH_Clear (unsigned long address, unsigned char *scratch,
+1201                                    unsigned int length)
+1202          {
+1203   1         idata unsigned long flash_page_1;   // Stores address of first FLASH page;
+1204   1         idata unsigned long flash_page_2;   // Stores address of second FLASH page;
+1205   1         idata unsigned int card_status;     // Stores MMC status after each MMC
+1206   1                                             // command;
+1207   1         idata unsigned int counter;         // Counter for clearing bytes in local
+1208   1                                             // block copy;
+1209   1         unsigned char xdata *index;         // Index into local block used for 
+1210   1                                             // clearing desired data;
+1211   1         if(length > 512) return 0;          // Test desired clear length;  If 
+1212   1                                             // length > 512, break out and return
+1213   1                                             // zero;
+1214   1                                             // Calculate first FLASH page address;
+1215   1         flash_page_1 = address & ~(PHYSICAL_BLOCK_SIZE-1);
+1216   1                                             // Calculate second FLASH page address;
+1217   1         flash_page_2 = (address+length-1) & ~(PHYSICAL_BLOCK_SIZE-1);
+1218   1         if(flash_page_1 == flash_page_2)    // Clear space all in one FLASH block
+1219   1         {                                   // condition;
+1220   2                                             // Read first FLASH block;
+1221   2            card_status = MMC_Command_Exec(SET_BLOCKLEN,
+1222   2                                       (unsigned long)PHYSICAL_BLOCK_SIZE,
+1223   2                                       EMPTY);
+1224   2            card_status = MMC_Command_Exec(READ_SINGLE_BLOCK,flash_page_1,scratch);
+1225   2                                             // Set index to address of area to clear
+1226   2                                             // in local block;
+1227   2            index = (unsigned int)(address % PHYSICAL_BLOCK_SIZE) + scratch;
+*** WARNING C259 IN LINE 1227 OF MMC_DATALOGGER.C: '=': pointer: different mspace
+1228   2            counter = 0;
+1229   2            while(counter<length)            // Clear desired area in local block;
+1230   2            {
+1231   3               *index++ = 0x00;
+1232   3               counter++;
+C51 COMPILER V9.00   MMC_DATALOGGER                                                        03/27/2012 11:30:16 PAGE 21  
+
+1233   3            }
+1234   2                                             // Tag first FLASH page for erase;
+1235   2            card_status = MMC_Command_Exec(TAG_SECTOR_START,flash_page_1,EMPTY);
+1236   2            card_status = MMC_Command_Exec(TAG_SECTOR_END,flash_page_1,EMPTY);
+1237   2                                             // Erase first FLASH page;
+1238   2            card_status = MMC_Command_Exec(ERASE,EMPTY,EMPTY);
+1239   2                                             // Write local copy of block back out
+1240   2                                             // to MMC;
+1241   2            card_status = MMC_Command_Exec(WRITE_BLOCK,flash_page_1,scratch);
+1242   2         }
+1243   1         else                                // Clear space crosses FLASH block
+1244   1         {                                   // boundaries condition;
+1245   2                                             // Follow same procedure as for single
+1246   2                                             // block case above;  Read first block
+1247   2                                             // clear data from start address to end
+1248   2                                             // of block;  Erase block in FLASH;
+1249   2                                             // Write local copy back out;
+1250   2            card_status = MMC_Command_Exec(SET_BLOCKLEN,
+1251   2                                       (unsigned long)PHYSICAL_BLOCK_SIZE,
+1252   2                                       EMPTY);
+1253   2            card_status = MMC_Command_Exec(READ_SINGLE_BLOCK,flash_page_1,scratch);
+1254   2            index = (unsigned int)(address % PHYSICAL_BLOCK_SIZE) + scratch;
+*** WARNING C259 IN LINE 1254 OF MMC_DATALOGGER.C: '=': pointer: different mspace
+1255   2            counter = (unsigned int)(flash_page_2 - address);
+1256   2            while(counter > 0)
+1257   2            {
+1258   3               *index++ = 0xFF;
+1259   3               counter--;
+1260   3            }
+1261   2            card_status = MMC_Command_Exec(TAG_SECTOR_END,flash_page_1,EMPTY);
+1262   2            card_status = MMC_Command_Exec(ERASE,EMPTY,EMPTY);
+1263   2            card_status = MMC_Command_Exec(WRITE_BLOCK,flash_page_1,scratch);
+1264   2                                             // Same process as above, but using
+1265   2                                             // second FLASH block;  Area to be
+1266   2                                             // cleared extends from beginning of
+1267   2                                             // second FLASH block to end of desired
+1268   2                                             // clear area;
+1269   2            card_status = MMC_Command_Exec(READ_SINGLE_BLOCK,flash_page_2,scratch);
+1270   2            index = scratch;
+*** WARNING C259 IN LINE 1270 OF MMC_DATALOGGER.C: '=': pointer: different mspace
+1271   2            counter = (unsigned int)(length - (flash_page_2 - address));
+1272   2            while(counter > 0)
+1273   2            {
+1274   3               *index++ = 0xFF;
+1275   3               counter--;
+1276   3            }
+1277   2            card_status = MMC_Command_Exec(TAG_SECTOR_END,flash_page_2,EMPTY);
+1278   2            card_status = MMC_Command_Exec(ERASE,EMPTY,EMPTY);
+1279   2            card_status = MMC_Command_Exec(WRITE_BLOCK,flash_page_2,scratch);
+1280   2         }
+1281   1      }
+1282          
+1283          //-----------------------------------------------------------------------------
+1284          // MMC_FLASH_Write
+1285          //-----------------------------------------------------------------------------
+1286          //
+1287          // This function operates much like the MMC_FLASH_Clear and MMC_FLASH_Read
+1288          // functions.  As with the others, if the desired write space crosses a FLASH 
+1289          // block boundary, the operation must be broken into two pieces.  
+1290          // MMC_FLASH_Write uses the MMC_FLASH_Clear function to clear the write space 
+1291          // before issuing any writes.  The desired write space is cleared using 
+1292          // MMC_FLASH_Clear, then the data is read in, the previously cleared write 
+C51 COMPILER V9.00   MMC_DATALOGGER                                                        03/27/2012 11:30:16 PAGE 22  
+
+1293          // space is modified, and the data is written back out.
+1294          //
+1295          // While it would be more efficient to avoid the MMC_FLASH_Clear and simply 
+1296          // perform a read-modify-write operation, using MMC_FLASH_Clear helps make the 
+1297          // process easier to understand.
+1298          unsigned char MMC_FLASH_Write (unsigned long address, unsigned char *scratch,
+1299                                    unsigned char *wdata, unsigned int length)
+1300          {
+1301   1         idata unsigned long flash_page_1;   // First FLASH page address;
+1302   1         idata unsigned long flash_page_2;   // Second FLASH page address;
+1303   1         idata unsigned int card_status;     // Stores status returned from MMC;
+1304   1         idata unsigned int counter;         // Byte counter used for writes to 
+1305   1                                             // local copy of data block;
+1306   1         unsigned char xdata *index;         // Pointer into local copy of data
+1307   1                                             // block, used during modification;
+1308   1         MMC_FLASH_Clear(address,scratch,length); // Clear desired write space;
+1309   1         if(length > 512) return 0;          // Check for valid data length;
+1310   1                                             // Calculate first FLASH page address;
+1311   1         flash_page_1 = address & ~(PHYSICAL_BLOCK_SIZE-1);
+1312   1                                             // Calculate second FLASH page address;
+1313   1         flash_page_2 = (address+length-1) & ~(PHYSICAL_BLOCK_SIZE-1);
+1314   1         if(flash_page_1 == flash_page_2)    // Handle single FLASH block condition;
+1315   1         {
+1316   2                                             // Set block length to default block
+1317   2                                             // size (512 bytes);
+1318   2            card_status = MMC_Command_Exec(SET_BLOCKLEN,
+1319   2                                       (unsigned long)PHYSICAL_BLOCK_SIZE,
+1320   2                                       EMPTY);
+1321   2                                             // Read data block;
+1322   2            card_status = MMC_Command_Exec(READ_SINGLE_BLOCK,flash_page_1,scratch);
+1323   2            index = (unsigned int)(address % PHYSICAL_BLOCK_SIZE) + scratch;
+*** WARNING C259 IN LINE 1323 OF MMC_DATALOGGER.C: '=': pointer: different mspace
+1324   2            counter = 0;
+1325   2            while(counter<length)            // Modify write space in local copy;
+1326   2            {
+1327   3               *index++ = *wdata++;
+1328   3               counter++;
+1329   3            }
+1330   2                                             // Write modified block back to MMC;
+1331   2            card_status = MMC_Command_Exec(WRITE_BLOCK,flash_page_1,scratch);
+1332   2         }
+1333   1         else                                // Handle multiple FLASH block 
+1334   1         {                                   // condition;
+1335   2                                             // Set block length to default block
+1336   2                                             // size (512 bytes);
+1337   2            card_status = MMC_Command_Exec(SET_BLOCKLEN,
+1338   2                                       (unsigned long)PHYSICAL_BLOCK_SIZE,
+1339   2                                       EMPTY);
+1340   2                                             // Read first data block;
+1341   2            card_status = MMC_Command_Exec(READ_SINGLE_BLOCK,flash_page_1,scratch);
+1342   2            index = (unsigned int)(address % PHYSICAL_BLOCK_SIZE) + scratch;
+*** WARNING C259 IN LINE 1342 OF MMC_DATALOGGER.C: '=': pointer: different mspace
+1343   2            counter = (unsigned int)(flash_page_2 - address);
+1344   2            while(counter > 0)               // Modify data in local copy of first
+1345   2            {                                // block;
+1346   3               *index++ = *wdata++;
+1347   3               counter--;
+1348   3            }
+1349   2                                             // Write local copy back to MMC;
+1350   2            card_status = MMC_Command_Exec(WRITE_BLOCK,flash_page_1,scratch);
+1351   2                                             // Read second data block;
+1352   2            card_status = MMC_Command_Exec(READ_SINGLE_BLOCK,flash_page_2,scratch);
+C51 COMPILER V9.00   MMC_DATALOGGER                                                        03/27/2012 11:30:16 PAGE 23  
+
+1353   2            index = scratch;
+*** WARNING C259 IN LINE 1353 OF MMC_DATALOGGER.C: '=': pointer: different mspace
+1354   2            counter = (unsigned int)(length - (flash_page_2 - address));
+1355   2            while(counter > 0)               // Modify data in local copy of second
+1356   2            {                                // block;
+1357   3               *index++ = *wdata++;
+1358   3               counter--;
+1359   3            }
+1360   2                                             // Write local copy back to MMC;
+1361   2            card_status = MMC_Command_Exec(WRITE_BLOCK,flash_page_2,scratch);
+1362   2         }
+1363   1      }
+1364          
+1365          //-----------------------------------------------------------------------------
+1366          // MMC_FLASH_MassErase
+1367          //-----------------------------------------------------------------------------
+1368          //
+1369          // This function erases <length> bytes of flash starting with the block
+1370          // indicated by <address1>.  This function only handles sector-sized erases
+1371          // or larger.  Function should be called with sector-aligned erase addresses.
+1372          unsigned char MMC_FLASH_MassErase (unsigned long address1, 
+1373                                             unsigned long length)
+1374          {
+1375   1         idata unsigned char card_status;    // Stores card status returned from MMC;
+1376   1                                             // Store start and end sectors to be
+1377   1                                             // to be erased;
+1378   1         idata unsigned long flash_page_1, flash_page_2;
+1379   1                                             // Store start and end groups to be
+1380   1                                             // erased;
+1381   1         idata unsigned long flash_group_1, flash_group_2;
+1382   1                                             // Compute first sector address for 
+1383   1                                             // erase;
+1384   1         flash_page_1 = address1 & ~(PHYSICAL_BLOCK_SIZE-1);
+1385   1                                             // Compute first group address for 
+1386   1                                             // erase;
+1387   1         flash_group_1 = flash_page_1 &~(PHYSICAL_GROUP_SIZE-1);
+1388   1                                             // Compute last sector address for 
+1389   1                                             // erase;
+1390   1         flash_page_2 = (address1 + length) & ~(PHYSICAL_BLOCK_SIZE-1);
+1391   1                                             // Compute last group address for erase;
+1392   1         flash_group_2 = flash_page_2 &~(PHYSICAL_GROUP_SIZE-1);
+1393   1      
+1394   1         if(flash_group_1 == flash_group_2)  // Handle condition where entire erase
+1395   1         {                                   // space is in one erase group;
+1396   2                                             // Tag first sector;
+1397   2            card_status = MMC_Command_Exec(TAG_SECTOR_START,flash_page_1,EMPTY);
+1398   2                                             // Tag last sector;
+1399   2            card_status = MMC_Command_Exec(TAG_SECTOR_END,flash_page_2,EMPTY);
+1400   2                                             // Issue erase command;
+1401   2            card_status = MMC_Command_Exec(ERASE,EMPTY,EMPTY);
+1402   2         }
+1403   1         else                                // Handle condition where erase space
+1404   1         {                                   // crosses an erase group boundary;
+1405   2                                             // Tag first erase sector;
+1406   2            card_status = MMC_Command_Exec(TAG_SECTOR_START,flash_page_1,EMPTY);
+1407   2                                             // Tag last sector of first group;
+1408   2            card_status = MMC_Command_Exec(TAG_SECTOR_END,
+1409   2                                      (flash_group_1 + 
+1410   2                                      (unsigned long)(PHYSICAL_GROUP_SIZE 
+1411   2                                      - PHYSICAL_BLOCK_SIZE)),EMPTY);
+1412   2                                             // Issue erase command;
+1413   2            card_status = MMC_Command_Exec(ERASE,EMPTY,EMPTY);
+C51 COMPILER V9.00   MMC_DATALOGGER                                                        03/27/2012 11:30:16 PAGE 24  
+
+1414   2                                             // Tag first sector of last erase group;
+1415   2            card_status = MMC_Command_Exec(TAG_SECTOR_START,flash_group_2,EMPTY);
+1416   2                                             // Tag last erase sector;
+1417   2            card_status = MMC_Command_Exec(TAG_SECTOR_END,flash_page_2,EMPTY);
+1418   2                                             // Issue erase;
+1419   2            card_status = MMC_Command_Exec(ERASE,EMPTY,EMPTY);
+1420   2                                             // Conditional that erases all groups
+1421   2                                             // between first and last group;
+1422   2            if(flash_group_2 > (flash_group_1 + PHYSICAL_GROUP_SIZE))
+1423   2            {
+1424   3                                             // Tag first whole group to be erased;
+1425   3               card_status = MMC_Command_Exec(TAG_ERASE_GROUP_START,
+1426   3                                         (flash_group_1 + 
+1427   3                                         (unsigned long)PHYSICAL_GROUP_SIZE),EMPTY);
+1428   3                                             // Tag last whole group to be erased;
+1429   3               card_status = MMC_Command_Exec(TAG_ERASE_GROUP_END,
+1430   3                                         (flash_page_2 - 
+1431   3                                         (unsigned long)PHYSICAL_GROUP_SIZE),EMPTY);
+1432   3                                             // Issue erase command;
+1433   3               card_status = MMC_Command_Exec(ERASE,EMPTY,EMPTY);
+1434   3            }
+1435   2         }
+1436   1      
+1437   1         return card_status;
+1438   1      }
+1439          
+1440          //-----------------------------------------------------------------------------
+1441          // Interrupt Service Routines
+1442          //-----------------------------------------------------------------------------
+1443          
+1444          //-----------------------------------------------------------------------------
+1445          // ADC0_ISR
+1446          //-----------------------------------------------------------------------------
+1447          //
+1448          // ADC0 end-of-conversion ISR
+1449          // Here we take the ADC0 sample, add it to a running total <accumulator>, and
+1450          // decrement our local decimation counter <int_dec>.  When <int_dec> reaches
+1451          // zero, we post the decimated result in the global variable <result>.
+1452          //
+1453          // In addition, this ISR is used to keep track of time.  Every 4096 samples,
+1454          // approximately once a second, we update the seconds, minutes, hours, and days
+1455          // for the temperature timestamp.  If the global state is RUNNING or FINISHED,
+1456          // a low priority software interrupt56 is generated and the log is updated.  
+1457          // Using the low priority interrupt allows the MMC communication to execute
+1458          // without disrupting the temperature sampling process.  The ADC end-of-conv
+1459          // interrupt is set to high priority, so it will be executed even if a low
+1460          // priority interrupt is already in progress.
+1461          void ADC0_ISR (void) interrupt 10
+1462          {
+1463   1         static unsigned int_dec=INT_DEC;    // integrate/decimate counter
+1464   1                                             // we post a new result when
+1465   1                                             // int_dec = 0
+1466   1         static LONG accumulator={0L};       // here's where we integrate the
+1467   1                                             // ADC samples
+1468   1      
+1469   1         AD0INT = 0;                         // clear ADC conversion complete
+1470   1                                             // indicator
+1471   1      
+1472   1              accumulator.l += ADC0;              // read ADC value and add to running
+1473   1                                             // total
+1474   1         int_dec--;                          // update decimation counter
+1475   1      
+C51 COMPILER V9.00   MMC_DATALOGGER                                                        03/27/2012 11:30:16 PAGE 25  
+
+1476   1         if (int_dec == 0) {                 // if zero, then post result
+1477   2            int_dec = INT_DEC;               // reset counter
+1478   2      
+1479   2            // Result = accumulator >> 6
+1480   2            // Perform my shifting left 2, then byte-swapping
+1481   2            accumulator.l <<= 2;             // accumulator = accumulator << 2 
+1482   2            Result.b[0] = 0;                 // Result = accumulator >> 8
+1483   2            Result.b[3] = accumulator.b[2];
+1484   2            Result.b[2] = accumulator.b[1];
+1485   2            Result.b[1] = accumulator.b[0];
+1486   2        
+1487   2            accumulator.l = 0L;              // reset accumulator
+1488   2            LogRecord.bSec++;                // update seconds counter
+1489   2            if (LogRecord.bSec == 60) 
+1490   2            {
+1491   3               LogRecord.bSec = 0;
+1492   3               LogRecord.bMin++;             // update minutes counter
+1493   3               if (LogRecord.bMin == 60) 
+1494   3               {
+1495   4                  LogRecord.bMin = 0;
+1496   4                  LogRecord.bHour++;         // update hours counter
+1497   4                  if (LogRecord.bHour == 24) 
+1498   4                  {
+1499   5                     LogRecord.bHour = 0;
+1500   5                     LogRecord.uDay++;       // update days counter
+1501   5                  }
+1502   4               }
+1503   3            }
+1504   2      
+1505   2            if ((State == RUNNING)||(State == FINISHED)) 
+1506   2            {
+1507   3               AD0WINT = 1;
+1508   3            }
+1509   2         }
+1510   1      }
+1511          
+1512          //-----------------------------------------------------------------------------
+1513          // Soft_ISR
+1514          //-----------------------------------------------------------------------------
+1515          //
+1516          // This ISR executes whenever a log update is needed.  It simply clears the 
+1517          // interrupt flag and executes the LogUpdate function.  This is a low priority
+1518          // ISR, so the ADC end-of-conversion ISR will interrupt it if necessary.  This
+1519          // prevents the long MMC communication process from disrupting temperature
+1520          // sampling.
+1521          //
+1522          void Soft_ISR (void) interrupt 9
+1523          {
+1524   1         AD0WINT = 0;                        // Clear software interrupt flag;
+1525   1         LogUpdate();
+1526   1      }
+1527          
+1528          //-----------------------------------------------------------------------------
+1529          // Initialization Subroutines
+1530          //-----------------------------------------------------------------------------
+1531          
+1532          //-----------------------------------------------------------------------------
+1533          // SYSCLK_Init
+1534          //-----------------------------------------------------------------------------
+1535          //
+1536          // This routine initializes the system clock to use the internal 24.5MHz
+1537          // oscillator as its clock source.  Enables missing clock detector reset. Also
+C51 COMPILER V9.00   MMC_DATALOGGER                                                        03/27/2012 11:30:16 PAGE 26  
+
+1538          // configures and enables the external crystal oscillator.
+1539          //
+1540          /*
+1541          void SYSCLK_Init (void)
+1542          {
+1543             OSCICN |= 0x06;                     // Configure internal oscillator for
+1544                                                 // its maximum frequency;
+1545             VDM0CN  = 0x80;                     // Enable VDD Monitor
+1546             RSTSRC |= 0x06;                     // Enable missing clock detector and 
+1547                                                 // VDD Monitor as reset sources;
+1548          
+1549             CLKMUL = 0x00;                      // Reset multiplier; Internal Osc is
+1550                                                 // multiplier source;
+1551             CLKMUL |= 0x80;                     // Enable Clock Multiplier;
+1552          
+1553          // Wait 5 us for multiplier to be enabled
+1554             TMR2CN = 0x00;                      // STOP Timer2; Clear TF2H and TF2L;
+1555                                                 // disable low-byte interrupt; disable
+1556                                                 // split mode; select internal timebase
+1557             CKCON |= 0x10;                      // Timer2 uses SYSCLK as its timebase
+1558          
+1559             TMR2RL  = START_SYSCLK / 200000;    // Init reload values 12 MHz / (5E^-6)
+1560             TMR2    = TMR2RL;                   // Init Timer2 with reload value
+1561             ET2 = 0;                            // disable Timer2 interrupts
+1562             TF2H = 0;
+1563             TR2 = 1;                            // start Timer2
+1564             while (!TF2H);                      // wait for overflow
+1565             TF2H = 0;                           // clear overflow indicator
+1566             TR2 = 0;                            // Stop Timer2;
+1567             
+1568             CLKMUL |= 0xC0;                     // Initialize Clock Multiplier
+1569             while(!(CLKMUL & 0x20))             // Wait for MULRDY
+1570             CLKSEL = 0x02;                      // Select SYSCLK * 4 / 2 as clock source
+1571          }*/
+1572          
+1573          //-----------------------------------------------------------------------------
+1574          // PORT_Init
+1575          //-----------------------------------------------------------------------------
+1576          //
+1577          // Configure the Crossbar and GPIO ports.
+1578          
+1579          // P0.0 - SCK
+1580          // P0.1 - MISO
+1581          // P0.2 - XTAL1 (skipped by Crossbar)
+1582          // P0.3 - XTAL2 (skipped by Crossbar)
+1583          
+1584          // P0.4 - UART TX (push-pull)
+1585          // P0.5 - UART RX
+1586          // P0.6 - MOSI
+1587          // P0.7 - VREF
+1588          // P1.7 - NSS
+1589          
+1590          // P2.2 - LED (push-pull)
+1591          // P2.1 - SW2
+1592          
+1593          //
+1594          
+1595          void PORT_Init (void)
+1596          {
+1597   1       //  P0SKIP  = 0x80;                     // skip VREF in crossbar
+1598   1                                             // assignments
+1599   1         XBR0    = 0x03;                     // UART0 TX and RX pins enabled, SPI
+C51 COMPILER V9.00   MMC_DATALOGGER                                                        03/27/2012 11:30:16 PAGE 27  
+
+1600   1                                             // enabled
+1601   1         XBR1    = 0x40;                     // Enable crossbar and weak pull-ups
+1602   1      
+1603   1        // P0MDIN &= ~0x80;                    // configure VREF as analog input
+1604   1      
+1605   1         P0MDOUT |= 0x1D;                    // enable TX0,SCK,MOSI as a push-pull
+1606   1         P2MDOUT |= 0x04;                    // enable LED as a push-pull output
+1607   1      }
+1608          
+1609          //-----------------------------------------------------------------------------
+1610          // UART0_Init
+1611          //-----------------------------------------------------------------------------
+1612          //
+1613          // Configure the UART0 using Timer1, for <BAUDRATE> and 8-N-1.
+1614          //
+1615          void UART0_Init (void)
+1616          {
+1617   1         SCON0 = 0x10;                       // SCON0: 8-bit variable bit rate
+1618   1                                             //        level of STOP bit is ignored
+1619   1                                             //        RX enabled
+1620   1                                             //        ninth bits are zeros
+1621   1                                             //        clear RI0 and TI0 bits
+1622   1         if (SYSCLK/BAUDRATE/2/256 < 1) 
+1623   1         {
+1624   2            TH1 = -(SYSCLK/BAUDRATE/2);
+1625   2            CKCON |=  0x08;                  // T1M = 1; SCA1:0 = xx
+1626   2         } 
+1627   1         else if (SYSCLK/BAUDRATE/2/256 < 4) 
+1628   1         {
+1629   2            TH1 = -(SYSCLK/BAUDRATE/2/4);
+1630   2            CKCON &= ~0x0B;                  
+1631   2            CKCON |=  0x01;                  // T1M = 0; SCA1:0 = 01
+1632   2         } 
+1633   1         else if (SYSCLK/BAUDRATE/2/256 < 12) 
+1634   1         {
+1635   2            TH1 = -(SYSCLK/BAUDRATE/2/12);
+1636   2            CKCON &= ~0x0B;                  // T1M = 0; SCA1:0 = 00
+1637   2         } 
+1638   1         else 
+1639   1         {
+1640   2            TH1 = -(SYSCLK/BAUDRATE/2/48);
+1641   2            CKCON &= ~0x0B;                  // T1M = 0; SCA1:0 = 10
+1642   2            CKCON |=  0x02;
+1643   2         }
+1644   1      
+1645   1         TL1 = TH1;                          // init Timer1
+1646   1         TMOD &= ~0xf0;                      // TMOD: timer 1 in 8-bit autoreload
+1647   1         TMOD |=  0x20;
+1648   1         TR1 = 1;                            // START Timer1
+1649   1         TI0 = 1;                            // Indicate TX0 ready
+1650   1      }
+1651          
+1652          //-----------------------------------------------------------------------------
+1653          // SPI0_Init
+1654          //-----------------------------------------------------------------------------
+1655          //
+1656          // Configure SPI0 for 8-bit, 2MHz SCK, Master mode, polled operation, data
+1657          // sampled on 1st SCK rising edge.
+1658          //
+1659          void SPI_Init (void)
+1660          {
+1661   1         SPI0CFG = 0x70;                     // data sampled on rising edge, clk
+C51 COMPILER V9.00   MMC_DATALOGGER                                                        03/27/2012 11:30:16 PAGE 28  
+
+1662   1                                             // active low,
+1663   1                                             // 8-bit data words, master mode;
+1664   1      
+1665   1         SPI0CN = 0x0F;                      // 4-wire mode; SPI enabled; flags
+1666   1                                             // cleared
+1667   1         SPI0CKR = SYSCLK/2/10000000;        // SPI clock <= 10MHz
+1668   1      }
+1669          
+1670          //-----------------------------------------------------------------------------
+1671          // ADC0_Init
+1672          //-----------------------------------------------------------------------------
+1673          //
+1674          // Configure ADC0 to use Timer2 overflows as conversion source, to
+1675          // generate an interrupt on conversion complete, and to sense the output of
+1676          // the temp sensor with a gain of 2 (we want the white noise).  Enables ADC
+1677          // end of conversion interrupt.  Leaves ADC disabled.
+1678          //
+1679          void ADC0_Init (void)
+1680          {
+1681   1         ADC0CN = 0x02;                      // ADC0 disabled; normal tracking
+1682   1                                             // mode; ADC0 conversions are initiated
+1683   1                                             // on overflow of Timer2;
+1684   1      //   AMX0P = 0x1E;                       // Select temp sensor as positive input;
+1685   1       //  AMX0N = 0x1F;                       // Select GND as negative input;
+1686   1         ADC0CF = (SYSCLK/2000000) << 3;     // ADC conversion clock <= 2.0MHz
+1687   1         REF0CN = 0x07;                      // Enable temp sensor, bias generator,
+1688   1                                             // and internal VREF;
+1689   1         EIE1 |= 0x08;                       // Enable ADC0 EOC interrupt;
+1690   1         EIP1 |= 0x08;                       // ADC EOC interrupt is high priority;
+1691   1      }
+1692          
+1693          
+1694          //-----------------------------------------------------------------------------
+1695          // Soft_Init
+1696          //-----------------------------------------------------------------------------
+1697          //
+1698          // This function enables ADC Window Compare interrupts and clears the interrupt
+1699          // flag.  Since the window compare interrupt is not being used in this example,
+1700          // we can use it as a low priority software interrupt.  This interrupt can be 
+1701          // used to execute log updates without disturbing the ADC sampling process.
+1702          //
+1703          void Soft_Init (void)
+1704          {
+1705   1         AD0WINT = 0;                        // Clear ADC0 window compare interrupt
+1706   1                                             // flag;
+1707   1         EIE1 |= 0x04;                       // Enable ADC0 window compare 
+1708   1                                             // interrupts;
+1709   1      }
+1710          
+1711          //-----------------------------------------------------------------------------
+1712          // Timer2_Init
+1713          //-----------------------------------------------------------------------------
+1714          //
+1715          // This routine initializes Timer2 to use SYSCLK as its timebase and to
+1716          // generate an overflow at <SAMPLE_RATE> Hz.
+1717          //
+1718          void Timer2_Init (int counts)
+1719          {
+1720   1         TMR2CN = 0x01;                      // Clear TF2H, TF2L; disable TF2L
+1721   1                                             // interrupts; T2 in 16-bit mode;
+1722   1                                             // Timer2 stopped; 
+1723   1         CKCON |= 0x30;                      // Timer 2 uses SYSCLK as clock
+C51 COMPILER V9.00   MMC_DATALOGGER                                                        03/27/2012 11:30:16 PAGE 29  
+
+1724   1                                             // source
+1725   1         TMR2RL = -counts;                   // reload once per second
+1726   1         TMR2 = TMR2RL;                      // init Timer2
+1727   1         ET2 = 0;                            // Disable Timer2 interrupts
+1728   1         TR2 = 1;                            // Start Timer2
+1729   1      }
+*** WARNING C291 IN LINE 1185 OF MMC_DATALOGGER.C: not every exit path returns a value
+*** WARNING C291 IN LINE 1281 OF MMC_DATALOGGER.C: not every exit path returns a value
+*** WARNING C291 IN LINE 1363 OF MMC_DATALOGGER.C: not every exit path returns a value
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   5000    ----
+   CONSTANT SIZE    =    526    ----
+   XDATA SIZE       =    798    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     12      70
+   IDATA SIZE       =      2      92
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  9 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,4 @@
+"C:\Leonid 7\WorkDirectory\kza\SPI_MMC\init.obj",
+"C:\Leonid 7\WorkDirectory\kza\SPI_MMC\servo.obj",
+"C:\Leonid 7\WorkDirectory\kza\SPI_MMC\tarservo.obj",
+"C:\Leonid 7\WorkDirectory\kza\SPI_MMC\mmcflash6.obj"  TO "C:\Leonid 7\WorkDirectory\kza\SPI_MMC\2.omf" RS(256) PL(68) PW(78) 

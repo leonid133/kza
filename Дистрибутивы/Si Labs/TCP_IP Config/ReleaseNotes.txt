@@ -1,0 +1,85 @@
+Silicon Laboratories TCP/IP Configuration Wizard Release 3.23a Release Notes
+Copyright (C) 2008 Silicon Laboratories, Inc.
+
+
+
+Known Issues
+------------
+
+	1.) Supported devices include: C8051F12x, C8051F13x, C8051F02x, C8051F34x
+
+	2.) Firmware and libraries work with the Keil C51 tool chain.
+	Version 5.15.0.1 or later of BL51 must be used to link into 
+	the TCP/IP library. 
+
+	3.) Corresponding with release 3.0 is a change in installation strategy. 
+	This release will now be compatible with the release downloaded from 
+	www.silabs.com. Due to this change, release 3.0 will not recognize 
+	previous installations. The new installation will overwrite any 
+	existing files if installed to the same location as a previous 
+	installion. Attempting to uninstall a previous installation will affect 
+	the new installation if located in the same directory. 
+
+	
+Release Dates
+-------------
+
+	TCP/IP Configuration Wizard Version 3.23a - July 28, 2008
+	TCP/IP Configuration Wizard Version 3.23 - September 5, 2007
+
+
+
+TCP/IP Configuration Wizard Revision History
+--------------------------------------------
+Version 3.23a
+	1.) Updated the TCP_Telnet example.
+
+
+Version 3.23
+	1.) Added workaround for CP2200 MAC Address Filtering issue (see Section 17.2 of datasheet for details).
+
+Version 3.21
+
+	1.) Output libraries support C8051F04x and C8051F06x.
+
+Version 3.20
+
+	1.) Fixed bug in TCP module which caused spurious TCP RESET messages to be sent.
+	2.) Added CGI_Script Ethernet Examples for all devices.
+	2.) Added TCP_Telnet Ethernet Examples for all devices.
+
+Version 3.1
+
+	1.) Modified to support Rev C and later of the CP220x.
+
+	2.) Added NetFinder module.
+
+	3.) Added DNS module.
+
+	4.) Added USB FIFO support for the C8051F34x device family.
+
+	5.) Added capability to serve content directly from CP220x Flash.
+
+
+Version 3.0
+
+	1.) Added support for CP2200 and removed support for CS8900A.
+
+	2.) Added support for C8051F02x and C8051F34x.
+
+
+Version 2.0
+
+	1.) Added support for CS8900A and Custom Ethernet Devices.
+
+	2.) Added support for code banking on the C8051F12x.
+
+	3.) Added NOOL and XD(10H) Linker directive to Project File.
+
+Version 1.0
+
+	Initial Release
+
+
+
+

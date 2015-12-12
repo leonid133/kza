@@ -1,0 +1,95 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- saved from url=(0040)http://catalog.gaw.ru/search_gaw_ru.html -->
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Поиск</title>
+<meta http-equiv="pragma" content="no-cache">
+<meta name="copyright" content="Рынок Микроэлектроники">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<link rel="shortcut icon" href="http://catalog.gaw.ru/favicon.ico">
+
+<script language="JavaScript" src="jquery.js"></script>
+<link rel="stylesheet" type="text/css" href="nextpage_style_public.css">
+<link href="style_n.css" type="text/css" rel="STYLESHEET">
+<!--[if lt IE 8]><link href="/project/templates/public_www2/css/main_ie.css" rel="stylesheet" type="text/css" media="all" /><![endif]-->
+<script src="common.js"></script>
+
+<script src="chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/document_iterator.js"></script><script src="chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/find_proxy.js"></script><script src="chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/get_html_text.js"></script><script src="chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/global_constants.js"></script><script src="chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/name_injection_builder.js"></script><script src="chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/number_injection_builder.js"></script><script src="chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/string_finder.js"></script><script src="chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/change_sink.js"></script><meta name="document_iterator.js"><meta name="find_proxy.js"><meta name="get_html_text.js"><meta name="global_constants.js"><meta name="name_injection_builder.js"><meta name="number_injection_builder.js"><meta name="string_finder.js"><meta name="change_sink.js"></head>
+<body bgcolor="FFFFFF" text="000000" topmargin="0" leftmargin="0" marginheight="0" marginwidth="0" link="0E50CB" vlink="0E50CB">
+
+
+<!-- AREA admin_panel -->
+
+
+<form action="http://catalog.gaw.ru/index.php" method="GET" id="search_form" target="_parent">
+    <input type="hidden" name="page" value="search_components_result" id="search_page_name">
+    <input type="hidden" name="range" value="ff" id="search_range">
+
+<table cellspacing="0" cellpadding="0" border="0">
+<tbody><tr>
+    <td>
+		  <table border="0" cellspacing="0" cellpadding="0">
+		   <tbody><tr>
+		   <td>
+		   <img src="serchl.jpg" width="9" height="39" border="0" alt="">
+		   </td>
+		    <td background="serchbg.jpg" width="226">
+		   <div id="input"><input class="itxt" type="text" name="s" value="">
+				</div>
+		   </td>
+		    <td>
+		   <img src="serchr.jpg" width="9" height="39" border="0" alt="">
+		   </td>
+		   </tr>
+
+		   <tr>
+		   <td colspan="3"><input type="checkbox" name="not_only_by_name" id="not_only_by_name"> <label for="not_only_by_name" id="onluname">по всем полям</label>
+<!--		   <a id="onluname">только в названии</a> -->&nbsp;
+		   <a href="http://catalog.gaw.ru/index.php?page=search_extended_form" id="onluname" target="_blank">Расширенный</a>
+		   </td>
+		   </tr>
+		  </tbody></table>
+	</td>
+    <td valign="top">
+		  <table border="0" cellspacing="0" cellpadding="0">
+		   <tbody><tr>
+		   <td><img src="topbutleft.jpg" width="22" height="41" border="0" alt=""></td>
+		   <td background="topbutbg.jpg"><div id="top"><a href="javascript:goSearch('search_components_result')" id="menutext"><nobr>В компонентах</nobr></a></div></td>
+		   <td><img src="topbutright.jpg" width="9" height="41" border="0" alt=""></td>
+		   
+		   <td><img src="topbutleft.jpg" width="22" height="41" border="0" alt=""></td>
+		   <td background="topbutbg.jpg"><div id="top"><a href="javascript:goSearch('search_firms_result')" id="menutext"><nobr>По фирмам</nobr></a></div></td>
+		   <td><img src="topbutright.jpg" width="9" height="41" border="0" alt=""></td>
+<!--		   
+		    <td><img src="http://www.gaw.ru/im_n/topbutleft.jpg" width="22" height="41" border="0" alt=""></td>
+		   <td background="http://www.gaw.ru/im_n/topbutbg.jpg"><div id="top"><a href="javascript:goSearch('search_store_result')" id="menutext"><nobr>По складам</nobr></a></td>
+		   <td><img src="http://www.gaw.ru/im_n/topbutright.jpg" width="9" height="41" border="0" alt=""></td>
+-->		   
+		  </tr>
+		 </tbody></table>
+	</td>
+</tr>
+</tbody></table>
+</form>
+
+<script>
+function goSearch(page_name)
+{
+    if (page_name=='pdf')
+    {
+        $("#search_page_name").attr('value','search_documents_result');
+        $("#search_range").attr('value','pdf');
+    }
+    else
+    {
+        $("#search_page_name").attr('value',page_name);
+    }
+    
+    $("#search_form").get(0).submit();
+}
+</script>
+<!-- AREA search_form -->
+
+
+
+</body><span id="skype_highlighting_settings" display="none" autoextractnumbers="1"></span><object id="skype_plugin_object" location.href="http://catalog.gaw.ru/search_gaw_ru.html" location.hostname="catalog.gaw.ru" style="position: absolute; visibility: hidden; left: -100px; top: -100px; " width="0" height="0" type="application/x-vnd.skype.click2call.chrome.5.7.0"></object></html>

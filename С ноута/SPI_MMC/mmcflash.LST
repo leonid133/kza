@@ -1,0 +1,368 @@
+C51 COMPILER V9.00   MMCFLASH                                                              04/17/2012 13:44:00 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE MMCFLASH
+OBJECT MODULE PLACED IN mmcflash.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.exe mmcflash.c DB OE BR
+
+line level    source
+
+   1          #include "c8051f120.h"
+   2          #include "mmcflash.h"
+   3          #include <intrins.h>
+   4          #include <stdio.h>                     
+   5          #include <ctype.h> 
+   6          
+   7          //SPI------------------------------------------------------------------
+   8          void SPI_Init (void)
+   9          {
+  10   1              SPI0CFG = 0x40;
+  11   1              SPI0CN = 0x0F;
+  12   1              SPI0CKR = 0x08; //2.8 Mhz
+  13   1      }                                                                                                         
+             -                                                                                                                        
+             -                                                                  
+  14          
+  15          //-----------------------------------------------------------------------
+  16          void MMC_init(void)
+  17          {
+  18   1              xdata unsigned int i, i2;
+  19   1              xdata unsigned char b;
+  20   1      
+  21   1              xdata char SFRPAGE_SAVE = SFRPAGE;
+  22   1              SFRPAGE = SPI0_PAGE;
+  23   1      
+  24   1              P3_2 = 1;
+  25   1      
+  26   1              for (i = 0; i < 10; i++)
+  27   1              {
+  28   2                      SPI0DAT = 0xFF; while(SPIF == 0) ;   SPIF = 0;
+  29   2              }
+  30   1      
+  31   1              P3_2 = 0;
+  32   1      //CMD0 
+  33   1              SPI0DAT = 0x40; while(SPIF == 0) ;   SPIF = 0;
+  34   1              SPI0DAT = 0x00;   while(SPIF == 0) ;   SPIF = 0;
+  35   1              SPI0DAT = 0x00;   while(SPIF == 0) ;   SPIF = 0;
+  36   1              SPI0DAT = 0x00;   while(SPIF == 0) ;   SPIF = 0;
+  37   1              SPI0DAT = 0x00; while(SPIF == 0) ;   SPIF = 0;
+  38   1              SPI0DAT = 0x95;   while(SPIF == 0) ;   SPIF = 0;
+  39   1              
+  40   1              do
+  41   1              {
+  42   2                      SPI0DAT = 0xFF; while(SPIF == 0)        ;       SPIF = 0;
+  43   2                      b = SPI0DAT;
+  44   2              } while(b == 0xFF);
+  45   1              while(SPI0DAT != 0xFF)
+  46   1              {
+  47   2                      SPI0DAT = 0xFF; while(SPIF == 0) ;      SPIF = 0;
+  48   2              }
+  49   1      
+  50   1              do
+  51   1              {
+  52   2                      //CMD1  
+  53   2                      P3_2 = 1;
+C51 COMPILER V9.00   MMCFLASH                                                              04/17/2012 13:44:00 PAGE 2   
+
+  54   2                      for (i = 0; i < 10; i++)
+  55   2                      {
+  56   3                              SPI0DAT = 0xFF; while(SPIF == 0) ;      SPIF = 0;
+  57   3                      }
+  58   2      
+  59   2                      P3_2 = 0;
+  60   2      
+  61   2                      SPI0DAT = 0x41; while(SPIF == 0) ;      SPIF = 0;
+  62   2                      SPI0DAT = 0x00; while(SPIF == 0) ;      SPIF = 0;
+  63   2                      SPI0DAT = 0x00; while(SPIF == 0) ;      SPIF = 0;
+  64   2                      SPI0DAT = 0x00; while(SPIF == 0) ;      SPIF = 0;
+  65   2                      SPI0DAT = 0x00; while(SPIF == 0) ;      SPIF = 0;
+  66   2                      SPI0DAT = 0xFF; while(SPIF == 0) ;      SPIF = 0;
+  67   2              b = SPI0DAT;
+  68   2                      do
+  69   2                      {
+  70   3                              SPI0DAT = 0xFF; while(SPIF == 0) ;      SPIF = 0;
+  71   3                              b = SPI0DAT;
+  72   3                      } while(b == 0xFF);
+  73   2              
+  74   2                      while(SPI0DAT != 0xFF) 
+  75   2                      {
+  76   3                              SPI0DAT = 0xFF; while(SPIF == 0) ;      SPIF = 0;
+  77   3                      }       
+  78   2              
+  79   2                      for (i2 = 0; i2 < 15; i2++)
+  80   2                      {
+  81   3                              for (i = 0; i < 65534; i++)
+  82   3                              {
+  83   4                                      _nop_();
+  84   4                              }
+  85   3                      }
+  86   2              } while ((b & 0x01));
+  87   1              P3_2 = 1; 
+  88   1              SPI0DAT = 0xFF; while(SPIF == 0) ;      SPIF = 0;
+  89   1              SFRPAGE = SFRPAGE_SAVE;
+  90   1              return;
+  91   1      }
+  92          
+  93          //-----------------------------------------------------------------------
+  94          void SD_init(void)
+  95          {
+  96   1              xdata unsigned int i, i2;
+  97   1              xdata unsigned char b;
+  98   1      
+  99   1              xdata char SFRPAGE_SAVE = SFRPAGE;
+ 100   1              SFRPAGE = SPI0_PAGE;
+ 101   1      
+ 102   1              P3_2 = 1;
+ 103   1      
+ 104   1              for (i = 0; i < 10; i++)
+ 105   1              {
+ 106   2                      SPI0DAT = 0xFF; while(SPIF == 0) ;   SPIF = 0;
+ 107   2              }
+ 108   1      
+ 109   1              P3_2 = 0;
+ 110   1      //CMD0 
+ 111   1              SPI0DAT = 0x40; while(SPIF == 0) ;   SPIF = 0;
+ 112   1              SPI0DAT = 0x00;   while(SPIF == 0) ;   SPIF = 0;
+ 113   1              SPI0DAT = 0x00;   while(SPIF == 0) ;   SPIF = 0;
+ 114   1              SPI0DAT = 0x00;   while(SPIF == 0) ;   SPIF = 0;
+ 115   1              SPI0DAT = 0x00; while(SPIF == 0) ;   SPIF = 0;
+C51 COMPILER V9.00   MMCFLASH                                                              04/17/2012 13:44:00 PAGE 3   
+
+ 116   1              SPI0DAT = 0x95;   while(SPIF == 0) ;   SPIF = 0;
+ 117   1              
+ 118   1              do
+ 119   1              {
+ 120   2                      SPI0DAT = 0xFF; while(SPIF == 0)        ;       SPIF = 0;
+ 121   2                      b = SPI0DAT;
+ 122   2              } while(b == 0xFF);
+ 123   1      
+ 124   1              while(SPI0DAT != 0xFF)
+ 125   1              {
+ 126   2                      SPI0DAT = 0xFF; while(SPIF == 0) ;      SPIF = 0;
+ 127   2              }
+ 128   1      
+ 129   1              do
+ 130   1              {
+ 131   2                      //CMD1  
+ 132   2                      P3_2 = 1;
+ 133   2                      for (i = 0; i < 10; i++)
+ 134   2                      {
+ 135   3                              SPI0DAT = 0xFF; while(SPIF == 0) ;      SPIF = 0;
+ 136   3                      }
+ 137   2      
+ 138   2                      P3_2 = 0;
+ 139   2      
+ 140   2                      SPI0DAT = 0x41; while(SPIF == 0) ;      SPIF = 0;
+ 141   2                      SPI0DAT = 0x00; while(SPIF == 0) ;      SPIF = 0;
+ 142   2                      SPI0DAT = 0x00; while(SPIF == 0) ;      SPIF = 0;
+ 143   2                      SPI0DAT = 0x00; while(SPIF == 0) ;      SPIF = 0;
+ 144   2                      SPI0DAT = 0x00; while(SPIF == 0) ;      SPIF = 0;
+ 145   2                      SPI0DAT = 0xFF; while(SPIF == 0) ;      SPIF = 0;
+ 146   2              b = SPI0DAT;
+ 147   2                      do
+ 148   2                      {
+ 149   3                              SPI0DAT = 0xFF; while(SPIF == 0) ;      SPIF = 0;
+ 150   3                              b = SPI0DAT;
+ 151   3                      } while(b == 0xFF);
+ 152   2              
+ 153   2                      while(SPI0DAT != 0xFF) 
+ 154   2                      {
+ 155   3                              SPI0DAT = 0xFF; while(SPIF == 0) ;      SPIF = 0;
+ 156   3                      }       
+ 157   2      
+ 158   2                      //CMD55
+ 159   2      
+ 160   2                      SPI0DAT = 0x77; while(SPIF == 0) ;      SPIF = 0;
+ 161   2                      SPI0DAT = 0x00; while(SPIF == 0) ;      SPIF = 0;
+ 162   2                      SPI0DAT = 0x00; while(SPIF == 0) ;      SPIF = 0;
+ 163   2                      SPI0DAT = 0x00; while(SPIF == 0) ;      SPIF = 0;
+ 164   2                      SPI0DAT = 0x00; while(SPIF == 0) ;      SPIF = 0;
+ 165   2                      SPI0DAT = 0xFF; while(SPIF == 0) ;      SPIF = 0;
+ 166   2              b = SPI0DAT;
+ 167   2                      do
+ 168   2                      {
+ 169   3                              SPI0DAT = 0xFF; while(SPIF == 0) ;      SPIF = 0;
+ 170   3                              b = SPI0DAT;
+ 171   3                      } while(b == 0xFF);
+ 172   2              
+ 173   2                      while(SPI0DAT != 0xFF) 
+ 174   2                      {
+ 175   3                              SPI0DAT = 0xFF; while(SPIF == 0) ;      SPIF = 0;
+ 176   3                      }       
+ 177   2      
+C51 COMPILER V9.00   MMCFLASH                                                              04/17/2012 13:44:00 PAGE 4   
+
+ 178   2                      //ACMD41
+ 179   2      
+ 180   2                      SPI0DAT = 0x69; while(SPIF == 0) ;      SPIF = 0;
+ 181   2                      SPI0DAT = 0x00; while(SPIF == 0) ;      SPIF = 0;
+ 182   2                      SPI0DAT = 0x00; while(SPIF == 0) ;      SPIF = 0;
+ 183   2                      SPI0DAT = 0x00; while(SPIF == 0) ;      SPIF = 0;
+ 184   2                      SPI0DAT = 0x00; while(SPIF == 0) ;      SPIF = 0;
+ 185   2                      SPI0DAT = 0xFF; while(SPIF == 0) ;      SPIF = 0;
+ 186   2              b = SPI0DAT;
+ 187   2                      do
+ 188   2                      {
+ 189   3                              SPI0DAT = 0xFF; while(SPIF == 0) ;      SPIF = 0;
+ 190   3                              b = SPI0DAT;
+ 191   3                      } while(b == 0xFF);
+ 192   2              
+ 193   2                      while(SPI0DAT != 0xFF) 
+ 194   2                      {
+ 195   3                              SPI0DAT = 0xFF; while(SPIF == 0) ;      SPIF = 0;
+ 196   3                      }       
+ 197   2      
+ 198   2                      for (i2 = 0; i2 < 15; i2++)
+ 199   2                      {
+ 200   3                              for (i = 0; i < 65534; i++)
+ 201   3                              {
+ 202   4                                      _nop_();
+ 203   4                              }
+ 204   3                      }
+ 205   2              } while ((b & 0x01));
+ 206   1      
+ 207   1              P3_2 = 1;
+ 208   1              SPI0DAT = 0xFF; while(SPIF == 0) ;      SPIF = 0;
+ 209   1      
+ 210   1              for (i = 0; i < 65534; i++)
+ 211   1              {
+ 212   2                      _nop_();
+ 213   2              }
+ 214   1      
+ 215   1              SFRPAGE = SFRPAGE_SAVE;
+ 216   1              return;
+ 217   1      }
+ 218          //-----------------------------------------------------------------------
+ 219          void ReadMMC(unsigned long address)
+ 220          {
+ 221   1              xdata unsigned int i, i2;
+ 222   1              unsigned char b;
+ 223   1      
+ 224   1              xdata char SFRPAGE_SAVE = SFRPAGE;
+ 225   1              SFRPAGE = SPI0_PAGE;
+ 226   1      
+ 227   1              SPI0DAT = 0xFF; while(SPIF == 0) ;      SPIF = 0;       
+ 228   1              P3_2 = 0;
+ 229   1              SPI0DAT = 0x51; while(SPIF == 0) ;      SPIF = 0;
+ 230   1              SPI0DAT = (address & 0xff); while(SPIF == 0) ;  SPIF = 0;
+ 231   1              SPI0DAT = (address & 0xff00) >> 8; while(SPIF == 0) ;   SPIF = 0;
+ 232   1              SPI0DAT = (address & 0xff0000) >> 16; while(SPIF == 0) ;        SPIF = 0;
+ 233   1              SPI0DAT = (address & 0xff000000) >> 24; while(SPIF == 0) ;      SPIF = 0;
+ 234   1              SPI0DAT = 0xFF; while(SPIF == 0) ;      SPIF = 0;
+ 235   1              do
+ 236   1              {
+ 237   2                      SPI0DAT = 0xFF; while(SPIF == 0) ;      SPIF = 0;
+ 238   2                      b = SPI0DAT;    // 00-ok, 20-Adress Err, 60-Param Err
+ 239   2              } while(b == 0xFF);
+C51 COMPILER V9.00   MMCFLASH                                                              04/17/2012 13:44:00 PAGE 5   
+
+ 240   1              
+ 241   1              while(SPI0DAT != 0xFF) 
+ 242   1              {
+ 243   2                      SPI0DAT = 0xFF; while(SPIF == 0) ;      SPIF = 0;
+ 244   2              }       
+ 245   1              do
+ 246   1              {
+ 247   2                      SPI0DAT = 0xFF; while(SPIF == 0) ;      SPIF = 0;
+ 248   2                      b = SPI0DAT;  // FE - DataToken, 08-Err Token Out Of Range
+ 249   2              } while(b == 0xFF);
+ 250   1              
+ 251   1              for(i=0; i<512; i++)
+ 252   1              {
+ 253   2                      SPI0DAT = 0xFF; while(SPIF == 0) ;      SPIF = 0;
+ 254   2                      Buffer[i] = SPI0DAT;
+ 255   2              }
+ 256   1              b=SPI0DAT; //crc1
+ 257   1              b=SPI0DAT; //crc0
+ 258   1              while(SPI0DAT != 0xFF) 
+ 259   1              {
+ 260   2                      SPI0DAT = 0xFF; while(SPIF == 0) ;      SPIF = 0;
+ 261   2              }
+ 262   1              P3_2 = 1; 
+ 263   1              SPI0DAT = 0xFF; while(SPIF == 0) ;      SPIF = 0;
+ 264   1      
+ 265   1                      for (i2 = 0; i2 < 15; i2++)
+ 266   1                      {
+ 267   2                              for (i = 0; i < 65534; i++)
+ 268   2                              {
+ 269   3                                      _nop_();
+ 270   3                              }
+ 271   2                      }
+ 272   1      
+ 273   1              SPI0DAT = 0xFF; while(SPIF == 0) ;      SPIF = 0;
+ 274   1      
+ 275   1              SFRPAGE = SFRPAGE_SAVE;
+ 276   1              return;
+ 277   1              
+ 278   1      }
+ 279          
+ 280          //-----------------------------------------------------------------------
+ 281          void WriteMMC(unsigned long address)
+ 282          {
+ 283   1              xdata unsigned int i, i2;
+ 284   1              unsigned char b;
+ 285   1              
+ 286   1              xdata char SFRPAGE_SAVE = SFRPAGE;
+ 287   1              SFRPAGE = SPI0_PAGE;
+ 288   1      
+ 289   1              SPI0DAT = 0xFF; while(SPIF == 0) ;      SPIF = 0;
+ 290   1              P3_2 = 0;
+ 291   1              SPI0DAT = 0x58; while(SPIF == 0) ;      SPIF = 0;
+ 292   1              SPI0DAT = (address & 0xff); while(SPIF == 0) ;  SPIF = 0;
+ 293   1              SPI0DAT = (address & 0xff00) >> 8; while(SPIF == 0) ;   SPIF = 0;
+ 294   1              SPI0DAT = (address & 0xff0000) >> 16; while(SPIF == 0) ;        SPIF = 0;
+ 295   1              SPI0DAT = (address & 0xff000000) >> 24; while(SPIF == 0) ;      SPIF = 0;
+ 296   1              SPI0DAT = 0xFF; while(SPIF == 0) ;      SPIF = 0;
+ 297   1              do
+ 298   1              {
+ 299   2                      SPI0DAT = 0xFF; while(SPIF == 0) ;      SPIF = 0;
+ 300   2                      b = SPI0DAT;    // 00-ok, 20-Adress Err, 40,60-Param Err
+ 301   2              } while(b == 0xFF);
+C51 COMPILER V9.00   MMCFLASH                                                              04/17/2012 13:44:00 PAGE 6   
+
+ 302   1              
+ 303   1              while(SPI0DAT != 0xFF) 
+ 304   1              {
+ 305   2                      SPI0DAT = 0xFF; while(SPIF == 0) ;      SPIF = 0;
+ 306   2              }
+ 307   1              SPI0DAT = 0xFE; while(SPIF == 0) ;      SPIF = 0;
+ 308   1              for(i=0; i<512; i++)
+ 309   1              {
+ 310   2                      SPI0DAT = Buffer[i]; while(SPIF == 0) ;         SPIF = 0;
+ 311   2              }
+ 312   1              SPI0DAT = 0xFF; while(SPIF == 0) ;      SPIF = 0; //crc1
+ 313   1              SPI0DAT = 0xFF; while(SPIF == 0) ;      SPIF = 0; //crc0
+ 314   1              while(SPI0DAT != 0xFF) 
+ 315   1              {
+ 316   2                      SPI0DAT = 0xFF; while(SPIF == 0) ;      SPIF = 0;
+ 317   2              }
+ 318   1              P3_2 = 1; 
+ 319   1              SPI0DAT = 0xFF; while(SPIF == 0) ;      SPIF = 0;
+ 320   1      
+ 321   1                      for (i2 = 0; i2 < 15; i2++)
+ 322   1                      {
+ 323   2                              for (i = 0; i < 65534; i++)
+ 324   2                              {
+ 325   3                                      _nop_();
+ 326   3                              }
+ 327   2                      }
+ 328   1      
+ 329   1              SPI0DAT = 0xFF; while(SPIF == 0) ;      SPIF = 0;
+ 330   1      
+ 331   1              SFRPAGE = SFRPAGE_SAVE;
+ 332   1              return;
+ 333   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1656    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----      22
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       8
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

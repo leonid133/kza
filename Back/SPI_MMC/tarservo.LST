@@ -1,0 +1,192 @@
+C51 COMPILER V9.00   TARSERVO                                                              07/30/2012 08:39:59 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE TARSERVO
+OBJECT MODULE PLACED IN tarservo.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.exe tarservo.c DB OE BR
+
+line level    source
+
+   1          #include "c8051f120.h"
+   2          #include "tarservo.h"
+   3          #include "init.h"
+   4          #include "servo.h"
+   5          #include <intrins.h>
+   6          #include <float.h>
+   7          #include "mmcflash4.h"
+   8          
+   9          
+  10          #define NBFM            50
+  11          xdata char BuferFromModem [NBFM]; // Для анализа с последовательного порта
+  12          xdata char wBFM, rBFM, marBFM;   
+  13          
+  14          //Для работы с флешкой
+  15          
+  16                  unsigned char fli = 0;
+  17                  extern xdata unsigned char flash;
+  18          //xdata unsigned int Value[16]; 
+  19          
+  20          void UART0_isr(void);
+  21          void UART1_isr(void);
+  22          void Timer0_isr(void);
+  23          
+  24          //-----------------------------------------------------------------------
+  25          void main(void)
+  26          {
+  27   1              //Для работы с последовательным портом "Модем"
+  28   1              xdata char RK_code[26], nByte = 0, KontrSumma = 0, PWM;
+  29   1              unsigned int Value;     
+  30   1              
+  31   1              WDTCN = 0xde;                   //Стоп сторожевой таймер
+  32   1              WDTCN = 0xad;
+  33   1      //   WDTCN = 0x07;         // Макс время = 0,021 с
+  34   1      
+  35   1      
+  36   1      
+  37   1      
+  38   1      
+  39   1         FLSCL = FLSCL | 1;   //Разрешение стирания/записи FLASH памяти
+  40   1      
+  41   1              port_init(); 
+  42   1              sysclk();       
+  43   1              UART0_Init();   
+  44   1              UART1_Init(); 
+  45   1              DAC0_init();    
+  46   1              ADC_init();
+  47   1              Timer0_init(); 
+  48   1              config();
+  49   1      //--------------- SPI MMC ----------------
+  50   1              SPI_Init();
+  51   1              MMC_init1();
+  52   1              
+  53   1      //--------------- SPI MMC end ------------
+  54   1      
+  55   1      //      DAC0 = 0x00;
+C51 COMPILER V9.00   TARSERVO                                                              07/30/2012 08:39:59 PAGE 2   
+
+  56   1      
+  57   1      
+  58   1      //------------------
+  59   1      
+  60   1      
+  61   1              rBFM = wBFM = marBFM = 0;
+  62   1              for(PWM = 1; PWM < 15; PWM++)
+  63   1              {
+  64   2                      Value = 37500;
+  65   2                      write(PWM+112, Value);
+  66   2              }
+  67   1              
+  68   1              while(1)        
+  69   1              {
+  70   2                      fli=0xb4;
+  71   2                      while(!WriteInKZA(fli))
+  72   2                      {
+  73   3                              fli=0x0a;
+  74   3                      };
+  75   2              }       
+  76   1              while(1)        
+  77   1              {
+  78   2                      fli++;
+  79   2                      if(flash==1)
+  80   2                      {
+  81   3                              WriteInKZA(fli);
+  82   3                      }
+  83   2                      if(rBFM < wBFM+marBFM*NBFM)
+  84   2              {
+  85   3                              if ((BuferFromModem[rBFM] & 0xC0) == 0x40)      
+  86   3                              {
+  87   4                                      nByte = 0;
+  88   4                                      KontrSumma = 0;
+  89   4                                      PWM = BuferFromModem[rBFM] & 0x3f;
+  90   4                              }
+  91   3                              if (nByte > 25)
+  92   3                                      nByte = 25;
+  93   3                              RK_code[nByte] = BuferFromModem[rBFM] & 0x7f;
+  94   3                              KontrSumma = KontrSumma^RK_code[nByte++];
+  95   3      
+  96   3                              if ( (nByte == 5) && (KontrSumma == 0) )
+  97   3                              {
+  98   4                                      Value = RK_code[1]+((unsigned int)RK_code[2] << 7)+((unsigned int)RK_code[3] << 14);
+  99   4                                      write(PWM+112, Value);
+ 100   4                              }
+ 101   3      
+ 102   3               rBFM++;
+ 103   3                              if(rBFM >= NBFM)
+ 104   3                              {
+ 105   4                              rBFM = 0;
+ 106   4                                      marBFM = 0;     
+ 107   4                              }
+ 108   3            }
+ 109   2                      
+ 110   2              }       //while (1)
+ 111   1              return;
+ 112   1      }
+ 113          
+ 114          //-------------------------------------------------------------------
+ 115          void UART0_isr(void) interrupt 4
+ 116          {
+ 117   1              xdata char SFRPAGE_SAVE = SFRPAGE;
+C51 COMPILER V9.00   TARSERVO                                                              07/30/2012 08:39:59 PAGE 3   
+
+ 118   1              SFRPAGE = UART0_PAGE;
+ 119   1              
+ 120   1              if (RI0)  
+ 121   1              { 
+ 122   2                      BuferFromModem [wBFM++] = SBUF0;  // read character
+ 123   2                      if(wBFM >= NBFM)
+ 124   2                      {
+ 125   3                      wBFM = 0;
+ 126   3                              marBFM = 1;     
+ 127   3                      }      
+ 128   2                      RI0 = 0;                
+ 129   2              }
+ 130   1              if (TI0)
+ 131   1                      TI0 = 0;
+ 132   1      
+ 133   1              SFRPAGE = SFRPAGE_SAVE;
+ 134   1              return;
+ 135   1      }
+ 136          
+ 137          //---------------------------------------------------------------------------------
+ 138          void UART1_isr(void) interrupt 20
+ 139          {
+ 140   1              xdata char SFRPAGE_SAVE = SFRPAGE;//, tmp;
+ 141   1              SFRPAGE = UART1_PAGE;                                                     
+ 142   1      
+ 143   1              if (RI1)  
+ 144   1                      RI1 = 0;
+ 145   1      
+ 146   1              TI1 = 0;
+ 147   1              SFRPAGE = SFRPAGE_SAVE;
+ 148   1              return;
+ 149   1      }
+ 150          
+ 151          //----------------------------------------------------------------------
+ 152          void TIMER0_ISR (void) interrupt 1
+ 153          {
+ 154   1              xdata char SFRPAGE_SAVE = SFRPAGE;
+ 155   1              SFRPAGE = 0;
+ 156   1      
+ 157   1              TH0 = 0xAE;     // 0xFFFF-49766400/48/FREQ = 0xAEFF
+ 158   1              TL0 = 0xFF;     
+ 159   1      
+ 160   1              SFRPAGE = SFRPAGE_SAVE;
+ 161   1              return;
+ 162   1      }
+ 163          
+ 164          
+ 165          //----------------------------------------------------------------------
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    278    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =     53      32
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      1       2
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

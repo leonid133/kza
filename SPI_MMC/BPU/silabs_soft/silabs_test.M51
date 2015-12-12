@@ -1,0 +1,332 @@
+BL51 BANKED LINKER/LOCATER V6.11              12/28/2009  18:32:26  PAGE 1
+
+
+BL51 BANKED LINKER/LOCATER V6.11, INVOKED BY:
+C:\KEIL\C51\BIN\BL51.EXE D:\work\navodchik\silabs_soft\test.obj TO D:\work\nav
+>> odchik\silabs_soft\silabs_test RS (256) PL (68) PW (78)
+
+
+MEMORY MODEL: SMALL
+
+
+INPUT MODULES INCLUDED:
+  D:\work\navodchik\silabs_soft\test.obj (TEST)
+  C:\KEIL\C51\LIB\C51S.LIB (?C_STARTUP)
+  C:\KEIL\C51\LIB\C51S.LIB (?C_INIT)
+
+
+LINK MAP OF MODULE:  D:\work\navodchik\silabs_soft\silabs_test (TEST)
+
+
+            TYPE    BASE      LENGTH    RELOCATION   SEGMENT NAME
+            -----------------------------------------------------
+
+            * * * * * * *   D A T A   M E M O R Y   * * * * * * *
+            REG     0000H     0008H     ABSOLUTE     "REG BANK 0"
+            DATA    0008H     000CH     UNIT         ?DT?TEST
+                    0014H     000CH                  *** GAP ***
+            BIT     0020H.0   0000H.1   UNIT         ?BI?TEST
+                    0020H.1   0000H.7                *** GAP ***
+            IDATA   0021H     0001H     UNIT         ?STACK
+
+            * * * * * * *   C O D E   M E M O R Y   * * * * * * *
+            CODE    0000H     0003H     ABSOLUTE     
+            CODE    0003H     001DH     UNIT         ?PR?UART0_ISR?TEST
+                    0020H     0003H                  *** GAP ***
+            CODE    0023H     0003H     ABSOLUTE     
+            CODE    0026H     0038H     UNIT         ?PR?TIMER3_ISR?TEST
+            CODE    005EH     0015H     UNIT         ?PR?CONFIG?TEST
+            CODE    0073H     0003H     ABSOLUTE     
+            CODE    0076H     008CH     UNIT         ?C_C51STARTUP
+            CODE    0102H     0056H     UNIT         ?PR?SYSCLK?TEST
+            CODE    0158H     002AH     UNIT         ?PR?PORT_INIT?TEST
+            CODE    0182H     0027H     UNIT         ?PR?MAIN?TEST
+            CODE    01A9H     0022H     UNIT         ?PR?UART0_INIT?TEST
+            CODE    01CBH     0012H     UNIT         ?PR?TIMER3_INIT?TEST
+            CODE    01DDH     0006H     UNIT         ?C_INITSEG
+
+
+
+OVERLAY MAP OF MODULE:   D:\work\navodchik\silabs_soft\silabs_test (TEST)
+
+
+SEGMENT
+  +--> CALLED SEGMENT
+---------------------
+?C_C51STARTUP
+  +--> ?PR?MAIN?TEST
+  +--> ?C_INITSEG
+
+?PR?MAIN?TEST
+  +--> ?PR?PORT_INIT?TEST
+  +--> ?PR?SYSCLK?TEST
+  +--> ?PR?UART0_INIT?TEST
+  +--> ?PR?TIMER3_INIT?TEST
+  +--> ?PR?CONFIG?TEST
+
+
+
+SYMBOL TABLE OF MODULE:  D:\work\navodchik\silabs_soft\silabs_test (TEST)
+BL51 BANKED LINKER/LOCATER V6.11            12/28/2009  18:32:26  PAGE 2
+
+
+
+  VALUE           TYPE          NAME
+  ----------------------------------
+
+  -------         MODULE        TEST
+  C:0000H         SYMBOL        _ICE_DUMMY_
+  D:008FH         PUBLIC        PLL0FLT
+  D:00FFH         PUBLIC        WDTCN
+  D:00B0H         PUBLIC        P3
+  D:00C8H         PUBLIC        P4
+  D:00E6H         PUBLIC        EIE1
+  D:00D8H         PUBLIC        P5
+  D:00E8H         PUBLIC        P6
+  D:00E7H         PUBLIC        EIE2
+  C:0026H         PUBLIC        Timer3_ISR
+  D:008EH         PUBLIC        PLL0MUL
+  D:00E8H         PUBLIC        ADC0CN
+  D:0084H         PUBLIC        SFRPAGE
+  D:00A4H         PUBLIC        P0MDOUT
+  D:00E8H         PUBLIC        ADC2CN
+  D:00A5H         PUBLIC        P1MDOUT
+  D:00A8H         PUBLIC        IE
+  D:00A6H         PUBLIC        P2MDOUT
+  D:00A7H         PUBLIC        P3MDOUT
+  D:00F6H         PUBLIC        EIP1
+  D:009CH         PUBLIC        P4MDOUT
+  D:00F7H         PUBLIC        EIP2
+  D:009DH         PUBLIC        P5MDOUT
+  D:009EH         PUBLIC        P6MDOUT
+  D:009FH         PUBLIC        P7MDOUT
+  D:00D8H         PUBLIC        PCA0CN
+  D:00B8H         PUBLIC        IP
+  D:0008H         PUBLIC        data_pwm_i
+  D:000AH         PUBLIC        addr
+  D:00E1H         PUBLIC        XBR0
+  C:0003H         PUBLIC        UART0_isr
+  D:00E2H         PUBLIC        XBR1
+  D:00E3H         PUBLIC        XBR2
+  D:00CBH         PUBLIC        RCAP2H
+  D:00CBH         PUBLIC        RCAP3H
+  D:00C0H         PUBLIC        SMB0CN
+  D:00CAH         PUBLIC        RCAP2L
+  C:0182H         PUBLIC        main
+  D:00CAH         PUBLIC        RCAP3L
+  D:0088H         PUBLIC        CPT0CN
+  B:0020H.0       PUBLIC        flTransmit
+  D:00ADH         PUBLIC        P1MDIN
+  D:0089H         PUBLIC        PLL0CN
+  D:0088H         PUBLIC        CPT1CN
+  D:00F8H         PUBLIC        SPI0CN
+  D:00C9H         PUBLIC        TMR2CF
+  D:00C9H         PUBLIC        TMR3CF
+  D:0088H         PUBLIC        TCON
+  D:00C8H         PUBLIC        TMR2CN
+  D:000BH         PUBLIC        asd
+  D:00C8H         PUBLIC        TMR3CN
+  D:00C8H         PUBLIC        TMR4CN
+  D:0097H         PUBLIC        CLKSEL
+  D:008AH         PUBLIC        OSCICN
+  D:000DH         PUBLIC        lsb
+  D:000EH         PUBLIC        msb
+  B:0098H.0       PUBLIC        RI0
+  B:00C8H.7       PUBLIC        TF3
+  B:0098H.1       PUBLIC        TI0
+  D:008CH         PUBLIC        OSCXCN
+BL51 BANKED LINKER/LOCATER V6.11            12/28/2009  18:32:26  PAGE 3
+
+
+  D:0088H         PUBLIC        FLSTAT
+  D:000FH         PUBLIC        data_pwm
+  D:0011H         PUBLIC        tmp
+  B:00B0H.4       PUBLIC        rd
+  B:00C8H.2       PUBLIC        TR2
+  C:0102H         PUBLIC        SYSCLK
+  C:0158H         PUBLIC        port_init
+  D:0099H         PUBLIC        SBUF0
+  D:00EFH         PUBLIC        RSTSRC
+  C:01A9H         PUBLIC        UART0_Init
+  D:0098H         PUBLIC        SCON0
+  D:0098H         PUBLIC        SCON1
+  D:0012H         PUBLIC        tt
+  D:0013H         PUBLIC        i
+  B:00B0H.3       PUBLIC        wr
+  D:0091H         PUBLIC        SSTA0
+  C:01CBH         PUBLIC        timer3_init
+  D:00CDH         PUBLIC        TMR2H
+  D:00CDH         PUBLIC        TMR3H
+  D:00CCH         PUBLIC        TMR2L
+  D:00CCH         PUBLIC        TMR3L
+  D:00B7H         PUBLIC        FLSCL
+  C:005EH         PUBLIC        config
+  D:00D0H         PUBLIC        PSW
+  D:008DH         PUBLIC        PLL0DIV
+  -------         PROC          MAIN
+  C:0182H         LINE#         36
+  C:0182H         LINE#         37
+  C:0182H         LINE#         38
+  C:0185H         LINE#         39
+  C:0188H         LINE#         41
+  C:018BH         LINE#         42
+  C:018EH         LINE#         43
+  C:0191H         LINE#         44
+  C:0194H         LINE#         46
+  C:0197H         LINE#         49
+  C:0199H         LINE#         50
+  C:019BH         LINE#         53
+  C:019BH         LINE#         54
+  C:019BH         LINE#         76
+  C:019EH         LINE#         77
+  C:01A1H         LINE#         78
+  C:01A4H         LINE#         79
+  C:01A7H         LINE#         80
+  -------         ENDPROC       MAIN
+  -------         PROC          SYSCLK
+  -------         DO            
+  D:0006H         SYMBOL        n
+  -------         ENDDO         
+  C:0102H         LINE#         83
+  C:0102H         LINE#         84
+  C:0102H         LINE#         85
+  C:0105H         LINE#         87
+  C:0107H         LINE#         88
+  C:010AH         LINE#         89
+  C:010DH         LINE#         90
+  C:0110H         LINE#         91
+  C:011DH         LINE#         92
+  C:0122H         LINE#         94
+  C:0125H         LINE#         95
+  C:0128H         LINE#         96
+  C:012BH         LINE#         98
+  C:012DH         LINE#         99
+  C:0130H         LINE#         101
+  C:0133H         LINE#         102
+BL51 BANKED LINKER/LOCATER V6.11            12/28/2009  18:32:26  PAGE 4
+
+
+  C:0136H         LINE#         103
+  C:0139H         LINE#         104
+  C:013CH         LINE#         105
+  C:013FH         LINE#         106
+  C:014CH         LINE#         107
+  C:014FH         LINE#         108
+  C:0154H         LINE#         110
+  C:0157H         LINE#         112
+  -------         ENDPROC       SYSCLK
+  -------         PROC          PORT_INIT
+  C:0158H         LINE#         114
+  C:0158H         LINE#         115
+  C:0158H         LINE#         116
+  C:015BH         LINE#         117
+  C:015EH         LINE#         118
+  C:0161H         LINE#         119
+  C:0164H         LINE#         127
+  C:0167H         LINE#         128
+  C:016AH         LINE#         129
+  C:016CH         LINE#         130
+  C:016FH         LINE#         131
+  C:0172H         LINE#         132
+  C:0175H         LINE#         133
+  C:0178H         LINE#         134
+  C:017BH         LINE#         135
+  C:017EH         LINE#         137
+  C:0181H         LINE#         139
+  -------         ENDPROC       PORT_INIT
+  -------         PROC          CONFIG
+  C:005EH         LINE#         141
+  C:005EH         LINE#         142
+  C:005EH         LINE#         144
+  C:0061H         LINE#         145
+  C:0063H         LINE#         147
+  C:0066H         LINE#         148
+  C:0069H         LINE#         149
+  C:006BH         LINE#         150
+  C:006EH         LINE#         151
+  C:0070H         LINE#         152
+  C:0072H         LINE#         154
+  -------         ENDPROC       CONFIG
+  -------         PROC          UART0_INIT
+  -------         DO            
+  D:0007H         SYMBOL        SFRPAGE_SAVE
+  -------         ENDDO         
+  C:01A9H         LINE#         156
+  C:01A9H         LINE#         157
+  C:01A9H         LINE#         158
+  C:01ABH         LINE#         160
+  C:01AEH         LINE#         162
+  C:01B1H         LINE#         163
+  C:01B4H         LINE#         164
+  C:01B7H         LINE#         165
+  C:01B9H         LINE#         166
+  C:01BBH         LINE#         167
+  C:01BEH         LINE#         168
+  C:01C0H         LINE#         169
+  C:01C2H         LINE#         171
+  C:01C5H         LINE#         172
+  C:01C8H         LINE#         174
+  C:01CAH         LINE#         175
+  -------         ENDPROC       UART0_INIT
+  -------         PROC          UART0_ISR
+  -------         DO            
+  D:0007H         SYMBOL        SFRPAGE_SAVE
+BL51 BANKED LINKER/LOCATER V6.11            12/28/2009  18:32:26  PAGE 5
+
+
+  -------         ENDDO         
+  C:0003H         LINE#         178
+  C:000AH         LINE#         180
+  C:000CH         LINE#         181
+  C:000FH         LINE#         183
+  C:0012H         LINE#         184
+  C:0012H         LINE#         185
+  C:0014H         LINE#         186
+  C:0014H         LINE#         187
+  C:0017H         LINE#         188
+  C:0017H         LINE#         189
+  C:0019H         LINE#         190
+  C:0019H         LINE#         191
+  C:001BH         LINE#         192
+  -------         ENDPROC       UART0_ISR
+  -------         PROC          TIMER3_INIT
+  C:01CBH         LINE#         195
+  C:01CBH         LINE#         196
+  C:01CBH         LINE#         197
+  C:01CEH         LINE#         198
+  C:01D1H         LINE#         199
+  C:01D3H         LINE#         200
+  C:01D5H         LINE#         201
+  C:01D7H         LINE#         202
+  C:01D9H         LINE#         203
+  C:01DCH         LINE#         204
+  -------         ENDPROC       TIMER3_INIT
+  -------         PROC          TIMER3_ISR
+  -------         DO            
+  D:0007H         SYMBOL        SFRPAGE_SAVE
+  -------         ENDDO         
+  C:0026H         LINE#         206
+  C:002FH         LINE#         208
+  C:0031H         LINE#         209
+  C:0033H         LINE#         210
+  C:0036H         LINE#         211
+  C:0039H         LINE#         212
+  C:0039H         LINE#         213
+  C:003CH         LINE#         214
+  C:003EH         LINE#         215
+  C:0040H         LINE#         216
+  C:0042H         LINE#         218
+  C:0042H         LINE#         219
+  C:0045H         LINE#         220
+  C:0047H         LINE#         221
+  C:0049H         LINE#         222
+  C:004EH         LINE#         223
+  C:0053H         LINE#         225
+  C:0055H         LINE#         226
+  C:0055H         LINE#         227
+  C:0057H         LINE#         228
+  -------         ENDPROC       TIMER3_ISR
+  -------         ENDMOD        TEST
+
+Program Size: data=21.1 xdata=0 code=480
+LINK/LOCATE RUN COMPLETE.  0 WARNING(S),  0 ERROR(S)

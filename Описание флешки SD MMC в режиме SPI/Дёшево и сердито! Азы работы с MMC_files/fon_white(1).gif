@@ -1,0 +1,566 @@
+<html>
+<head>
+<!--meta http-equiv="Content-Type" content="text/html; charset=windows-1251"-->
+<title>Самый информированный сервер по микроэлектронике - документация, применения, статьи, фирмы</title>
+<meta name="description" content="Справочные данные по электронным компонентам">
+ 
+
+<meta http-equiv="pragma" content="no-cache">
+<meta name="generator" content="WebFX.jwdx.com MetaTagGen">
+<meta name="copyright" content="Рынок Микроэлектроники">
+<meta name="language" content="Russian">
+<meta name="MSSmartTagsPreventParsing" content="TRUE">
+<meta name="distribution" content="Global">
+<meta name="rating" content="General">
+<meta name="expires" content="Never">
+<meta name="robots" content="Index, Follow">
+<meta name="description" content="Справочные данные - электронные компоненты, описания микросхем, жк дисплеи, микроэлектроника">
+<link rel="shortcut icon" href="/favicon.ico">
+<style type="text/css">
+<!--A:link,
+A:visited { text-decoration: none; }-->
+</style>
+<link rel="stylesheet" type="text/css" href="/t.css">
+</head>
+
+<body bgcolor=FFFFFF text=000000 vlink=0E50CB topmargin=0 leftmargin=0 marginheight=0 marginwidth=0 link=0E50CB>
+<a name="#top">
+
+<!-- Yandex.Metrika -->
+<script src="//mc.yandex.ru/metrika/watch.js" type="text/javascript"></script>
+<div style="display:none;"><script type="text/javascript">
+try { var yaCounter1140336 = new Ya.Metrika(1140336); } catch(e){}
+</script></div>
+<noscript><div style="position:absolute"><img src="//mc.yandex.ru/watch/1140336" alt="" /></div></noscript>
+<!-- /Yandex.Metrika -->
+
+<!--LiveInternet counter--><script language="JavaScript"><!--
+document.write('<img src="http://counter.yadro.ru/hit?r'+
+escape(document.referrer)+((typeof(screen)=='undefined')?'':
+';s'+screen.width+'*'+screen.height+'*'+(screen.colorDepth?
+screen.colorDepth:screen.pixelDepth))+';u'+escape(document.URL)+
+';i'+escape('Жж'+document.title.substring(0,80))+';'+Math.random()+
+'" width=1 height=1 alt="">')//-->
+</script><!--/LiveInternet-->
+
+<!-- table align="center" cellspacing="0" cellpadding="0" border="0" width="984">
+<tr>
+	<td>
+    <form method="get" ACTION="http://www.gaw.ru/html.cgi/look.cgi">
+	<nobr>&nbsp;&nbsp;&nbsp;<a href="http://www.gaw.ru/html.cgi/look_ext.cgi"><font class="search2">Поиск по сайту:</font></a>&nbsp;&nbsp;
+    &nbsp;&nbsp;&nbsp;<input NAME="for" size="12">
+    &nbsp;&nbsp;&nbsp;<input type="Radio" name="seck" value="html" checked><font class="search">HTML</font>
+    &nbsp;&nbsp;&nbsp;<input type="Radio" name="seck" value="pdf"><font class="search">PDF</font>
+    &nbsp;&nbsp;&nbsp;<input type="image" src="/images/ds/go_s.gif" border=0 alt="Найти!" width="26" height="24"><br>
+    &nbsp;&nbsp;&nbsp;<a href="http://www.gaw.ru/html.cgi/look_ext.cgi"><font class="search2">Расширенный поиск</font></a>
+	</form>
+	</td>
+		  <td valign="top" width="700" align="right">
+<iframe src="http://catalog.gaw.ru/search_gaw_ru.html" frameborder="0" vspace="0" hspace="0" width="100%" height="80px" scrolling="no"></iframe>
+		  </td>
+</tr>
+</table -->
+
+
+	  <table align="center" cellspacing="0" cellpadding="0" border="0" width="984">
+	    <tr>
+		  <td height="40" nowrap>&nbsp;&nbsp;&nbsp;</td>
+		  <td align="right" valign="top" width="200">
+		  <form method="get" ACTION="/html.cgi/look.cgi">
+		  <table border="0" cellspacing="0" cellpadding="0">
+		   <tr>
+		   <td>
+		   <img src="/im_n/serchl.jpg" width="9" height="39" border="0" alt="">
+		   </td>
+		    <td background="/im_n/serchbg.jpg" width="226">
+		 	 <div id="inputs"><input type="text" name="for" value="Строка поиска"  onfocus="javascript: if(this.value == 'Строка поиска') this.value = '';" onBlur="javascript: if(this.value == '') { this.value = 'Строка поиска';}" id=" searchText">
+			 </div>
+		   </td>
+		    <td>
+		   <img src="/im_n/serchr.jpg" width="9" height="39" border="0" alt="">
+		   </td>
+		   </tr>
+		   <tr>
+		   <td colspan="3"><input type="Radio" name="seck" value="html" checked>
+		   <a id="onluname">В HTML</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		   <input type="Radio" name="seck" value="pdf">
+		   <a id="onluname">В PDF</a>
+		   </td>
+		   </tr>
+		  </table>
+
+		  </td>
+		<td valign="top"> 
+	 	
+		 <!-- input type="image" src="/images/ds/go_s.gif" border="0" alt="!" width="26" height="24" -->
+		 <table border="0"  cellspacing="0" cellpadding="0">
+		 <tr>
+		   <td><img src="/im_n/topbutleft.jpg" width="22" height="41" border="0" alt=""></td>
+		   <td background="/im_n/topbutbg.jpg"><div id="tops"><input value="Найти" class="buttons" type="Submit"></td>
+		   <td><img src="/im_n/topbutright.jpg" width="9" height="41" border="0" alt=""></td>
+		 </tr>
+		 </table>
+		 </form>
+		  </td>
+		  <td valign="top">
+<iframe src="http://catalog.gaw.ru/search_gaw_ru.html" frameborder="0" vspace="0" hspace="0" width="100%" height="80px" scrolling="no"></iframe>
+		  </td>
+		</tr>
+	  </table>
+
+
+<table align="center" cellspacing="0" cellpadding="0" border="0" width="984">
+<tr>
+    <td><a href="/"><img src="/img/ds/logo.gif" width=468 height=60 alt="микроэлектроника, микросхема, микроконтроллер, память, msp430, MSP430, Atmel, Maxim, LCD, hd44780, t6963, sed1335, SED1335, mega128, avr, mega128" title="микроэлектроника, микросхема, микроконтроллер, память, msp430, MSP430, Atmel, Maxim, LCD, hd44780, t6963, sed1335, SED1335, mega128, avr, mega128" border=0></a></td>
+    <td width="5">&nbsp;</td>
+    <td align="right">
+	<noindex>
+<iframe id='aefd403c' name='aefd403c' src='http://a.efind.ru/adframe.php?n=aefd403c&amp;what=zone:31' framespacing='0' frameborder='no' scrolling='no' width='468' height='60'><a href='http://a.efind.ru/adclick.php?n=aefd403c' target='_blank'><img src='http://a.efind.ru/adview.php?what=zone:31&amp;n=aefd403c' border='0' alt=''></a></iframe>
+	</noindex>
+	</td>
+</tr>
+</table>
+<table align="center" cellspacing="0" cellpadding="0" border="0" width="984">
+<tr>
+    <td width="140" valign="middle"><form>
+      <input type="hidden" name="Choose WEB-site" value><select NAME="Jump"
+      onchange="top.location.href = this.options[this.selectedIndex].value;" class="button">
+        <option selected value="#">Разделы сервера</option>
+        <option value="/">Главная страница</option>
+        <option value="/html.cgi/txt/doc/index.htm">Документация</option>
+        <option value="/html.cgi/txt/ic/start.htm">Микросхемы</option>
+        <option value="/html.cgi/txt/lcd/index.htm">ЖК-индикаторы</option>
+        <option value="/html.cgi/txt/soft/index.htm">Программы</option>
+        <option value="/html.cgi/txt/interface/index.htm">Интерфейсы</option>
+        <option value="/html.cgi/txt/el_mech/index.htm">Электромеханика</option>
+        <option value="/html.cgi/txt/app/index.htm">Применения</option>
+        <option value="/html.cgi/txt/publ/index.htm">Статьи</option>
+        <option value="/html.cgi/txt/sch/index.htm">Схемы</option>
+		<option value="/map.htm">-------------------</option>
+		<option value="http://catalog.gaw.ru">Дилеры и фирмы</option>
+		<option value="http://www.compitech.ru">CompiTech</option>
+		<option value="http://www.eust.ru">Блог</option>
+		<option value="http://forum.gaw.ru">Форум</option>
+      </select>
+</form>
+	</td>	
+    <td>&nbsp;</td>
+    <td colspan="8" align="left" valign="middle">
+<a href="/" class="top1">Главная страница</a> &gt; <a href="/html.cgi/txt/app/index.htm" class="top1">Применения</a>
+	</td>
+</table>
+
+<table align="center" cellspacing="0" cellpadding="5" border="0" width="984">
+<tr>
+    <td>
+<br>
+
+<table width="800" cellspacing="2" cellpadding="2" border="0">
+<tr>
+    <td>
+
+
+<script type="text/javascript"><!--
+
+
+// Размер шрифтов
+var yandex_ad_fontSize = 1;
+
+// Настройки объявлений Директа
+var yandex_direct_showType = 1;
+var yandex_direct_fontColor = '000000';
+var yandex_direct_BorderColor = 'FFFFFF';
+var yandex_direct_BgColor = 'FFFFFF';
+var yandex_direct_headerBgColor = 'FFFFFF';
+var yandex_direct_titleColor = '093cbc';
+var yandex_direct_siteurlColor = '000000';
+var yandex_direct_linkColor = 'c0c0c0';
+function yandex_direct_print(){ }
+
+var yandex_r = Math.round(Math.random() * 100000);
+document.write('<sc'+'ript type="text/javascript" src="http://an.yandex.ru/code/8043?rnd=' + yandex_r + '&direct-style=1&direct-limit=4&market-limit=0"></'+'sc'+'ript>');
+
+
+//--></script>
+
+<!-- Вставьте эту строчку туда, где планируется показывать рекламный блок Яндекс.Директа -->
+<script type="text/javascript">yandex_direct_print()</script>
+
+	</td>
+</tr>
+</table>
+
+	</td>
+	<td>
+
+<table cellspacing="0" cellpadding="0" border="0" align="right">
+<tr>
+    <td width="5" nowrap>
+	</td>
+    <td>
+	<table cellspacing="1" cellpadding="0" border="0" bgcolor="#accfc7">
+<tr>
+    <td>
+<table width="160" cellspacing="2" cellpadding="2" border="0" bgcolor="#ffffff">
+
+  <tr>
+	<td nowrap width="160" class="tx" valign="top">
+
+<table width=160 cellspacing=0 cellpadding=0 border=0 bgcolor=E6E6E6>
+<tr>
+    <td align="center">
+<br>
+<iframe src="http://www.terraelectronica.ru/gaw.php" frameborder="0" vspace="0" hspace="0" width="140" height="200" marginwidth="0" marginheight="0" scrolling="no"></iframe>
+<br><br>
+
+	</td>
+</tr>
+</table>
+
+	</td>
+  </tr>
+</table>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+
+	</td>
+</tr>
+<tr>
+	<td valign="top" width="100%" align="center" colspan="2">
+
+<table cellspacing="0" cellpadding="0" border="0" align="right">
+<tr>
+    <td width="5" nowrap>
+	</td>
+    <td>
+	<table cellspacing="1" cellpadding="0" border="0" bgcolor="#accfc7">
+<tr>
+    <td>
+<table width="160" cellspacing="2" cellpadding="2" border="0" bgcolor="#ffffff">
+
+  <tr>
+	<td nowrap width="160" class="tx" valign="top">
+
+<table width=160 cellspacing=0 cellpadding=0 border=0 bgcolor=E6E6E6>
+<tr>
+    <td align="center">
+	
+<table align="center" width="140" height="200" cellspacing="0" cellpadding="0" border="0">
+
+	<td height=5>&nbsp;</td>
+
+<tr>
+    <td align="center">
+<a href="http://milandr.ru/index.php?mact=Products,cntnt01,details,0&cntnt01productid=236&cntnt01returnid=68" target="_blank"><img src="http://www.gaw.ru/baner/avia.gif" alt="32-разрядный RISC-микроконтроллер для авиационных применений" border="0" height="200" width="140"></a>
+<br><br>
+
+<a href="http://bit.ly/ks3DZ8" target="_blank" rel="nofollow"><img src="http://www.gaw.ru/baner/140x200_Banner_R.jpg" alt="Корпуса и шкафы для электронного оборудования" border="0" height="200" width="140"></a>
+
+<!--
+<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" codebase="http://fpdownload.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=7,0,0,0" width="140" height="200" id="mail" align="middle">
+<param name="movie" value="http://www.gaw.ru/baner/Internet-market140x200+search_opt.swf"/>
+<param name="quality" value="high"/>
+<param name="bgcolor" value="#2E2F2F"/>
+<embed src="http://www.gaw.ru/baner/Internet-market140x200+search_opt.swf" quality="high" bgcolor="#2E2F2F" width="140" height="200" name="mail" align="middle" type="application/x-shockwave-flash" pluginspage="http://www.macromedia.com/go/getflashplayer"/>
+</object>-->
+
+<!--
+<object width="140" height="200"
+codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=8,0,0,0">
+<param name="src" value="http://www.gaw.ru/baner/Milandr.swf" />
+<embed type="application/x-shockwave-flash"
+width="140" height="200" src="http://www.gaw.ru/baner/Milandr.swf"></embed>
+</object>
+-->
+
+<!--
+<br><br>
+
+<a href="http://bit.ly/ks3DZ8" target="_blank"><img src="http://www.gaw.ru/baner/140x300_Mikroelektronikmarkt.jpg" width="140" height="300" alt="шкафы и корпуса" border="0"></a>
+-->
+
+</td>
+</tr>
+</table>
+
+
+<br><br>
+<script type="text/javascript"><!--
+google_ad_client = "pub-4585385300578666";
+google_ad_width = 120;
+google_ad_height = 90;
+google_ad_format = "120x90_0ads_al_s";
+//2007-03-28: links
+google_ad_channel = "9895613298";
+google_color_border = "FFFFFF";
+google_color_bg = "CCCCCC";
+google_color_link = "0000FF";
+google_color_text = "000000";
+google_color_url = "008000";
+//-->
+</script>
+<script type="text/javascript"
+  src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+
+<br><br>
+	</td>
+</tr>
+</table>
+
+	</td>
+  </tr>
+</table>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+<br>
+<div align="left">
+
+
+<!--end top-->
+ 
+<h1 class="titl">Данная страница переехала в другой раздел</h1>
+
+<hr width="100%">
+<p class="pe">Запрашиваемая вами страница не найдена. Возможно, вы ошиблись при вводе адреса или набрали его русскими буквами. Если вы уверены в правильности указанного адреса, то данная страница была переименована. Вы можете воспользоваться <a href="http://www.gaw.ru/html.cgi/look_ext.cgi">поиском</a> или попробовать самостоятельно найти нужную вам страницу. Или просто побродите по разделам</p>
+
+<table align="center" width="100%" cellspacing="2" cellpadding="2" border="0">
+<tr>
+    <td>
+<h2 class="titl">Новые публикации:</h2>
+
+
+<table cellspacing="2" cellpadding="2" border="0">
+<tr>
+    <td valign="top" align="center"><b>по микроконтроллерам<br><a href="/html.cgi/txt/doc/micros/arm/index.htm"><font color="#ff0000" size="+2">ARM</font></a></td>
+    <td>
+<li><a href="http://www.gaw.ru/html.cgi/txt/doc/micros/arm/asm/asm_arm/index.htm">Система команд ARM</a>
+<li><a href="http://www.gaw.ru/html.cgi/txt/doc/micros/arm/arh/index.htm">Общее описание архитектуры RISС-процессоров семейства ARM</a>
+<li><a href="http://www.gaw.ru/html.cgi/txt/doc/micros/arm/arh_7dtmi/index.htm">Справочное руководство по процессору ARM7TDMI</a>
+</td>
+</tr>
+<tr>
+    <td valign="top" align="center"><b>по памяти<br><a href="/html.cgi/txt/ic/Atmel/memory/at45/index.htm"><font color="#ff0000" size="+2">DataFlash</font></a></td>
+    <td>
+<li><a href="/html.cgi/txt/ic/Atmel/memory/at45/about.htm">Микросхемы DataFlash</a>
+<li><a href="/html.cgi/txt/app/Atmel/memory/index.htm">Примеры применения</a>
+<li><a href="/html.cgi/txt/ic/Atmel/memory/at45/faq.htm">FAQ по DataFlash</a>
+<li><a href="/html.cgi/txt/publ/memory/dataflash_2.htm">Сравнение АТ26 и АТ45</a>
+<li><a href="/html.cgi/txt/ic/Atmel/memory/at45/at45db642/start.htm">AT45DB642 Полное описание</a>
+</td>
+</tr>
+</table>
+
+<li><a href="/html.cgi/txt/publ/powersuply/converter_levels.htm">Выбор правильного преобразователя логического уровня</a>
+<li><a href="/html.cgi/txt/publ/_ineltek/pb-free/index.htm">Особенности применения электронных компонентов без содержания свинца (Pb-free)</a>
+<li><a href="/html.cgi/txt/ic/Texas_Instruments/micros/msp470/start.htm">Микроконтроллеры семейства TMS470 компании Texas Instruments</a>
+<li><a href="/html.cgi/txt/el_mech/C-MAC/index.htm">Резонаторы фирмы C-MAC MicroTechnology</a>
+<li><a href="/html.cgi/txt/publ/micros/arm.htm">Сравнительный анализ микроконтроллеров с ядром ARM</a>
+<li><a href="/html.cgi/txt/publ/plis/max_plus2.htm">Программное обеспечение для перевода проектов ПЛИС из САПР Maxplus II в базис БМК</a>
+<li><a href="/html.cgi/txt/app/motor/index_motor.htm">8-разрядные RISC-микроконтроллеры AVR в устройствах управления электродвигателями</a>
+<li><a href="/html.cgi/txt/app/adc/start.htm">Примеры применения аналого-цифровых преобразователей фирмы Texas Instruments</a>
+
+	</td>
+    <td valign="bottom">
+<!-- HotLog -->
+<script language="javascript">
+hotlog_js="1.0";
+hotlog_r=""+Math.random()+"&s=3870&im=134&r="+escape(document.referrer)+"&pg="+
+escape(window.location.href);
+document.cookie="hotlog=1; path=/"; hotlog_r+="&c="+(document.cookie?"Y":"N");
+</script><script language="javascript1.1">
+hotlog_js="1.1";hotlog_r+="&j="+(navigator.javaEnabled()?"Y":"N")</script>
+<script language="javascript1.2">
+hotlog_js="1.2";
+hotlog_r+="&wh="+screen.width+'x'+screen.height+"&px="+
+(((navigator.appName.substring(0,3)=="Mic"))?
+screen.colorDepth:screen.pixelDepth)</script>
+<script language="javascript1.3">hotlog_js="1.3"</script>
+<script language="javascript">hotlog_r+="&js="+hotlog_js;
+document.write("<a href='http://click.hotlog.ru/?3870' target='_top'><img "+
+" src='http://hit1.hotlog.ru/cgi-bin/hotlog/count?"+
+hotlog_r+"&' border=0 width=88 height=31 alt=HotLog></a>")</script>
+<noscript><a href=http://click.hotlog.ru/?3870 target=_top><img
+src="http://hit1.hotlog.ru/cgi-bin/hotlog/count?s=3870&im=134" border=0
+width="88" height="31" alt="HotLog"></a></noscript>
+<!-- /HotLog -->
+
+	</td>
+</tr>
+</table>
+<!--end body-->
+
+<br><br>
+<div align="center">
+<hr>
+<div align="center">
+<script type="text/javascript"><!--
+google_ad_client = "pub-4585385300578666";
+google_ad_width = 468;
+google_ad_height = 60;
+google_ad_format = "468x60_as";
+google_ad_type = "text";
+google_ad_channel ="";
+google_color_border = "FFFFFF";
+google_color_bg = "FFFFFF";
+google_color_link = "0000FF";
+google_color_url = "008000";
+google_color_text = "000000";
+//--></script>
+<script type="text/javascript"
+  src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+&nbsp;&nbsp;
+<script type="text/javascript"><!--
+google_ad_client = "pub-4585385300578666";
+google_ad_width = 468;
+google_ad_height = 60;
+google_ad_format = "468x60_as";
+google_ad_type = "text";
+google_ad_channel ="";
+google_color_border = "FFFFFF";
+google_color_bg = "FFFFFF";
+google_color_link = "0000FF";
+google_color_url = "008000";
+google_color_text = "000000";
+//--></script>
+<script type="text/javascript"
+  src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div>
+<hr>
+<img src="/im/ds/fon_white.gif" width=5 height=5 border=0><br>
+<a href="/">Главная</a> - 
+<a href="/html.cgi/txt/ic/index.htm">Микросхемы</a> - 
+<a href="/html.cgi/txt/doc/index.htm">DOC</a> - 
+<a href="/html.cgi/txt/lcd/index.htm">ЖКИ</a> - 
+<a href="/html.cgi/txt/power/index.htm">Источники питания</a> - 
+<a href="/html.cgi/txt/el_mech/index.htm">Электромеханика</a> - 
+<a href="/html.cgi/txt/interface/index.htm">Интерфейсы</a> - 
+<a href="/html.cgi/txt/soft/index.htm">Программы</a> - 
+<a href="/html.cgi/txt/app/index.htm">Применения</a> - 
+<a href="/html.cgi/txt/publ/index.htm">Статьи</a>
+</div>
+<img src="/im/ds/fon_white.gif" width=5 height=5 border=0><br>
+	</td>
+</tr>
+</table>
+<br>
+<table align="center" width=984 cellspacing=0 cellpadding=0 border=0 background="/img/ds/fon_1.gif">
+<tr>
+	<td bgcolor=677CB4 nowrap height=20><h2 class="menu">ПОИСК ПО СЕРВЕРУ</td>
+	<td bgcolor=FFFFFF>&nbsp;</td>
+	<td bgcolor=677CB4 nowrap height=20><h2 class="menu">Навигация</td>
+	<td bgcolor=FFFFFF>&nbsp;</td>
+	<td bgcolor=677CB4 nowrap height=20><h2 class="menu">СПИСКИ РАССЫЛКИ</td>
+</tr>
+<tr>
+	<td>
+          <table border=0 cellspacing=0 cellpadding=0>
+            <tr>
+              <td colspan=2 nowrap height="5"></td>
+            </tr>
+            <tr>
+              <td><form method="get" ACTION="http://www.gaw.ru/html.cgi/look.cgi"><input NAME="for" size="12"></td>
+              <td><input type="image" src="/images/ds/go_s.gif" border=0 alt="Найти!" width="26" height="24"></td>
+            </tr>
+            <tr>
+              <td colspan=2><table border=0 cellspacing=0 cellpadding=0>
+                <tr>
+                  <td><input type="Radio" name="seck" value="html" checked></td>
+                  <td><font class="search">HTML</font></td>
+                  <td><input type="Radio" name="seck" value="pdf"></td>
+                  <td><font class="search">PDF</font></td>
+                </tr>
+              </table>
+              </td>
+            </tr>
+            <tr>
+              <td colspan=2><a href="http://www.gaw.ru/html.cgi/look_ext.cgi"><font class="search2">Расширенный поиск</font></a></td>
+            </tr>
+          </table>
+        </form>
+	</td>
+	<td bgcolor=FFFFFF></td>
+	<td>
+	  <input type="hidden" name="Choose WEB-site" value><select NAME="Jump"
+      onchange="top.location.href = this.options[this.selectedIndex].value;" class="button">
+        <option selected value="#">Разделы сервера</option>
+        <option value="/">Главная страница</option>
+        <option value="/html.cgi/txt/doc/index.htm">Документация</option>
+        <option value="/html.cgi/txt/ic/start.htm">Микросхемы</option>
+        <option value="/html.cgi/txt/lcd/index.htm">ЖК-индикаторы</option>
+        <option value="/html.cgi/txt/soft/index.htm">Программы</option>
+        <option value="/html.cgi/txt/interface/index.htm">Интерфейсы</option>
+        <option value="/html.cgi/txt/el_mech/index.htm">Электромеханика</option>
+        <option value="/html.cgi/txt/app/index.htm">Применения</option>
+        <option value="/html.cgi/txt/publ/index.htm">Статьи</option>
+        <option value="/html.cgi/txt/sch/index.htm">Схемы</option>
+		<option value="/map.htm">-------------------</option>
+		<option value="http://sub.chipdoc.ru">Новости</option>
+		<option value="http://catalog.gaw.ru">Дилеры и фирмы</option>
+		<option value="http://shop.chipdoc.ru">Магазин</option>
+		<option value="http://www.compitech.ru">CompiTech</option>
+      </select>
+	</td>
+	<td bgcolor=FFFFFF></td>
+	<td>
+<form action="http://sub.chipdoc.ru/addsub.php" method="post" name="addsub">
+<input type="hidden" name="fid" value="4">
+<input type="hidden" name="list" value="10">
+<table cellspacing="0" cellpadding="2" border="0">
+<tr>
+    <td><b>Имя</b></td>
+    <td><input type="text" name="uname" size=16 maxlength=50 class="win"></td>
+    <td></td>
+</tr>
+<tr>
+    <td><b><nobr>E-mail</b></td>
+    <td><input type="text" name="umail" size=16 maxlength=50 class="win"></td>
+    <td><input type="submit" value="Подписаться" class="button"></td>
+</tr>
+</table>
+
+</form>
+	
+	</td>
+</tr>
+</table>
+
+<img src="img/ds/fon_white.gif" width=5 height=5 border=0><br>
+
+<table align="center" width=984 cellspacing=0 cellpadding=0 border=0>
+<tr valign="middle">
+	<td width="30" align="right" height="5" bgcolor=677CB4 colspan="2">&nbsp;</td>
+</tr>
+<tr>
+	<td>
+<noindex>
+<!--LiveInternet logo--><a href="http://www.liveinternet.ru/click" target=_blank><img
+src="http://counter.yadro.ru/logo?24.6" border=0
+title="LiveInternet: показано число посетителей за сегодня"
+width=88 height=15></a><!--/LiveInternet-->
+</noindex>
+	</td>
+	<td>
+
+	</td>
+	<td align="right">
+<a href="http://www.gaw.ru/about.htm" class="list2">Впервые?</a> | <a href="http://catalog.gaw.ru/index.php?page=document&id=17951" class="list2">Реклама на сайте</a> | <a href="http://www.gaw.ru/html.cgi/txt/web/index.htm" class="list2">О проекте</a> | <a href="http://www.gaw.ru/map.htm" class="list2">Карта портала</a><br>
+тел: +7 (495) 514 4110. e-mail:<a href="mailto:admin@eust.ru">admin@eust.ru</a><br>
+&copy; <a href="http://www.eust.ru">ООО Рынок Микроэлектроники</a>
+	</td>
+<tr>
+</table>
+<div>
+</body>
+</html>
+<!--end bot-->

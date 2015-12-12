@@ -1,0 +1,55 @@
+--------------------------------------------------
+Battery Life Estimator v1.20 Release Notes
+Copyright (C) 2008 Silicon Laboratories, Inc.
+--------------------------------------------------
+
+
+This release contains the following components:
+
+    * BatteryTypes (directory)
+        - Battery description files
+    * DischargeProfiles (directory)
+        - Discharge Profile description files
+    - BatteryLifeEstimator.exe 
+    - BatteryLifeEstimator.ini
+    - ReleaseNotes.txt (this file)
+
+
+Release Dates
+-------------
+
+	Battery Life Estimator v1.20 - September 19, 2009
+	Battery Life Estimator v1.1 - June 26, 2008
+	Battery Life Estimator v1.0 - February 25, 2008
+
+
+Revision History
+-----------------
+Version 1.20
+	Corrections
+	-----------
+          - Updated Help files.
+          - Changed caption to Silicon Labs battery Life Estimator
+
+Version 1.1
+
+	New features/Enhancements
+	-------------------------
+	- Added a help file.
+	- Battery description files now contain a parameter for maximum
+	  battery life.  Estimated battery life values on the Simulation
+	  Results dialog will not exceed this limit.
+	- The minimum system operating voltage limit specified in the
+	  discharge profile now works for the single and parallel
+	  battery configurations if the starting voltage is greater
+	  than the minimum system operating voltage.
+
+Version 1.0
+
+	New features/Enhancements
+	-------------------------
+	Initial release.
+
+	Corrections
+	-----------
+	Initial release.

@@ -1,0 +1,391 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- saved from url=(0052)http://wiki.seabright.co.nz/wiki/SdCardProtocol.html -->
+<html xmlns="http://www.w3.org/1999/xhtml"><head profile="http://gmpg.org/xfn/11"><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Seabright Technology</title>
+    	
+    <meta name="generator" content="stattrac 1.0">
+    <link rel="stylesheet" href="./Seabright Technology_files/style.css" type="text/css" media="screen">
+  <script src="chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/document_iterator.js"></script><script src="chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/find_proxy.js"></script><script src="chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/get_html_text.js"></script><script src="chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/global_constants.js"></script><script src="chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/name_injection_builder.js"></script><script src="chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/number_injection_builder.js"></script><script src="chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/string_finder.js"></script><script src="chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/change_sink.js"></script><meta name="document_iterator.js"><meta name="find_proxy.js"><meta name="get_html_text.js"><meta name="global_constants.js"><meta name="name_injection_builder.js"><meta name="number_injection_builder.js"><meta name="string_finder.js"><meta name="change_sink.js"></head>
+  <body class="custom">
+    <div id="page" class="hfeed content-540px">
+      <div id="header">
+	<div id="branding">
+	  <div class="homelink"><a href="http://seabright.co.nz/" title="Seabright Technology">Seabright Technology</a></div>
+	  <p class="description">Good Software Engineering</p>
+	</div>
+	<div id="skip"><a title="Skip to content" href="http://wiki.seabright.co.nz/wiki/SdCardProtocol.html#primary" accesskey="S">Skip to Content ↓</a></div>
+	<ul class="menu">
+	  <li class="page_item page-item-2"><a href="http://seabright.co.nz/" title="About">About</a></li>
+	  <li class="page_item page-item-19"><a href="http://seabright.co.nz/blog/" title="Blog">Blog</a></li>
+	  <li class="page_item page-item-33"><a href="http://seabright.co.nz/projects/" title="Projects">Projects</a></li>
+	</ul>
+      </div><!--#header-->
+      <div id="container">
+	<div id="rotating">
+	  <img src="./Seabright Technology_files/banner.png" width="920" alt="Seabright Technology Header Image" title="Seabright Technology Header Image">
+	</div>
+	<div id="primary" class="page">
+	  <div class="entry" id="post-2">
+	    <div class="entry-content">
+                <div id="content" class="wiki">
+<div class="wikipage searchable">
+<h1 id="SDCardProtocol">SD Card Protocol</h1>
+<p>
+There's a ton of information out there on using the MMC/SD SPI
+protocol to access SD cards but not much on the native protocol.  This
+page hopes to rectify that with information helpful to those
+implementing a SD host or trying to understand what they're seeing on
+an oscilloscope.
+</p>
+<h2 id="References">References</h2>
+<ul><li>The full MMC Specification is available as <a class="ext-link" href="http://www.jedec.org/download/search/JESD84-A44.pdf"><span class="icon">&nbsp;</span>JESD84-A44</a> from the <a class="ext-link" href="http://jedec.org/"><span class="icon">&nbsp;</span>JEDEC website</a>
+</li><li>The <a class="ext-link" href="http://www.sdcard.org/developers/tech/sdcard/pls/"><span class="icon">&nbsp;</span>SD Simplified Specification</a> from the SD Card Association covers most of the protocol
+</li><li>The full SD specification is available after <a class="ext-link" href="http://www.sdcard.org/developers/join/"><span class="icon">&nbsp;</span>joining the SD Card Association</a>
+</li></ul><h1 id="Compatibility">Compatibility</h1>
+<p>
+MMC, SD, and SDHC cards are broadly compatible at the electrical and framing level.  A properly designed
+controller should be able to handle them all.  Some differences are:
+</p>
+<ul><li>MMC cards are available in both High Voltage (2.7 - 3.6 V) and Dual Voltage (2.7 - 3.6 and 1.70 - 1.95 V)
+</li><li>MMC is designed to support multiple cards on the same bus
+</li><li>During initialisation MMC cards are clocked at 400 kHz or less
+</li><li>MMC, SD, and SDHC all have different initialisation sequences
+</li></ul><h2 id="Protocol">Protocol</h2>
+<p>
+The protocol is a strict master/slave arrangement where data is
+clocked synchronously from the host to the card or from the card to
+the host over digital lines.  Commands are sent from the host to the
+card and all commands have either no response, a 48 bit response, or a
+136 bit response.  Some commands may also start a data transfer to or
+from the card.
+</p>
+<p>
+There are three types of signal:
+</p>
+<ul><li>CLK, carrying the clock signal from the host
+</li><li>CMD, carrying commands from the host and responses from the card
+</li><li>DAT, carrying data from the host or data from the card
+</li></ul><p>
+There may be 1, 4, or 8 DAT lines.  SD Cards can run at 0 - 25 MHz in
+Default Mode or 0 to 50 MHz in High-Speed Mode.   MMC cards come in
+different grades that can run at up to 20, 26, or 52 MHz.  No matter
+what all cards start up in 3.3 V, single DAT, and low speed mode with any
+other features negotiated during the initialisation.
+</p>
+<h1 id="Physicallayer">Physical layer</h1>
+<p>
+All communication are at 3.3 V logic levels with 3.3 V being a high and 0 V being a low.  CLK comes
+from the host and idles low.  CMD and DAT are bidirectional and idle
+high.  All are driven in a push/pull mode for speed.
+</p>
+<p>
+Data is clocked into the host or card on the rising edge of CLK and
+changes on the falling edge.  This is equivalent to the SPI (0, 0)
+mode.
+</p>
+<h1 id="Framing">Framing</h1>
+<p>
+The framing is a bit unusual.  It feels like it was written by a
+embedded software engineer instead of a hardware or protocol
+engineer as the framing and use of CRCs is unusual and
+inconsistent.  The advantage is that the framing maps through to a
+software only implementation pretty well.
+</p>
+<p>
+All transfers start with a zero start bit and finish with a one stop
+bit.  A card may signal that it is still working on the response by keeping the CMD
+line high until the response is ready.
+</p>
+<p>
+All commands are 48 bits (6 bytes) long and all responses are
+either 48 bits (6 bytes) or 136 bits (17 bytes) long.  The 48 bit
+transfers can be thought of as an 8 bit message ID, 32 bit argument,
+and 8 bit checksum.
+</p>
+<p>
+Bytes are transferred most significant bit first.  Words are
+transferred most significant byte first.
+</p>
+<h2 id="CommandsandResponses">Commands and Responses</h2>
+<p>
+A command or response has the following format:
+</p>
+<table class="wiki">
+<tbody><tr><td> Bit </td><td> # </td><td> Value </td><td> Name 
+</td></tr><tr><td> 47  </td><td> 1 </td><td> 0 </td><td> Start bit 
+</td></tr><tr><td> 46  </td><td> 1 </td><td> 1 for commands, 0 for responses </td><td> Transmitter bit 
+</td></tr><tr><td> 45-40 </td><td> 6 </td><td> </td><td> Command ID 
+</td></tr><tr><td> 39-8 </td><td> 32 </td><td> </td><td> Argument 
+</td></tr><tr><td> 7-1 </td><td> 7 </td><td> </td><td> CRC 
+</td></tr><tr><td> 0 </td><td> 1 </td><td> 1 </td><td> Stop bit 
+</td></tr></tbody></table>
+<p>
+The CRC is a 7 bit CRC with polynomial  x<sup>7</sup> + x<sup>3</sup> + 1.
+A table driven form can be found in the Linux
+kernel under <a class="ext-link" href="http://lxr.linux.no/#linux+v2.6.32/lib/crc7.c"><span class="icon">&nbsp;</span>lib/crc7.c</a>.
+Bitwise forms may be generated using 
+<a class="ext-link" href="http://www.tty1.net/pycrc/"><span class="icon">&nbsp;</span>pycrc</a> with the parameters
+</p>
+<blockquote>
+<p>
+<tt>--width=7 --poly=9 --reflect-in=0 --reflect-out=0 --xor-out=0 --xor-in=0 --generate c --algorithm=bit-by-bit-fast</tt>
+</p>
+</blockquote>
+<p>
+such as
+</p>
+<div class="code"><pre><span class="k">for</span> <span class="p">(</span><span class="kt">int</span> b <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> b <span class="o">&lt;</span> <span class="mi">8</span><span class="p">;</span> b<span class="o">++</span><span class="p">)</span>
+<span class="p">{</span>
+    uint bit <span class="o">=</span> crc <span class="o">&amp;</span> <span class="mh">0x40</span><span class="p">;</span>
+
+    <span class="k">if</span> <span class="p">((</span>data <span class="o">&amp;</span> <span class="mh">0x80</span>UL<span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="p">{</span>
+        bit <span class="o">^=</span> <span class="mh">0x40</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    data <span class="o">&lt;&lt;=</span> <span class="mi">1</span><span class="p">;</span>
+    crc <span class="o">&lt;&lt;=</span> <span class="mi">1</span><span class="p">;</span>
+
+    <span class="k">if</span> <span class="p">(</span>bit <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="p">{</span>
+        crc <span class="o">^=</span> <span class="mh">0x09</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div><p>
+Note that the final CRC must be ANDed with 0x7F.
+</p>
+<p>
+The CRC seed is zero and is calculated over the start, transmitter,
+command ID, and argument fields.  The resulting CRC is compared for
+equality with the CRC from the message.
+</p>
+<p>
+Some examples are:
+</p>
+<p>
+<i>An APP_CMD (55) command that prefixes a SD specific command</i>
+</p>
+<p>
+Bytes: <tt>0x770000000065</tt>
+</p>
+<p>
+Bits: <tt>0 1 110111 00000000000000000000000000000000 0110010 1</tt>
+</p>
+<p>
+Fields:
+</p>
+<ul><li>Start bit = 0
+</li><li>Transmitter = 1
+</li><li>Command = 55 (decimal)
+</li><li>Argument = 00000000
+</li><li>CRC = 0x32
+</li><li>Stop bit = 1
+</li></ul><p>
+The CRC can be generated by feeding 0x77, 0x00, 0x00, 0x00, 0x00 into
+the CRC function above.
+</p>
+<p>
+<i>The response to the APP_CMD</i>
+</p>
+<p>
+Bytes: <tt>0x370000012083</tt>
+</p>
+<p>
+Bits: <tt>0 0 110111 00000000000000000000000100100000 1000001 1</tt>
+</p>
+<p>
+Fields:
+</p>
+<ul><li>Start bit = 0
+</li><li>Transmitter = 0 (this is a response)
+</li><li>Response = 55 (decimal)
+</li><li>Argument = 00000120
+</li><li>CRC = 0x41
+</li><li>Stop bit = 1
+</li></ul><p>
+<i>The response to CMD3 SEND_RELATIVE_ADDR</i>
+</p>
+<p>
+Bytes: <tt>0x03B368050019</tt>
+</p>
+<p>
+Bits: <tt>0 0 000011 10110011011010000000010100000000 0001100 1</tt>
+</p>
+<p>
+Fields:
+</p>
+<ul><li>Start bit = 0
+</li><li>Transmitter = 0 (this is a response)
+</li><li>Response = 3 (decimal)
+</li><li>Argument = 0xB3680500
+</li><li>CRC = 0x0C
+</li><li>Stop bit = 1
+</li></ul><p>
+Note that this cards Relative Card Address (RCA) is 0xB368
+</p>
+<h2 id="Data">Data</h2>
+<p>
+Data has the following format:
+</p>
+<table class="wiki">
+<tbody><tr><td> Bit </td><td> # </td><td> Value </td><td> Name 
+</td></tr><tr><td> 4113 </td><td> 1 </td><td> 0 </td><td> Start bit 
+</td></tr><tr><td> 4112-17 </td><td> 512*8 </td><td> </td><td> Data bits 
+</td></tr><tr><td> 16-1 </td><td> 16 </td><td> </td><td> CRC 
+</td></tr><tr><td> 0 </td><td> 1 </td><td> 1 </td><td> Stop bit 
+</td></tr></tbody></table>
+<p>
+Note that this is for a typical transfer of a block of 512 bytes.  The
+host knows from the command that was sent how many bytes to expect
+back.  There is no other way of knowing the message length.
+</p>
+<p>
+The CRC is is the ITU-T V.41 16 bit CRC with polynomial 0x1021.  A
+table driven version can be found in the Linux kernel under
+<a class="ext-link" href="http://lxr.linux.no/#linux+v2.6.32/lib/crc-itu-t.c"><span class="icon">&nbsp;</span>lib/crc-itu-t.c</a>.
+Note that there is no such thing as 'the' CRC16 so make sure you get
+the right one.
+</p>
+<p>
+Unlike the commands or responses the CRC is calculated over all of the
+data bytes and does not include the start bit.  The calculated CRC is checked for equality with the
+received CRC.
+</p>
+<p>
+PENDING: Add an example data message with CRC.
+</p>
+<h2 id="Handover">Handover</h2>
+<p>
+The CMD and DAT lines are bidirectional.  Handover occurs at the end
+of a command where both the host and the card switch to input mode for
+two clocks before the card starts driving in push/pull mode.  Some
+commands must be responded to in a fixed number of clocks but most
+allow an arbitrary time before the response must start.
+</p>
+<h1 id="Initialisation">Initialisation</h1>
+<p>
+To initialise a SD or SDHC card, send the following:
+</p>
+<ul><li>Write 74 clocks with CMD and DAT high
+</li><li>Write <tt>CMD0 GO_IDLE_STATE</tt>.  This will reset the card.
+</li><li>Write <tt>CMD8 SEND_IF_COND</tt> for 3.3 V parts. If any SDHC cards are
+</li></ul><p>
+present then you will get a wired-OR response with 0x3F as the
+command and 0xFF as the CRC and stop bit.  Note that this must be sent
+or SDHC cards will not respond to the following steps
+</p>
+<ul><li>Write <tt>CMD55 APP_CMD</tt>
+</li><li>Receive a 55 response
+</li><li>Write <tt>ACMD41 SD_SEND_OP_COND</tt>
+</li><li>Expect a wired-OR response with 0x3F as the command and 0xFF as the
+CRC and stop bit
+</li><li>Check the ready bit in the previous response.  If the card is not
+</li></ul><p>
+ready then repeat the CMD55/ACMD41 until it is
+</p>
+<ul><li>Write <tt>CMD2 ALL_SEND_CID</tt>
+</li><li>Expect a wired-OR response with 0x3F as the command and 0xFF as the
+CRC and stop bit
+</li><li>Write <tt>CMD3 SEND_RELATIVE_ADDR</tt>
+</li><li>Expect a 3 response.  The upper two bytes of the argument is the
+</li></ul><p>
+Relative Card Address (RCA) which is used in the next step
+</p>
+<ul><li>Write <tt>CMD7 SELECT_CARD</tt> with the RCA
+</li><li>Expect a 7 response
+</li></ul><p>
+The card is now selected and ready to transfer data.  See Figure 4-1
+'SD Memory Card State Diagram' in the simplified spec for more
+information.
+</p>
+<p>
+See section 4.7.4 'Detailed Command Description' in the simplified
+spec for more information on the commands and responses.
+</p>
+<p>
+MMC cards are initialised using a similar but different method.
+</p>
+<p>
+An example flow captured from Linux on a SC2440 is:
+</p>
+<table class="wiki">
+<tbody><tr><td> Phase </td><td> Command </td><td> Response </td><td> Notes 
+</td></tr><tr><td> CMD0 </td><td> 400000000095 </td><td> None 
+</td></tr><tr><td> CMD55 </td><td> 770000000065 </td><td> 370000012083 
+</td></tr><tr><td> ACMD41 SEND_OP_COND </td><td> 69001000005F </td><td> 3F00FF8000FF </td><td> Card is busy 
+</td></tr><tr><td> CMD55 </td><td> 770000000065 </td><td> 370000012083 
+</td></tr><tr><td> ACMD41 </td><td> 69001000005F </td><td> 3F00FF8000FF </td><td> Card is still busy 
+</td></tr><tr><td> CMD55 </td><td> 770000000065 </td><td> 370000012083 
+</td></tr><tr><td> ACMD41 SEND_OP_COND </td><td> 69001000005F </td><td> 3F80FF8000FF </td><td> Card is ready 
+</td></tr><tr><td> CMD2 ALL_SEND_CID </td><td> 42000000004D </td><td> 3F1D4144534420202010A0400BC10088ADFF 
+</td></tr><tr><td> CMD3 SEND_RELATIVE_ADDR </td><td> 43000100007F </td><td> 03B368050019 </td><td> RCA of 0xB368 
+</td></tr></tbody></table>
+<p>
+Note the missing CMD8 as this controller does not support SDHC.  I
+didn't capture the final CMD7.
+</p>
+<h1 id="Reading">Reading</h1>
+<p>
+Once initialised reading from a card is straight forward.
+</p>
+<p>
+To read a single page:
+</p>
+<ul><li>Send <tt>CMD17 READ_SINGLE_BLOCK</tt> with the offset to read from as the argument
+</li><li>Receive on the DAT lines
+</li><li>Send <tt>CMD12 STOP_TRANSMISSION</tt> once the block has been received
+</li></ul><p>
+To read consecutive pages:
+</p>
+<ul><li>Send <tt>CMD18 READ_MULTIPLE_BLOCK</tt>  with the starting offset as the argument
+</li><li>Receive as many blocks as you want on the DAT lines
+</li><li>Send <tt>CMD12 STOP_TRANSMISSION</tt> once the done
+</li></ul><p>
+Note that there will be a response to these commands and the response
+may be interleaved with the data.  See Figure 3-3: (Multiple) Block
+Read Operation for more information.
+</p>
+<p>
+On SDHC cards the offset is in terms of 512 byte blocks.  On SD cards
+the offset is in bytes and the number of bytes received depends on
+<tt>CMD16 SET_BLOCKLEN</tt>
+</p>
+<h1 id="ExceptionsforMMC">Exceptions for MMC</h1>
+<p>
+MMC cards are rare these days.  Rather than clutter the write up above
+with the MMC exceptions they have all been gathered up into this
+exception.
+</p>
+<p>
+The CMD line on a MMC card can operate in input, push/pull, or open
+collector modes.  The open collector mode is used during
+initialisation as a wired-OR to allow multiple cards to talk on the
+bus at once.  This is also why MMC initilisation mode is limited to
+400 kHz.
+</p>
+<p>
+Dual Voltage MMC cards are rare.  They start at 3.3 V and may be
+negotiated down to 1.8 V.
+</p>
+<p>
+One great thing about MMC is the Boot Operation Mode.  This is a very
+simple protocol that allows the host to easily address and clock in
+the specially configured boot partition off the card.  As far as I can
+tell this is only available on eMMC parts though which normally come
+in BGAs.
+</p>
+</div>
+
+</div>
+	    </div>
+	  </div><!--.entry-->
+	</div><!--#primary-->
+	<div id="footer">
+	  <p class="left">© 2009 <strong>Seabright Technology</strong></p>
+	</div><!--#footer-->
+      </div><!--#container-->	
+      <div class="clear"></div>	
+    </div><!--#page-->
+  
+
+</body><span id="skype_highlighting_settings" display="none" autoextractnumbers="1"></span><object id="skype_plugin_object" location.href="http://wiki.seabright.co.nz/wiki/SdCardProtocol.html" location.hostname="wiki.seabright.co.nz" style="position: absolute; visibility: hidden; left: -100px; top: -100px; " width="0" height="0" type="application/x-vnd.skype.click2call.chrome.5.7.0"></object></html>

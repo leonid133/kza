@@ -1,0 +1,5 @@
+"C:\Ivan\KNPP\VR\BPU\bpu\bpu1.obj",
+"C:\Ivan\KNPP\VR\BPU\bpu\interface.obj",
+"C:\Ivan\KNPP\VR\BPU\bpu\servo.obj",
+"C:\Ivan\KNPP\VR\BPU\bpu\init.obj",
+"C:\Ivan\KNPP\VR\BPU\bpu\mmcflash6.obj"  TO "C:\Ivan\KNPP\VR\BPU\bpu\bpu" RS(256) PL(68) PW(78) 

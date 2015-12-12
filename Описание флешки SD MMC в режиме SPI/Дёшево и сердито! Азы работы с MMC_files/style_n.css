@@ -1,0 +1,354 @@
+body {
+	width:100%;
+	margin-top: 0;
+	margin-left: 0;
+	margin-right: 0;
+	padding-top: 0;
+}
+#menu
+{
+	background-color: 68B2D5;
+	height: 22px;
+	margin-top: 16px;
+		
+}
+#menutext
+{
+	font-family: arial;
+	font-size:11px;
+	color : #ffffff;
+	text-decoration: none;
+	
+}
+#top
+{
+	margin-top: 20px;
+}
+#input
+{
+	margin-top: 16px;
+}
+input{
+
+	background-color: #FFFFFF;
+	height: 18;
+	border: 0px;
+	font-family: arial;
+	font-size : 12;
+	color : #9E9D9D;
+}
+#input2
+{
+	background-image: url(/im_n/input.gif);
+	width: 130px;
+	height: 22px;
+}
+#inputt
+{
+	margin-left: 10px;
+	width: 110px;
+	height: 18px;
+	margin-top: 1px;
+}
+
+
+h1.titl { 
+	font-family:Rosewood Std Regular,arial,helvetica; 
+	font-size:14pt;
+	color:#0E50CB;
+	font-style: bold;
+	text-align: center; 
+	line-height:25px
+	}
+h2.titl { 
+	font-family:arial,helvetica; 
+	font-size:12pt; 
+	color:#0E50CB; 
+	font-style: bold; 
+	text-align: center; 
+	}
+p.bl  { 
+	font-size: 10pt; 
+	font-family: Arial; 
+	font-weight:800; 
+	color: #000000; 
+	margin-left: 20pt }
+p.pe  { 
+	font-size: 10pt; 
+	font-family: Arial; 
+	color: #000000; 
+	text-align: justify; 
+	text-indent:20px; }
+	
+	
+#onluname
+{
+	font-family: arial;
+	font-size : 11px;
+	color : #9E9D9D;
+}
+
+#serchb
+{
+	font-family: arial;
+	font-size : 11;
+	color : #68B2D5
+}
+#serch
+{
+	font-family: arial;
+	font-size : 11;
+	color : #ffffff;
+}
+#banner
+{
+	background: url(/im_n/logo_baner.jpg) no-repeat;
+}
+#menutop
+{
+	background: url(/im_n/logo_menu.jpg) no-repeat;
+}
+#logint
+{
+	background: url(/im_n/logint.jpg) no-repeat;
+	
+}
+#logind
+{
+	background: url(/im_n/logind.jpg) no-repeat;
+	
+}
+#auth
+{
+	font-family: arial;
+	font-size : 14;
+	color : #ffffff;
+}
+#log
+{
+	padding-top: 20px;
+}
+#name
+{
+	font-family: arial;
+	font-size : 18;
+	color : #ffffff;
+	font-weight : bold;
+}
+#log2
+{
+	padding-top: 10px;
+}
+#lich
+{
+	font-family: arial;
+	font-size : 12;
+	color : #ffffff;
+}
+#log3
+{
+	padding-top: 20px;
+}
+#lmenut
+{
+	background: url(/im_n/lmenut.jpg) no-repeat;
+}
+#lmenud
+{
+	background: url(/im_n/lmenud.jpg) no-repeat;
+}
+#lmenu
+{
+	font-family: arial;
+	font-size : 14;
+	color : #68B2D5;
+}
+#imenum
+{
+	margin-left: 20px;
+}
+#strukt
+{
+	padding-left: 0;
+	float:left;
+}
+#r1
+{
+	background: url(/im_n/red.jpg) no-repeat;
+	height: 37px;
+	width: 400px;
+
+}
+#red
+{
+	font-family: Arial;
+	font-size : 20;
+	color : #ffffff;
+	margin-left: 30px;
+	margin-top: 10px;
+}
+#date
+{
+	font-family: Arial;
+	font-size : 11;
+	color : #000000;
+	font-weight: bold;
+}
+#time
+
+{
+	font-family: Arial;
+	font-size : 11;
+	color : #000000;
+}
+#razd
+{
+	font-family: Arial;
+	font-size : 11;
+	color : #727374;
+}
+#contr
+{
+	font-family: arial;
+	font-size : 11;
+	color : #3095C5;
+	font-weight : bold;
+}
+#textcr
+{
+	font-family: arial;
+	font-size : 12;
+	color : #000000;
+}
+#g1
+{
+	background: url(/im_n/grey.jpg) no-repeat;
+	height: 37px;
+	width: 100%;
+}
+#textcg
+{
+	font-family: arial;
+	font-size : 11;
+	color : #000000;
+}
+#b1
+{
+	background: url(/im_n/blue1.jpg) no-repeat;
+	height: 37px;
+	width: 400px;
+}
+#menud
+{
+	background: url(/im_n/menud.jpg) no-repeat;
+	width: 936px;
+	height: 33px;
+}
+#dmenu
+{
+	font-family: arial;
+	font-size : 12;
+	color : #FFFFFF;
+}
+#dmenu2
+{
+	font-family: arial;
+	font-size : 12;
+	color : #3095C5;
+}
+#tel
+{
+	font-family: arial;
+	font-size : 14;
+	color : #C30101;
+	font-weight: bold;
+}
+#name1
+{
+	font-family: Arial;
+	font-size : 12;
+	color : #000000;
+	font-weight: bold;
+}
+#copy
+{
+	
+	font-family: arial;
+	font-size : 12;
+	color : #000000;
+}
+#wm
+{
+	margin-left: 33px;
+	
+	
+}
+
+
+a {color:#3095C5;}
+a:hover{color:#C30101;}
+
+ul, ol {list-style: none;}
+.hidden {visibility: hidden;}
+
+#Ruler {display: none;}
+
+.div_p {padding: 0 0 20px; text-align: center;}
+*.div_p {margin: 0 0 20px; text-align: center;}
+ul.clist {padding: 10px 7px;}
+*ul.clist {margin: 10px 7px;}
+ul.clist li {text-align: left; font-family: arial; font-size: 12px; color:#555; padding: 4 0 1px 12px; background: url("/im_n/dot2.gif") left 7px no-repeat;}
+table.div {border-collapse: collapse; margin: 10 auto 10px; width: 98%; text-align: center;}
+table.div td {width: 25%; padding: 2px; border: 1px dotted #9E9D9D; vertical-align: top;} 
+table.div td p {font-size: 12px; padding: 5px; background:#F0F0EE;}
+  
+ul.speedbar2 {margin: 0; padding: 0 0 20px 0px; text-align: right; }
+ul.speedbar2 li {font-size: 12px; display: inline; color:#555; padding: 0 15px 5px 12px; background: url("/im_n/dot2.gif"/*tpa=http://catalog.gaw.ru/project/templates/public_www2//im_n/dot2.gif*/) left 5px no-repeat;}
+ul.speedbar2 li .selected  {color:#555; font-weight: bold; text-decoration: none;}
+ul.speedbar2 li .selected:hover  {color:#555; font-weight: bold; text-decoration: none;}
+
+/*?=headings
+------------------- */
+.heading {margin: 0 20px 0 0;}
+.heading span {display: block; color:#fff; font-size:16px; padding: 11px 32px 0; font-weight: bold; overflow: hidden;}
+
+.heading2 {font-size: 1px; height: 9px; margin: 0 20px 10px 0;}
+.heading2 span {display: block; font-size: 1px; height: 9px;}
+
+.heading_red {background: #C30101 url('http://catalog.gaw.ru/images/cells/big/red/l.gif') left top no-repeat;}
+.heading_red span {background: url('http://catalog.gaw.ru/images/cells/big/red/r.gif') right top no-repeat;}
+
+.heading_blue {background: #3095C5 url('http://catalog.gaw.ru/images/cells/big/blue/l.gif') left top no-repeat;}
+.heading_blue span {background: url('http://catalog.gaw.ru/images/cells/big/blue/r.gif') right top no-repeat;}
+
+.heading_grey {background: #727374 url('http://catalog.gaw.ru/images/cells/big/grey/l.gif') left top no-repeat;}
+.heading_grey span {background: url('http://catalog.gaw.ru/images/cells/big/grey/r.gif') right top no-repeat;}
+
+.heading2_red {background: #C30101 url('http://catalog.gaw.ru/images/cells/big/red/l2.gif') left top no-repeat;}
+.heading2_red span {background: url('http://catalog.gaw.ru/images/cells/big/red/r2.gif') right top no-repeat;}
+
+.heading2_blue {background: #3095C5 url('http://catalog.gaw.ru/images/cells/big/blue/l2.gif') left top no-repeat;}
+.heading2_blue span {background: url('http://catalog.gaw.ru/images/cells/big/blue/r2.gif') right top no-repeat;}
+
+.heading2_grey {background: #727374 url('http://catalog.gaw.ru/images/cells/big/grey/l2.gif') left top no-repeat;}
+.heading2_grey span {background: url('http://catalog.gaw.ru/images/cells/big/grey/r2.gif') right top no-repeat;}
+
+.all_search {padding: 0 22px 10px 0; overflow: hidden;}
+.all_search span {display: block; float: left; height: 29px; width: 260px; text-align: center; font-size:11px; font-family:arial; background: #333 url('http://gaw.ru/images/cells/small/red/l.gif') left top no-repeat;}
+.all_search span a {color:#fff; text-decoration: none;  cursor: pointer; display: block; padding: 12px 18px 0 25px; height: 17px; background: url('http://gaw.ru/images/cells/small/red/r.gif') right top no-repeat;}
+.all_search a:hover {color:#fff;}
+
+.news {padding:0 0 20px 0;
+margin:0;
+font:13px Arial, Helvetica, sans-serif;
+background:#FFFFFF;
+color:#232323;
+}
+
+a.news {
+color:#0a4368;
+text-decoration:underline;
+}
+#searchText {
+border:none;
+}

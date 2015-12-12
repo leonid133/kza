@@ -1,0 +1,415 @@
+C51 COMPILER V9.00   MMCFLASH3                                                             07/16/2012 10:46:36 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE MMCFLASH3
+OBJECT MODULE PLACED IN mmcflash3.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.exe mmcflash3.c DB OE BR
+
+line level    source
+
+   1          #include "c8051f120.h"
+   2          #include "mmcflash3.h"
+   3          #include <intrins.h>
+   4          #include <stdio.h>                     
+   5          #include <ctype.h> 
+   6          
+   7          xdata unsigned int i_CMD = 0x00, MMC_CMD = 0xff;
+   8          xdata unsigned long timeFlashOver = 0, address = 0x00000A00;
+   9          
+  10          xdata unsigned char BufferInKZA[512], flash = 0;
+  11          sbit CS = P3^2;
+  12          
+  13          //SPI------------------------------------------------------------------
+  14          void SPI_Init (void)
+  15          {
+  16   1              SPI0CFG = 0x40;
+  17   1              SPI0CN = 0x0F;
+  18   1              SPI0CKR = 0x08; //2.8 Mhz
+  19   1      }                                                                                                         
+             -                                                                                                                        
+             -                                                                  
+  20          
+  21          //----------------------------------------------------------------------
+  22          void SPI_isr(void) interrupt 6
+  23          {
+  24   1              static xdata unsigned char i_RST = 0x00;
+  25   1              xdata unsigned char a_tmp, b;
+  26   1              xdata char SFRPAGE_SAVE = SFRPAGE;
+  27   1              SFRPAGE = SPI0_PAGE;
+  28   1              
+  29   1              SPIF = 0;
+  30   1              if(MMC_CMD == 0xFE)
+  31   1              {
+  32   2                      flash=0;
+  33   2                      CS = 1;
+  34   2              }
+  35   1              else if(MMC_CMD == 0xFF)
+  36   1              {
+  37   2                      flash=1;
+  38   2                      CS = 1;
+  39   2              }
+  40   1              else if(MMC_CMD == 0x00) //init------------------------
+  41   1              {
+  42   2                      flash=0;
+  43   2                      if(i_RST==0x00)
+  44   2                      {
+  45   3                              CS = 1;
+  46   3                              i_RST++;
+  47   3                              SPI0DAT = 0xFF;
+  48   3                      }
+  49   2                      else if((i_RST > 0x00)&&(i_RST < 0x09))
+  50   2                      {
+  51   3                              i_RST++;
+  52   3                              SPI0DAT = 0xFF;
+  53   3                      }
+C51 COMPILER V9.00   MMCFLASH3                                                             07/16/2012 10:46:36 PAGE 2   
+
+  54   2                      else if(i_RST == 0x09)
+  55   2                      {
+  56   3                              CS = 0;
+  57   3                              i_RST++;
+  58   3                              SPI0DAT = 0xFF;
+  59   3                      }
+  60   2                      else
+  61   2                      {
+  62   3      //CMD0------------------------------------- 
+  63   3                              MMC_CMD = 0x01;
+  64   3                              i_RST = 0x00;
+  65   3                              SPI0DAT = 0x40;
+  66   3                      }
+  67   2              }
+  68   1              else if((MMC_CMD == 0x01) && (i_CMD < 0x04))
+  69   1              {
+  70   2                      i_CMD++;                        
+  71   2                      SPI0DAT = 0x00;
+  72   2              }
+  73   1              else if((MMC_CMD == 0x01) && (i_CMD >= 0x04))
+  74   1              {
+  75   2                      i_CMD = 0x00;
+  76   2                      MMC_CMD = 0x02;
+  77   2                      SPI0DAT = 0x95;
+  78   2              }
+  79   1              else if(MMC_CMD == 0x02)
+  80   1              {
+  81   2                      MMC_CMD = 0x03;
+  82   2                      SPI0DAT = 0xFF;
+  83   2              }
+  84   1              else if(MMC_CMD == 0x03)
+  85   1              {
+  86   2                      b = SPI0DAT;
+  87   2                      timeFlashOver++;
+  88   2                      if(timeFlashOver > 0x00d00000)
+  89   2                      {
+  90   3                              timeFlashOver = 0;
+  91   3                              MMC_CMD = 0xFF; 
+  92   3                      }
+  93   2                      
+  94   2                      if(b != 0xFF);
+  95   2                      {
+  96   3                              MMC_CMD=0x04;
+  97   3                      }
+  98   2                      SPI0DAT = 0xFF;
+  99   2              }
+ 100   1              else if(MMC_CMD == 0x04)
+ 101   1              {
+ 102   2                      timeFlashOver++;
+ 103   2                      if(timeFlashOver > 0x00d00000)
+ 104   2                      {
+ 105   3                              timeFlashOver=0;
+ 106   3                              MMC_CMD = 0xFF;
+ 107   3                      }
+ 108   2                      if(SPI0DAT == 0x00)
+ 109   2                      {
+ 110   3                              CS = 1;
+ 111   3                              flash = 1;
+ 112   3                              MMC_CMD = 0xFF;
+ 113   3                      }
+ 114   2                      if(SPI0DAT == 0xFF)
+ 115   2                      {
+C51 COMPILER V9.00   MMCFLASH3                                                             07/16/2012 10:46:36 PAGE 3   
+
+ 116   3                              MMC_CMD = 0x05;
+ 117   3                              timeFlashOver = 0;
+ 118   3                              CS = 1;
+ 119   3                      }
+ 120   2                      SPI0DAT = 0xFF;
+ 121   2      //-----------------------------------------
+ 122   2              }
+ 123   1              else if(MMC_CMD == 0x05)
+ 124   1              {
+ 125   2                      if(i_RST < 0x09)
+ 126   2                      {
+ 127   3                              i_RST++;
+ 128   3                              SPI0DAT = 0xFF;
+ 129   3                      }
+ 130   2                      else
+ 131   2                      {
+ 132   3      //CMD1--------------------------------------  
+ 133   3                              CS = 0;
+ 134   3                              i_RST = 0x00;
+ 135   3                              i_CMD = 0;
+ 136   3                              MMC_CMD = 0x06;
+ 137   3                              SPI0DAT = 0x41;
+ 138   3                      }
+ 139   2              }
+ 140   1              else if((MMC_CMD == 0x06) && (i_CMD < 0x04))
+ 141   1              {
+ 142   2                      i_CMD++;
+ 143   2                      SPI0DAT = 0x00;
+ 144   2              }
+ 145   1              else if((MMC_CMD == 0x06) && (i_CMD >= 0x04))
+ 146   1              {
+ 147   2                      i_CMD = 0x00;
+ 148   2                      MMC_CMD=0x07;
+ 149   2                      SPI0DAT = 0xFF;
+ 150   2              }
+ 151   1              else if(MMC_CMD == 0x07)
+ 152   1              {
+ 153   2                      timeFlashOver++;
+ 154   2                      if(timeFlashOver > 0x00d00000)
+ 155   2                      {
+ 156   3                              timeFlashOver = 0;
+ 157   3                              flash = 0;
+ 158   3                              CS = 1;
+ 159   3                              MMC_CMD = 0xFE;
+ 160   3                      }
+ 161   2                      b = SPI0DAT;
+ 162   2                      if(b != 0xFF)
+ 163   2                              MMC_CMD=0x08;
+ 164   2                      SPI0DAT = 0xFF;
+ 165   2              }
+ 166   1              else if(MMC_CMD == 0x08)
+ 167   1              {
+ 168   2                      timeFlashOver++;
+ 169   2                      if(timeFlashOver > 0x00d00000)
+ 170   2                      {
+ 171   3                              timeFlashOver=0;
+ 172   3                              CS = 1;
+ 173   3                              flash = 1;
+ 174   3                              MMC_CMD = 0xFF;
+ 175   3                      }
+ 176   2                      if(SPI0DAT == 0xFF)
+ 177   2                      {
+C51 COMPILER V9.00   MMCFLASH3                                                             07/16/2012 10:46:36 PAGE 4   
+
+ 178   3                              MMC_CMD = 0x09;
+ 179   3                      }
+ 180   2                      SPI0DAT = 0xFF;
+ 181   2              }
+ 182   1              else if(MMC_CMD == 0x09)
+ 183   1              {
+ 184   2                      if(b & 0x01)
+ 185   2                      {
+ 186   3                              MMC_CMD = 0x05;
+ 187   3                      }
+ 188   2                      else
+ 189   2                      {
+ 190   3                              CS = 1;
+ 191   3                              MMC_CMD = 0x0A;
+ 192   3                      }
+ 193   2                      SPI0DAT = 0xFF;
+ 194   2              }
+ 195   1              else if(MMC_CMD == 0x0A)
+ 196   1              {
+ 197   2                      flash = 1;
+ 198   2                      CS = 1;
+ 199   2                      MMC_CMD = 0xFF;
+ 200   2              }
+ 201   1              else if(MMC_CMD == 0x10) //write------------------------
+ 202   1              {
+ 203   2                      flash=0;
+ 204   2                      CS = 0;
+ 205   2                      MMC_CMD = 0x11;
+ 206   2                      SPI0DAT = 0xFF;
+ 207   2              }
+ 208   1              else if(MMC_CMD == 0x11) 
+ 209   1              {
+ 210   2                      MMC_CMD = 0x12;
+ 211   2                      SPI0DAT = 0x58;
+ 212   2              }
+ 213   1              else if(MMC_CMD == 0x12) 
+ 214   1              {
+ 215   2                      MMC_CMD = 0x13;
+ 216   2                      a_tmp = ((address & 0xff000000) >> 24);
+ 217   2                      BufferInKZA[0] = a_tmp;
+ 218   2                      SPI0DAT = a_tmp;
+ 219   2              }
+ 220   1              else if(MMC_CMD == 0x13) 
+ 221   1              {
+ 222   2                      MMC_CMD = 0x14;
+ 223   2                      a_tmp = ((address & 0x00ff0000) >> 16);
+ 224   2                      BufferInKZA[1] = a_tmp;
+ 225   2                      SPI0DAT = a_tmp;
+ 226   2              }
+ 227   1              else if(MMC_CMD == 0x14) 
+ 228   1              {
+ 229   2                      MMC_CMD = 0x15;
+ 230   2                      a_tmp = ((address & 0x0000ff00) >> 8);
+ 231   2                      BufferInKZA[2] = a_tmp;
+ 232   2                      SPI0DAT = a_tmp;
+ 233   2              }
+ 234   1              else if(MMC_CMD == 0x15) 
+ 235   1              {
+ 236   2                      MMC_CMD = 0x16;
+ 237   2                      a_tmp = address & 0x000000ff; 
+ 238   2                      BufferInKZA[3] = a_tmp;
+ 239   2                      SPI0DAT = a_tmp;
+C51 COMPILER V9.00   MMCFLASH3                                                             07/16/2012 10:46:36 PAGE 5   
+
+ 240   2              }
+ 241   1              else if(MMC_CMD == 0x16) 
+ 242   1              {
+ 243   2                      address += 0x00000200;
+ 244   2                      if(address > 0x001E3000) 
+ 245   2                              address = 0x00000A00; //1Gb
+ 246   2                      MMC_CMD = 0x17;
+ 247   2                      SPI0DAT = 0xFF;
+ 248   2              }
+ 249   1              else if(MMC_CMD == 0x17)
+ 250   1              {
+ 251   2                      MMC_CMD = 0x18;
+ 252   2                      SPI0DAT = 0xFF;
+ 253   2              }
+ 254   1              else if(MMC_CMD == 0x18)
+ 255   1              {
+ 256   2                      b = SPI0DAT;    // 00-ok, 20-Adress Err, 40,60-Param Err
+ 257   2                      timeFlashOver++;
+ 258   2                      if(timeFlashOver > 0x0000F000)
+ 259   2                      {
+ 260   3                              timeFlashOver=0;
+ 261   3                              CS = 1;
+ 262   3                              flash = 1;
+ 263   3                              MMC_CMD = 0x00;
+ 264   3                              address -= 0x00000200;
+ 265   3                      }
+ 266   2      
+ 267   2                      if(b == 0x00)
+ 268   2                      {
+ 269   3                              //OK
+ 270   3                              MMC_CMD = 0x19;
+ 271   3                      }
+ 272   2                      else if(b == 0x20)
+ 273   2                      {
+ 274   3                              address = 0x00000A00;
+ 275   3                              CS = 1;
+ 276   3                              flash = 1;
+ 277   3                              MMC_CMD = 0xFF;
+ 278   3                      }
+ 279   2                      else if(b == 0x40 || b == 0x60)
+ 280   2                      {
+ 281   3                              timeFlashOver=0;
+ 282   3                              CS = 1;
+ 283   3                              flash = 0;
+ 284   3                              MMC_CMD = 0xFE;
+ 285   3                      }
+ 286   2              
+ 287   2                      SPI0DAT = 0xFF;
+ 288   2              }
+ 289   1              else if(MMC_CMD == 0x19)
+ 290   1              {
+ 291   2                      timeFlashOver++;
+ 292   2                      if(timeFlashOver > 0x0000F000)
+ 293   2                      {
+ 294   3                              timeFlashOver=0;
+ 295   3                              CS = 1;
+ 296   3                              flash = 1;
+ 297   3                              MMC_CMD = 0xFF;
+ 298   3                      }
+ 299   2                      if(SPI0DAT==0xFF)
+ 300   2                      {
+ 301   3                              MMC_CMD = 0x1A;
+C51 COMPILER V9.00   MMCFLASH3                                                             07/16/2012 10:46:36 PAGE 6   
+
+ 302   3                      }
+ 303   2                      SPI0DAT = 0xFF;
+ 304   2              }
+ 305   1              else if(MMC_CMD == 0x1A)
+ 306   1              {
+ 307   2                      MMC_CMD = 0x1B;
+ 308   2                      SPI0DAT = 0xFE; 
+ 309   2              }
+ 310   1              else if(MMC_CMD == 0x1B)
+ 311   1              {
+ 312   2                      if(i_CMD >= 0x200)
+ 313   2                      {
+ 314   3                              i_CMD = 0;
+ 315   3                              MMC_CMD = 0x1C;
+ 316   3                              SPI0DAT = 0xFF;
+ 317   3                      }
+ 318   2                      else
+ 319   2                      {
+ 320   3                              SPI0DAT = BufferInKZA[i_CMD++];
+ 321   3                      }
+ 322   2              }
+ 323   1              else if(MMC_CMD == 0x1C)
+ 324   1              {
+ 325   2                      MMC_CMD = 0x1D;
+ 326   2                      SPI0DAT = 0xFF;
+ 327   2              }
+ 328   1              else if(MMC_CMD == 0x1D)
+ 329   1              {
+ 330   2                      if(SPI0DAT == 0xFF)
+ 331   2                      {
+ 332   3                              MMC_CMD = 0x1E;
+ 333   3                              CS = 1;
+ 334   3                      }
+ 335   2                      SPI0DAT = 0xFF;
+ 336   2              }
+ 337   1              else if(MMC_CMD == 0x1E)
+ 338   1              {
+ 339   2                      MMC_CMD = 0xFF;
+ 340   2                      CS = 1;
+ 341   2                      flash = 1;
+ 342   2                      SPI0DAT = 0xFF;
+ 343   2              }
+ 344   1      //------------------------
+ 345   1              SFRPAGE = SFRPAGE_SAVE;
+ 346   1              return;
+ 347   1      }
+ 348          
+ 349          //-----------------------------------------------------------------------
+ 350          void MMC_init1(void)
+ 351          {
+ 352   1              MMC_CMD = 0x00;
+ 353   1              SPIF = 1;
+ 354   1              return;
+ 355   1      }
+ 356          
+ 357          //-----------------------------------------------------------------------
+ 358          void WriteInKZA(unsigned char byte)
+ 359          {
+ 360   1              static xdata unsigned int counterBuf = 4;
+ 361   1              if(MMC_CMD == 0xFE)
+ 362   1                      return;
+ 363   1              BufferInKZA[counterBuf++] = byte;       
+C51 COMPILER V9.00   MMCFLASH3                                                             07/16/2012 10:46:36 PAGE 7   
+
+ 364   1              if((counterBuf >= 512)&&(flash == 1))
+ 365   1              {
+ 366   2                      counterBuf = 4;
+ 367   2                      MMC_CMD = 0x10;
+ 368   2                      SPIF = 1;
+ 369   2              }
+ 370   1              else if(flash == 3)
+ 371   1              {
+ 372   2              //--------------- SPI MMC end ------------
+ 373   2                      MMC_CMD = 0xfe;
+ 374   2              }
+ 375   1      
+ 376   1              return;
+ 377   1      }
+ 378          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1867    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =    528       3
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

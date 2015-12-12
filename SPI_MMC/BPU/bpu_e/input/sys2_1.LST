@@ -1,0 +1,662 @@
+C51 COMPILER V7.01  SYS2_1                                                                 10/21/2004 18:06:59 PAGE 1   
+
+
+C51 COMPILER V7.01, COMPILATION OF MODULE SYS2_1
+OBJECT MODULE PLACED IN sys2_1.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\c51.exe sys2_1.c DB OE
+
+stmt level    source
+
+   1          #include <C:\Cygnal\IDEfiles\C51\Inc\c8051f120.h>
+   2          
+   3          sfr16 DP       = 0x82;                 // data pointer
+   4          sfr16 ADC0     = 0xbe;                 // ADC0 data
+   5          sfr16 ADC0GT   = 0xc4;                 // ADC0 greater than window
+   6          sfr16 ADC0LT   = 0xc6;                 // ADC0 less than window
+   7          sfr16 RCAP2    = 0xca;                 // Timer2 capture/reload
+   8          sfr16 RCAP3    = 0xca;                 // Timer3 capture/reload
+   9          sfr16 RCAP4    = 0xca;                 // Timer4 capture/reload
+  10          sfr16 TMR2     = 0xcc;                 // Timer2
+  11          sfr16 TMR3     = 0xcc;                 // Timer3
+  12          sfr16 TMR4     = 0xcc;                 // Timer4
+  13          sfr16 DAC0     = 0xd2;                 // DAC0 data
+  14          sfr16 DAC1     = 0xd2;                 // DAC1 data
+  15          sfr16 PCA0CP5  = 0xe1;                 // PCA0 Module 5 capture
+  16          sfr16 PCA0CP2  = 0xe9;                 // PCA0 Module 2 capture
+  17          sfr16 PCA0CP3  = 0xeb;                 // PCA0 Module 3 capture
+  18          sfr16 PCA0CP4  = 0xed;                 // PCA0 Module 4 capture
+  19          sfr16 PCA0     = 0xf9;                 // PCA0 counter
+  20          sfr16 PCA0CP0  = 0xfb;                 // PCA0 Module 0 capture
+  21          sfr16 PCA0CP1  = 0xfd;                 // PCA0 Module 1 capture
+  22          
+  23          //sbit led = P3^0;
+  24          sbit sd = P2^3;
+  25          sbit vp = P2^4;
+  26          sbit gnd = P1^7;
+  27          sbit sys = P3^1;
+  28          sbit kor = P3^2;
+  29          sbit o3 = P3^3;
+  30          sbit o4 = P3^4;
+  31          sbit o5 = P3^5;
+  32          //sbit holl = P1^6;
+  33          
+  34          sbit CS = P2^1;
+  35          sbit RDY = P2^2; 
+  36          
+  37          void config(void);
+  38          void sysclk(void);
+  39          void UART0_Init(void);
+  40          void UART1_Init(void);
+  41          void port_init(void);
+  42          void UART0_isr(void);
+  43          void UART1_isr(void);
+  44          void DAC0_init(void);
+  45          void ADC0_init(void);
+  46          void Timer3_init(void);
+  47          void ADC0_isr(void);
+  48          
+  49          void Timer0_init(void);
+  50          void PCA_init(void);
+  51          void PCA_ISR (void);
+  52          /*
+  53          void PWM(void);
+  54          void Delay(void);
+  55          void Test (void);
+C51 COMPILER V7.01  SYS2_1                                                                 10/21/2004 18:06:59 PAGE 2   
+
+  56          */
+  57          void Read_flash(void);
+  58          void Write_byte(void);
+  59          
+  60          int tmpl, tmph, tmp;
+  61          char sw1 = 1, sw2, sw;
+  62          int adcrdy;
+  63          int i = 0, j = 0;
+  64          //unsigned char mess[80];
+  65          
+  66          int Delta_left, Delta_right;
+  67          
+  68          
+  69          
+  70          void main(void)
+  71          {
+  72   1              WDTCN = 0xde;
+  73   1              WDTCN = 0xad;
+  74   1      
+  75   1              port_init();
+  76   1              sysclk();
+  77   1              UART0_Init();
+  78   1              UART1_Init();
+  79   1              config();
+  80   1              DAC0_init();
+  81   1              ADC0_init();
+  82   1              Timer3_init();
+  83   1      
+  84   1              Timer0_init();
+  85   1              PCA_init();
+  86   1      
+  87   1      //      led = 0;
+  88   1      //      sd = led;
+  89   1              gnd = 1;
+  90   1      
+  91   1              DAC0 = 0x00;
+  92   1      
+  93   1              SFRPAGE = 0x00; 
+  94   1              SPI0CFG = 0x60; // SPI Configuration Register
+  95   1              SPI0CKR = 0x01; // SPI Clock Rate Register--- частота 12441600 Гц  Fsck=0.5*Fsysclk/(SPI0CKR+1)
+  96   1              SPI0CN = 0x01;  // SPI Control Register
+  97   1      //      SPI0CN = 0x09;  // SPI Control Register
+  98   1      
+  99   1              EIE1 = 0x00;
+ 100   1              IE = 0x00;
+ 101   1      
+ 102   1              Write_byte();
+ 103   1      
+ 104   1              Read_flash();
+ 105   1      
+ 106   1              EIE1 = 0x08;
+ 107   1              IE = 0x90;
+ 108   1              
+ 109   1              while(1)
+ 110   1              {
+ 111   2      //              Test();
+ 112   2      //              led = holl;
+ 113   2                      if (sw == 1)
+ 114   2                      {
+ 115   3                              if(sw1 == 1)
+ 116   3                              {
+ 117   4                                      SBUF0 = tmpl;
+C51 COMPILER V7.01  SYS2_1                                                                 10/21/2004 18:06:59 PAGE 3   
+
+ 118   4                                      TI0 = 1;
+ 119   4                                      sw1 = 0;
+ 120   4                                      sw2 = 1;
+ 121   4                              }
+ 122   3                              if(sw2 == 1)
+ 123   3                              {
+ 124   4                                      SBUF0 = tmph;
+ 125   4                                      TI0 = 1;
+ 126   4                                      sw2 = 0;
+ 127   4                                      sw1 = 1;
+ 128   4                              }
+ 129   3                              sw = 0;
+ 130   3                      }
+ 131   2              }
+ 132   1      }
+ 133          
+ 134          void SYSCLK(void)
+ 135          {
+ 136   1              int n = 0;
+ 137   1      
+ 138   1              SFRPAGE = 0x00;
+ 139   1              FLSCL = 0x10;   // FLASH Memory Control
+ 140   1              SFRPAGE = 0x0F;
+ 141   1              OSCXCN = 0x67;  // EXTERNAL Oscillator Control Register 
+ 142   1              for (n = 0; n < 256; n++) ;            // wait for osc to start
+ 143   1              while ( (OSCXCN & 0x80) == 0 );        // wait for xtal to stabilize
+ 144   1      
+ 145   1              CLKSEL = 0x01;  // Oscillator Clock Selector
+ 146   1              OSCICN = 0x00;  // Internal Oscillator Control Register
+ 147   1              PLL0CN = 0x05;  // PLL Control Register 
+ 148   1      
+ 149   1              SFRPAGE = 0x00;
+ 150   1              FLSCL = 0x10;
+ 151   1      
+ 152   1              SFRPAGE = 0x0F;
+ 153   1              PLL0CN |= 0x02;
+ 154   1              PLL0DIV = 0x04; // PLL pre-divide Register 
+ 155   1              PLL0MUL = 0x09; // PLL Clock scaler Register
+ 156   1              PLL0FLT = 0x01; // PLL Filter Register
+ 157   1              for(n = 0; n < 60; n++);               // wait at least 5us
+ 158   1              PLL0CN |= 0x02;                        // enable PLL
+ 159   1              while ( (PLL0CN & 0x10) == 0 );        // wait for PLL to lock
+ 160   1      
+ 161   1              CLKSEL = 0x02;  // Oscillator Clock Selector 
+ 162   1      }
+ 163          
+ 164          void port_init(void)
+ 165          {
+ 166   1         SFRPAGE = 0x0F;
+ 167   1              XBR0 = 0x36;    // XBAR0: Initial Reset Value
+ 168   1              XBR1 = 0x00;    // XBAR1: Initial Reset Value
+ 169   1              XBR2 = 0x44;    // XBAR2: Initial Reset Value
+ 170   1      // Select Pin I/0
+ 171   1      
+ 172   1      // NOTE: Some peripheral I/O pins can function as either inputs or 
+ 173   1      // outputs, depending on the configuration of the peripheral. By default,
+ 174   1      // the configuration utility will configure these I/O pins as push-pull 
+ 175   1      // outputs.
+ 176   1                          // Port configuration (1 = Push Pull Output)
+ 177   1          SFRPAGE = 0x0F;
+ 178   1          P0MDOUT = 0x75; // Output configuration for P0 
+ 179   1          P1MDOUT = 0x00; // Output configuration for P1 
+C51 COMPILER V7.01  SYS2_1                                                                 10/21/2004 18:06:59 PAGE 4   
+
+ 180   1          P2MDOUT = 0x1c;//8; // Output configuration for P2 
+ 181   1          P3MDOUT = 0x3F; // Output configuration for P3 
+ 182   1      
+ 183   1          P1MDIN = 0xFF;  // Input configuration for P1
+ 184   1      }
+ 185          
+ 186          void config(void)
+ 187          {
+ 188   1              SFRPAGE = 0x00;
+ 189   1              RSTSRC = 0x00;  // Reset Source Register
+ 190   1      
+ 191   1              IE = 0x90;          //Interrupt Enable
+ 192   1              IP = 0x10;          //Interrupt Priority
+ 193   1              EIE1 = 0x08;        //Extended Interrupt Enable 1
+ 194   1              EIE2 = 0x40;        //Extended Interrupt Enable 2
+ 195   1              EIP1 = 0x00;        //Extended Interrupt Priority 1
+ 196   1              EIP2 = 0x40;        //Extended Interrupt Priority 2
+ 197   1      }
+ 198          
+ 199          void UART0_Init(void)
+ 200          {
+ 201   1              char SFRPAGE_SAVE = SFRPAGE;
+ 202   1      
+ 203   1              SFRPAGE = 0x00;
+ 204   1      
+ 205   1              TMR2CF = 0x08;  // Timer 2 Configuration
+ 206   1              RCAP2L = 0xBC;  // Timer 2 Reload Register Low Byte
+ 207   1              RCAP2H = 0xFE;  // Timer 2 Reload Register High Byte
+ 208   1              TMR2L = 0x00;   // Timer 2 Low Byte     
+ 209   1              TMR2H = 0x00;   // Timer 2 High Byte    
+ 210   1              TMR2CN = 0x04;  // Timer 2 CONTROL
+ 211   1              TR2 = 1;        
+ 212   1              SFRPAGE = UART0_PAGE;
+ 213   1              
+ 214   1              SCON0 = 0x50;
+ 215   1              SSTA0 = 0x15;
+ 216   1      
+ 217   1              SFRPAGE = SFRPAGE_SAVE;
+ 218   1      }
+ 219          
+ 220          void UART1_Init(void)
+ 221          {
+ 222   1              char SFRPAGE_SAVE = SFRPAGE;
+ 223   1      
+ 224   1              SFRPAGE = UART1_PAGE;
+ 225   1      
+ 226   1              SCON1 = 0x10;       // Serial Port 1 Control Register 
+ 227   1              
+ 228   1              SFRPAGE =0x00;
+ 229   1      
+ 230   1              CKCON = CKCON & 0x08;
+ 231   1              TMOD = 0x22;
+ 232   1              TH1 = 0x28;
+ 233   1              TL1 = TH1;
+ 234   1              TR1 = 1;  
+ 235   1      
+ 236   1              SFRPAGE = SFRPAGE_SAVE;
+ 237   1      }
+ 238          
+ 239          
+ 240          void UART0_isr(void) interrupt 4
+ 241          {
+C51 COMPILER V7.01  SYS2_1                                                                 10/21/2004 18:06:59 PAGE 5   
+
+ 242   1              char SFRPAGE_SAVE = SFRPAGE;
+ 243   1              SFRPAGE = UART0_PAGE;
+ 244   1      
+ 245   1              if(TI0)
+ 246   1              {
+ 247   2      //              SBUF0 = tmp;
+ 248   2                      TI0 = 0;
+ 249   2              }
+ 250   1              if(RI0)
+ 251   1              {
+ 252   2                      RI0 = 0;
+ 253   2      //              j = SBUF0;
+ 254   2              }
+ 255   1              SFRPAGE = SFRPAGE_SAVE;
+ 256   1      }
+ 257          
+ 258          void UART1_isr(void) interrupt 20
+ 259          {
+ 260   1              char SFRPAGE_SAVE = SFRPAGE;
+ 261   1              SFRPAGE = UART1_PAGE;
+ 262   1      
+ 263   1              if(TI1)
+ 264   1              {
+ 265   2                      TI1 = 0;
+ 266   2              }
+ 267   1              if(RI1)
+ 268   1              {
+ 269   2                      tmp = SBUF1;
+ 270   2                      RI1 = 0;
+ 271   2              }
+ 272   1              SFRPAGE = SFRPAGE_SAVE;
+ 273   1      }
+ 274          
+ 275          void DAC0_init(void)
+ 276          {
+ 277   1              SFRPAGE = 0x00;
+ 278   1              REF0CN = 0x03;  // Reference Control Register
+ 279   1      
+ 280   1              DAC0L = 0xff;   // DAC0 Low Byte Register
+ 281   1              DAC0H = 0x0f;   // DAC0 High Byte Register
+ 282   1              DAC0CN = 0x80;  // DAC0 Control Register
+ 283   1      
+ 284   1              SFRPAGE = 0x01; 
+ 285   1              DAC1L = 0xff;   // DAC1 Low Byte Register
+ 286   1              DAC1H = 0x0f;   // DAC1 High Byte Register
+ 287   1              DAC1CN = 0x80;  // DAC1 Control Register
+ 288   1      }
+ 289          
+ 290          void ADC0_init(void)
+ 291          {
+ 292   1              SFRPAGE = 0x00;
+ 293   1              REF0CN |= 0x03; // Reference Control Register
+ 294   1              AMX0CF = 0x00;  // AMUX Configuration Register
+ 295   1              ADC0CN = 0x80;
+ 296   1              AMX0SL = 0x00;
+ 297   1              ADC0CF = 0x50;
+ 298   1      }
+ 299          
+ 300          void Timer3_init(void)
+ 301          {
+ 302   1              SFRPAGE = 0x01;
+ 303   1              TMR3CN = 0;
+C51 COMPILER V7.01  SYS2_1                                                                 10/21/2004 18:06:59 PAGE 6   
+
+ 304   1              TMR3CF = 0x08;
+ 305   1              RCAP3 = 0x00;
+ 306   1              TMR3 = RCAP3;
+ 307   1              TR3 = 1;
+ 308   1      }
+ 309          
+ 310          
+ 311          
+ 312          void Timer0_init(void)
+ 313          {
+ 314   1              SFRPAGE = 0x00;
+ 315   1              CKCON = CKCON | 0x08;   // Clock Control Register
+ 316   1              TL0 = 0x00;     // Timer 0 Low Byte
+ 317   1              TH0 = 0xF1;     // Timer 0 High Byte
+ 318   1              TMOD = TMOD | 0x22;    // Timer Mode Register
+ 319   1              TCON = TCON | 0x50;    // Timer Control Register 
+ 320   1      }
+ 321          
+ 322          void PCA_init(void)
+ 323          {
+ 324   1              SFRPAGE = 0x00;
+ 325   1              PCA0MD = 0x05;       // PCA Mode Register
+ 326   1              PCA0CN = 0x40;      // PCA Control Register
+ 327   1              PCA0L = 0x00;       // PCA Counter/Timer Low Byte
+ 328   1              PCA0H = 0x00;       // PCA Counter/Timer High Byte      
+ 329   1              
+ 330   1                      //Module 0
+ 331   1              PCA0CPM0 = 0xC2;    // PCA Capture/Compare Register 0
+ 332   1              PCA0CPL0 = 0x2B;    // PCA Counter/Timer Low Byte
+ 333   1              PCA0CPH0 = 0xEB;    // PCA Counter/Timer High Byte              
+ 334   1      
+ 335   1                      //Module 1
+ 336   1              PCA0CPM1 = 0xC2;    // PCA Capture/Compare Register 1
+ 337   1              PCA0CPL1 = 0x2B;    // PCA Counter/Timer Low Byte
+ 338   1              PCA0CPH1 = 0xEB;    // PCA Counter/Timer High Byte              
+ 339   1      
+ 340   1                      //Module 2
+ 341   1              PCA0CPM2 = 0xC2;    // PCA Capture/Compare Register 2
+ 342   1              PCA0CPL2 = 0x2B;    // PCA Counter/Timer Low Byte
+ 343   1              PCA0CPH2 = 0xEB;    // PCA Counter/Timer High Byte              
+ 344   1      
+ 345   1                      //Module 3
+ 346   1              PCA0CPM3 = 0xC2;    // PCA Capture/Compare Register 3  
+ 347   1              PCA0CPL3 = 0x2B;    // PCA Counter/Timer Low Byte
+ 348   1              PCA0CPH3 = 0xEB;    // PCA Counter/Timer High Byte              
+ 349   1      
+ 350   1                      //Module 4
+ 351   1              PCA0CPM4 = 0xC2;    // PCA Capture/Compare Register 4   
+ 352   1              PCA0CPL4 = 0x2B;    // PCA Counter/Timer Low Byte
+ 353   1              PCA0CPH4 = 0xEB;    // PCA Counter/Timer High Byte              
+ 354   1      
+ 355   1                      //Module 5
+ 356   1              PCA0CPM5 = 0xC2;    // PCA Capture/Compare Register 5
+ 357   1              PCA0CPL5 = 0x2B;    // PCA Counter/Timer Low Byte
+ 358   1              PCA0CPH5 = 0xEB;    // PCA Counter/Timer High Byte
+ 359   1      }
+ 360          
+ 361          void PCA_ISR (void) interrupt 9
+ 362          {
+ 363   1              SFRPAGE = 0x00;
+ 364   1              PCA0CN &= 0xBF;
+ 365   1              AMX0SL = 0x00;
+C51 COMPILER V7.01  SYS2_1                                                                 10/21/2004 18:06:59 PAGE 7   
+
+ 366   1              AD0BUSY = 1;
+ 367   1              while(AD0BUSY == 0)
+ 368   1              {
+ 369   2                      tmph = (ADC0&0x0fc0)>>6 | 0x80;
+ 370   2                      tmpl = (ADC0&0x3f) | 0xc0;
+ 371   2                      sw = 1;
+ 372   2              }
+ 373   1      }
+ 374          
+ 375          /*
+ 376          void PWM(void)
+ 377          {
+ 378                  unsigned int n;
+ 379          
+ 380                  SFRPAGE = 0x00;
+ 381          
+ 382                          //Module 0 Left rudder
+ 383                  n=60203-21.61*Delta_left;                                               // PCA0CP0=60558 +- 1659 
+ 384                  PCA0CPL0 = n&0xFF;                                                      // PCA Counter/Timer Low Byte
+ 385                  PCA0CPH0 = (n >> 8) & 0xFF ;                                    // PCA Counter/Timer High Byte
+ 386          
+ 387                          //Module 1 Right rudder
+ 388                  n=60203+21.61*Delta_right;                                              // PCA0CP1=60558 +- 1659
+ 389                  PCA0CPL1 = n&0xFF;                                                      // PCA Counter/Timer Low Byte
+ 390                  PCA0CPH1 = (n >> 8) & 0xFF ;                            // PCA Counter/Timer High Byte
+ 391          
+ 392                          //Module 2 Camera LR
+ 393                  n=60558+55.3*Cam_LR;                                                    // PCA0CP2=60558 +- 1659
+ 394                  PCA0CPL2 = n&0xFF;                                                      // PCA Counter/Timer Low Byte
+ 395                  PCA0CPH2 = (n >> 8) & 0xFF ;                                    // PCA Counter/Timer High Byte
+ 396          
+ 397                          //Module 3 Camera UD
+ 398                  n=62217-33.18*Cam_UD;                                                   // PCA0CP3=62217 - 3318
+ 399                  PCA0CPL3 = n&0xFF;                                                      // PCA Counter/Timer Low Byte
+ 400                  PCA0CPH3 = (n >> 8) & 0xFF ;                                    // PCA Counter/Timer High Byte
+ 401          
+ 402                  //Module 4 Engine throttle                      
+ 403                  n=62217-331.8*TRT;                                                              // PCA0CP4=62217 - 3318
+ 404                  PCA0CPL4 = n&0xFF;                                                      // PCA Counter/Timer Low Byte
+ 405                  PCA0CPH4 = (n >> 8) & 0xFF ;                                    // PCA Counter/Timer High Byte          
+ 406          
+ 407          }
+ 408          */
+ 409          
+ 410          /*
+ 411          void Delay(void)
+ 412          {
+ 413                  unsigned long j;
+ 414                  for (j=0; j<900000; j++);
+ 415          }
+ 416          */
+ 417          
+ 418          /*
+ 419          void Test (void)
+ 420          {
+ 421                  Delta_left=0;
+ 422                  Delta_right=0;
+ 423          //      PWM();
+ 424                  Delay();
+ 425          
+ 426                  Delta_left=0;
+ 427                  Delta_right=0;
+C51 COMPILER V7.01  SYS2_1                                                                 10/21/2004 18:06:59 PAGE 8   
+
+ 428          //      PWM(); 
+ 429                  Delay();
+ 430          
+ 431                  Delta_left=0;
+ 432                  Delta_right=0;
+ 433          //      PWM();
+ 434                  Delay();
+ 435          
+ 436                  Delta_left=0;
+ 437                  Delta_right=0;
+ 438          //      PWM();
+ 439                  Delay();
+ 440          
+ 441                  Delta_left=0;
+ 442                  Delta_right=0;
+ 443          //      PWM(); 
+ 444                  Delay();
+ 445          
+ 446                  Delta_left=0;
+ 447                  Delta_right=0;
+ 448          //      PWM();
+ 449                  Delay();
+ 450          
+ 451          } 
+ 452          */
+ 453          
+ 454          /*
+ 455          void ADC0_isr(void) interrupt 15
+ 456          {
+ 457                  SFRPAGE = 0x00;
+ 458                  AD0INT = 0;
+ 459                  adcrdy = 1;
+ 460                  tmp = (ADC0&0x0fc0)>>6 | 0x80;
+ 461                  SBUF0 = 0x33;
+ 462                  TI0 = 1;
+ 463                  tmp = (ADC0&0x3f) | 0xc0;
+ 464                  SBUF0 = tmp;
+ 465                  TI0 = 1;
+ 466                  DAC0 = 0x0000;
+ 467                  SFRPAGE = 0x01; 
+ 468                  DAC1 = 0;
+ 469          }
+ 470          */
+ 471          
+ 472          void Write_byte(void)
+ 473          { 
+ 474   1              static int Buf_Pointer=0,Page_Adr=0;
+ 475   1              static bit buf_num=1;
+ 476   1              idata unsigned int i=0;
+ 477   1      
+ 478   1              SFRPAGE = 0x00;
+ 479   1      
+ 480   1              for(tmpl = 0; tmpl< 200;tmpl ++)
+ 481   1              {
+ 482   2                      CS=0;                                                                   // Select flash
+ 483   2                      for(i=0;i<50;i++);
+ 484   2                                                                              // Wait 250 nS
+ 485   2                      SPIF=0;
+ 486   2                      if (buf_num) SPI0DAT=0x87;                                      // Opcode for Buffer 2 Write
+ 487   2                      else SPI0DAT=0x84;                                              // Opcode for Buffer 1 Write
+ 488   2                      while(!SPIF);
+ 489   2      
+C51 COMPILER V7.01  SYS2_1                                                                 10/21/2004 18:06:59 PAGE 9   
+
+ 490   2                      SPIF=0;
+ 491   2                      SPI0DAT=0xFF;                                                           // Don't care byte
+ 492   2                      while(!SPIF);
+ 493   2                      
+ 494   2                      SPIF=0;
+ 495   2                      SPI0DAT=(Buf_Pointer & 0x0300) >> 8;                    // 2 High bits of starting byte Adress
+ 496   2                      while(!SPIF);                                         
+ 497   2              
+ 498   2                      SPIF=0;
+ 499   2                      SPI0DAT=Buf_Pointer & 0x00FF;                           // Low byte of starting byte Adress
+ 500   2                      while(!SPIF);
+ 501   2      
+ 502   2                      for(tmp = 0; tmp< 528;tmp ++)
+ 503   2                      {
+ 504   3                              SPIF=0;
+ 505   3                              SPI0DAT=tmpl;
+ 506   3                              while(!SPIF);
+ 507   3      
+ 508   3                              if (Buf_Pointer<527) 
+ 509   3                                      Buf_Pointer++;
+ 510   3                              else 
+ 511   3                              {
+ 512   4                                      CS = 1;
+ 513   4                                      for(i=0;i<10;i++);                                                              // Wait 250 nS
+ 514   4      
+ 515   4                                      while (RDY == 0);
+ 516   4      
+ 517   4                                      CS=0;             
+ 518   4                                      for(i=0;i<10;i++);                                                      // Wait 250 nS
+ 519   4      
+ 520   4                                      SPIF=0; 
+ 521   4                                      if (buf_num) SPI0DAT=0x86;                              // Oрсоde for Buffer 2 writing
+ 522   4                                      else SPI0DAT=0x83;                                      // Oрсоde for Buffer 1 writing
+ 523   4                                      while(!SPIF);
+ 524   4      
+ 525   4                                      SPIF=0;
+ 526   4                                      SPI0DAT=(Page_Adr & 0x1FC0) >> 6;                       // High 7 bits of 13-bit Page Adress
+ 527   4                                      while(!SPIF);
+ 528   4      
+ 529   4                                      SPIF=0;
+ 530   4                                      SPI0DAT=(Page_Adr & 0x003F) << 2;               // Low 6 bits of 13-bit page adress
+ 531   4                                      while(!SPIF);
+ 532   4      
+ 533   4                                      SPIF=0;
+ 534   4                                      SPI0DAT=0xFF;                                           // Don't care byte
+ 535   4                                      while(!SPIF);
+ 536   4      
+ 537   4                                      for(i=0;i<10;i++);                                                      // Wait 250 nS 
+ 538   4                                      CS=1;        
+ 539   4      
+ 540   4                                      buf_num=!buf_num;
+ 541   4              
+ 542   4                                      Buf_Pointer=0;
+ 543   4              
+ 544   4                                      if (Page_Adr<8191) Page_Adr++;
+ 545   4                                      else Page_Adr=0;
+ 546   4                              }
+ 547   3                      }
+ 548   2                      for(i=0;i<40000;i++);                                                           // Wait 250 nS
+ 549   2              }
+ 550   1      }                                                                                               // End Routine
+ 551          
+C51 COMPILER V7.01  SYS2_1                                                                 10/21/2004 18:06:59 PAGE 10  
+
+ 552          void Read_flash(void)
+ 553          {
+ 554   1              int Page_Adr;
+ 555   1              unsigned char i=0,j=0;
+ 556   1      
+ 557   1              SFRPAGE = 0x00;
+ 558   1              
+ 559   1              RI0=0;
+ 560   1              TI0=1;
+ 561   1      
+ 562   1              for (Page_Adr=0;Page_Adr<8192;Page_Adr++)                               
+ 563   1              {
+ 564   2                      CS=0;                                                                   // Select flash
+ 565   2      
+ 566   2                      for(i=0;i<10;i++);                                                      // Wait 250 nS
+ 567   2      
+ 568   2                      SPIF=0;
+ 569   2                      SPI0DAT=0x52;                                                   // Opcode for Main Memory Page Read
+ 570   2                      while(!SPIF);
+ 571   2      
+ 572   2                      SPIF=0; 
+ 573   2                      SPI0DAT=(Page_Adr & 0x1FC0) >> 6;                       // High 7 bits of 13-bit Page Adress
+ 574   2                      while(!SPIF);
+ 575   2      
+ 576   2                      SPIF=0;  
+ 577   2                      SPI0DAT=((Page_Adr & 0x003F) <<2);                      // Low 6 bits of 13-bit Page Adress and 2
+ 578   2                      while(!SPIF);                                                           // High bits of Starting byte Adress on Page
+ 579   2      
+ 580   2                      SPIF=0;
+ 581   2                      SPI0DAT=0x00;                                                           // Low byte of Starting byte Adress
+ 582   2                      while(!SPIF);
+ 583   2      
+ 584   2                      SPIF=0;
+ 585   2                      SPI0DAT=0xFF;                                                           // Don't care byte
+ 586   2                      while(!SPIF);
+ 587   2      
+ 588   2                      SPIF=0;
+ 589   2                      SPI0DAT=0xFF;                                                           // Don't care byte
+ 590   2                      while(!SPIF);
+ 591   2      
+ 592   2                      SPIF=0;
+ 593   2                      SPI0DAT=0xFF;                                                           // Don't care byte
+ 594   2                      while(!SPIF);
+ 595   2      
+ 596   2                      SPIF=0;
+ 597   2                      SPI0DAT=0xFF;                                                           // Don't care byte
+ 598   2                      while(!SPIF);
+ 599   2      
+ 600   2                      for (i=0;i<33;i++)
+ 601   2                      {
+ 602   3                              while(!RI0);
+ 603   3                              RI0=0;
+ 604   3      
+ 605   3                              for(j=0;j<16;j++)
+ 606   3                              {
+ 607   4                                      SPIF=0;
+ 608   4                                      SPI0DAT=0xFF;
+ 609   4                                      while(!SPIF);
+ 610   4      
+ 611   4                                      while(!TI0);
+ 612   4                                      TI0=0;
+ 613   4                                      SBUF0=SPI0DAT;
+C51 COMPILER V7.01  SYS2_1                                                                 10/21/2004 18:06:59 PAGE 11  
+
+ 614   4                              }
+ 615   3                      }
+ 616   2                      for(i=0;i<10;i++);                                                      // Wait 250 nS
+ 617   2                      CS=1;     
+ 618   2              }
+ 619   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1164    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     23    ----
+   IDATA SIZE       =   ----       2
+   BIT SIZE         =      1    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

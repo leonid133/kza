@@ -1,0 +1,3 @@
+"C:\Leonid 7\WorkDirectory\kza\TarServ - копия\init.obj",
+"C:\Leonid 7\WorkDirectory\kza\TarServ - копия\servo.obj",
+"C:\Leonid 7\WorkDirectory\kza\TarServ - копия\tarservo.obj"  TO "C:\Leonid 7\WorkDirectory\kza\TarServ - копия\1" RS(256) PL(68) PW(78)  

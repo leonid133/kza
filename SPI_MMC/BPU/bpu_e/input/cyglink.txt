@@ -1,0 +1,1 @@
+C:\Ivan\Kulon\bcp1\input\sys2_1.obj  TO C:\Ivan\Kulon\bcp1\input\bbb RS(256) PL(68) PW(78) 

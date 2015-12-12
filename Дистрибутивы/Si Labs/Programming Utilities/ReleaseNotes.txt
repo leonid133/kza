@@ -1,0 +1,343 @@
+
+FLASH Programming Utilities v3.50 Release Notes
+Copyright (C) 2009 Silicon Laboratories, Inc.
+
+
+This release contains the following components:
+-----------------------------------------------
+
+	* Flash Programming (directory)
+	* Dynamic DLL Build (directory)
+            - mfc42.dll (MFC DLL for use with dynamic version of programming DLL) 
+            - msvcrt.dll (Additional Microsoft DLL for use with dynamic version of programming DLL) 
+            - SiUtil.dll (Flash Programming Dynamic Version DLL) 
+            - SiUtil.lib (Flash Programming Dynamic Version Library)
+            - USBHID.dll (USB Debug Adapter DLL)
+	* Static Programmers (directory)
+            * Command-Line (directory)
+                - SiUtil.dll (Flash Programming Static Version DLL) 
+                - SiUtil.lib (Flash Programming Static Version Library) 
+                - FLASHUtilCL.exe (Command-Line (32-bit) Flash Programming Application)
+                - USBHID.dll (USB Debug Adapter DLL)
+            * Windows Console (directory)
+                - SiUtil.dll (Flash Programming Static Version DLL) 
+                - SiUtil.lib (Flash Programming Static Version Library) 
+                - USBHID.dll (USB Debug Adapter DLL)
+                - FlashUtil.exe (Windows Console Flash Programming Application)
+                * FlashUtil Source Files (Application source file directory)
+	* ReleaseNotes.txt (this file)
+
+
+Supported Devices
+-----------------
+
+    F00x, F01x, F02x, F04x, F06x, F12x, F13x, F2xx, F30x, F31x, 
+    F32x, F33x, F34x, F35x, F36x, F41x, F50x, F52xA, F53xA, F54x,
+    F55x, F56x, F57x, F58x, F59x, F70x, F71x, F80x, F81x, F82x, 
+    F83x, F91x, F90x, F93x, F92x, T60x, T61x and T63x.
+
+
+Release Dates
+-------------
+
+	FLASH Programming Utilities Version 3.50 - October 28, 2009
+	FLASH Programming Utilities Version 3.40 - June 3, 2009
+	FLASH Programming Utilities Version 3.30 - April 27, 2009
+	FLASH Programming Utilities Version 3.20 - March 2, 2009
+	FLASH Programming Utilities Version 3.12.03 - January 8, 2009
+	FLASH Programming Utilities Version 3.12.02 - December 12, 2008
+	FLASH Programming Utilities Version 3.12 - October 8, 2008
+	FLASH Programming Utilities Version 3.11 - September8, 2008
+	FLASH Programming Utilities Version 3.10 - July 28, 2008
+	FLASH Programming Utilities Version 3.02 - July 1, 2008
+	FLASH Programming Utilities Version 3.01 - May 23, 2008
+	FLASH Programming Utilities Version 3.00 - April 15, 2008
+	FLASH Programming Utilities Version 2.90 - February 26, 2008
+	FLASH Programming Utilities Version 2.80 - December 3, 2007
+	FLASH Programming Utilities Version 2.70 - September 17, 2007
+	FLASH Programming Utilities Version 2.61 - March 5, 2007
+	FLASH Programming Utilities Version 2.60 - February 12, 2007
+	FLASH Programming Utilities Version 2.51 - October 14, 2006
+
+
+KNOWN ISSUES AND LIMITATIONS
+----------------------------
+	
+    1. To enable the USB Debug Adapter functionality in an application the 
+       USB debug adapter driver file must be present (USBHID.DLL).
+
+    2. Command-Line Utility
+	a. FLASHUtilCL.exe is a Windows command prompt program and cannot 
+             be used in DOS.
+	b. SiUtil.dll must be in the same directory as FLASHUtilCL.exe.
+	c. USBHID.dll must be in the same directory as FLASHUtilCL.exe.
+
+    3. Windows Console Utility: 
+	a. SiUtil.dll must be in the same directory as FLASHUtil.exe.
+	b. USBHID.dll must be in the same directory as FLASHUtil.exe.
+
+    4. Dynamic DLL
+	a. The dynamically linked build of the Utilities DLL requires that
+           files "MFC42.dll" and "MSVCRT.dll" be present on the target 
+           machine. This is not a problem if the client program is 
+           dynamically linked to the same version (Version 4.2) or newer 
+           of the MFC library (i.e. uses MFC as a shared library). The 
+           required MFC DLLs are provided with this release along with the 
+           dynamically linked MFC version of the Utilities DLL. Do not 
+           replace equivalent or newer version of these files if they are 
+           already present on the target machine.
+	b. USBHID.dll must be present to communicate with a USB Debug Adaper.
+
+    5. The FLASH Programming Utilities install by default to the 
+       "C:\SiLabs\MCU\Utilities\Flash Programming" directory.
+
+    6. Corresponding with Programming Utilities release 2.3 is a change in 
+       installation strategy. This release will now be compatible with the 
+       release downloaded from www.silabs.com. Due to this change, release 
+       2.3 will not recognize previous installations. The new installation 
+       will overwrite any existing files if installed to the same location 
+       as a previous installion. Attempting to uninstall a previous 
+       installation will affect the new installation if located in the 
+       same directory. 
+
+
+
+REVISION HISTORY
+----------------
+
+Version 3.50
+	Added support for C8051F34C/D devices.
+        Added support for C8051F800/1/2/3/4/5/6/7/8/9 devices.
+        Added support for C8051F810/1/2/3/4/5/6/7/8/9 devices.
+        Added support for C8051F820/1/2/3/4/5/6/7/8/9 devices.
+        Added support for C8051F830/1/2/3/4/5 devices.
+        Added support for C8051F901/2 devices.
+        Added support for C8051F911/2 devices.
+
+Version 3.40.00
+	Added support for C8051F550/1/2/3/4/5/6/7 devices.
+	Added support for C8051F560/1/2/3/4/5/6/7/8/9 devices.
+	Added support for C8051F570/1/2/3/4/5 devices.
+	Added support for C8051F540/1/2/3/4/5/6/7 devices.
+
+Version 3.30.00
+	Added support for C8051T606 device.
+
+	Fixed a problem with hexfile download which occurred when the 32k program space address (physical address 0x8000 
+	for bank 2 or 0x10000 for bank 3) was not at the beginning of the hexfile data line which resulted in the incorrect 
+	bank being programmed.
+ 
+Version 3.20.00
+	Added support for C8051F508/9 devices.
+	Added support for C8051F510/1 devices.
+	Added support for C8051F580/1/2/3/4/5/6/7/8/9 devices.
+	Added support for C8051F590/1 devices.
+	Added support for C8051F700/1/2/3/4/5/6/7/8/9 devices.
+	Added support for C8051F710/1/2/3/4/5 devices.
+
+	Firmware for the EC2 Serial Adapter has been updated to Version 23.
+	Firmware for the USB Debug Adapter has been updated to Version 21.
+	Firmware for the Toolstick Adapter has been updated to Version 6.
+
+	The USBDisconnect command has been changed to include a C2 firwmare disconnect command so that it 
+	will cause a reset prior to disconnection from the device so that subsequent code execution will resume from
+        address 0. This behavior is consistent with IDE behavior.
+
+	A timing problem was fixed in the EC2 Serial Adapter firmware that caused intermittent 
+	communication problems on specific boards.
+
+Version 3.12
+	Support added for C8051F34A/B devices.
+	Fixed memory size configuration in T61x devices. T61x devices can now be programmed without
+	a CRC error message.
+
+Version 3.11
+	Firmware for the EC2 Serial Adapter has been updated to Version 22.
+	Firmware for the USB Debug Adapter has been updated to Version 20.
+	Firmware for the Toolstick Adapter has been updated to Version 5.
+
+Version 3.10
+	Support added for C8051F500/1/2/3/4/5/6/7 devices.
+
+	Firmware for the EC2 Serial Adapter has been updated to Version 21.
+	Firmware for the USB Debug Adapter has been updated to Version 19.
+	Firmware for the Toolstick Adapter has been updated to Version 4.
+
+Version 3.02
+	Support added for C8051F348/9 devices.
+
+Version 3.01
+	XRAm access issue has been fixed.
+
+Version 3.00
+	Support added for C8051F520A/1A/3A/4A/6A/7A devices.
+	Support added for C8051F530A/1A/3A/4A/6A/7A devices.
+
+Version 2.90
+	Support added for C8051T630/1/2/3/4/5 devices.
+	Support added for C8051F930/1/2 devices.
+	Support added for C8051F920/1/2 devices.
+
+Version 2.80
+	Support added for C8051T610/1/2/3/4/5/6/7 devices.
+
+	Error codes listed in AN117 updated to correctly correspond with dll error codes.
+
+Version 2.70
+	Support added for C8051F336/7/8/9 devices.
+
+	The USBHID.DLL has been updated to include toolstick support. Therefore V1.6 of
+	the USBHID.DLL must be used with this version of the flash programming utilities.
+
+Version 2.61
+	Support added for C8051T600/1/2/3/4/5 devices.
+
+Version 2.60
+	Support added for C8051F360/1/2/3/4/5/6/7/8/9 devices.
+
+	The command interface was updated with improved error reporting. Functions
+	which previously returned an integer error code now return an HRESULT value 
+	containing detailed error information. Full documentation on the error codes 
+	is documented in the application note 117, "Using the C8051Fxxx	On-Chip 
+	Interface Utilities DLL".
+
+	The Download() I/F function was changed to add a new BOOL parameter called 
+	bPersistFlash which when set to TRUE will cause flash contents to be read 
+	prior to programming.
+
+	Function SetTargetHalt() return value type changed from BOOL to HRESULT with 
+	the function using the new error code implementation. 
+
+Version 2.51
+	Support added for C8051F520/1/3/4/6/7 devices.
+	Support added for C8051F530/1/3/4/6/7 devices.
+
+Version 2.50
+	A ToolStick device can be used as a USB Debug Adapter.	
+	Firmware for the EC2 Serial Adapter has been updated to Version 20.
+	Firmware for the USB Debug Adapter has been updated to version 12.
+
+Version 2.41
+	Issue when viewing XRAM with C8051F34x devices fixed.
+
+	Lock Code Memory section added to Set Memory tab of SiDebugger.exe. This
+	window provides direct access to the device Lock Bytes.
+
+	Function "GetDeviceName" added to dll that returns the Device Name of the 
+	connected device.
+
+Version 2.4
+	Support added for C8051F410/1/2/3 devices. 
+
+
+Version 2.3
+	Support added for C8051F340/1/2/3/4/5/6/7 devices. 
+	Support added for C8051F326/7 devices.
+
+	Firmware for the EC2 Serial Adapter has been updated to Version 19.
+	Firmware for the USB Debug Adapter has been updated to version 9.
+
+	The download function now contains a parameter option which will lock flash 
+	following the download.
+
+Version 2.21
+	A problem which prevented V2.2 from connecting to C8051F064 evaluation boards
+	has been corrected.
+
+
+version 2.2
+	Support added for Si825x devices. 
+	Support added for C8051F316/7 devices.
+
+	Issue causing the utility to not connect using an EC2 Serial Adapter 
+	has been resolved.
+
+	I/F updated for 'C' compatibility. Functions which previously contained 
+	std::string type parameters have been modified to use char *. 
+
+	Firmware for the EC2 Serial Adapter has been updated to Version 18.
+	Firmware for the USB Debug Adapter has been updated to version 7.
+	The new firmware versions include speed improvements for JTAG devices.
+
+	The USBHID.DLL has been updated to version 1.1.0.0. Version 2.2 of the 
+	FLASH Programming Utilities requires this version of the USBHID.DLL and 
+	will not work with older versions.
+
+
+Version 2.11
+	License Agreement updated.
+
+Version 2.1
+	Support has been added for the USB Debug Adapter. To enable this functionality in 
+	an application the USB debug adapter driver file must be present (USBHID.DLL).
+
+	Firmware for the RS232 serial adapter has been updated to Version 16.
+
+	Support added for COM ports above 4.
+
+	[FlashUtil.exe] Utility reorganized for easier access to Connection Options.
+
+Version 2.0
+	Support updated for the C8051F33x device family.
+
+	Executing a FlashErase() without hardware attached will return an error code of 2.
+
+Version 1.9
+	Support has been added for the F044\5\6\7 devices.
+	Support has been added for the F312\3\4\5 devices.
+	
+	A problem causing the Utilities DLL to not connect to a JTAG device in 
+	a multiple JTAG device chain has been fixed.
+
+	ALL dialog boxes are now disabled when using the Disable Dialogs feature.
+
+Version 1.8
+	Support added for F130/1/2/3 devices.
+
+Version 1.7
+	Support added for F064/5/6/7 devices.
+
+Version 1.6
+	Support added for F35x devices.
+
+Version 1.5
+	A problem with the SetCodeMemory function which caused pages edited in 
+	preceding SetCodeMemory calls to be reprogrammed has been corrected.
+	If security has been enabled on a device, unprotected areas of flash
+	can still be programmed.
+
+	Command-Line Utility: The version is now displayed with the usage 
+	information which is displayed when FlashUtilCL.exe is invoked with no 
+	parameters.
+
+	Command-Line Utility: Fixed a crash that occurred if the incorrect 
+	debug interface was specified for a download operation.
+
+Version 1.47
+	Fixed a problem that would not allow a single byte of flash to be written.
+
+	Fixed a problem which caused incorrect XRAM values to be displayed.
+
+	Fixed an error that occurred during a flash download on F12x devices when 
+	the erase flash option was selected.
+
+Version 1.46
+	Command-Line Utility: Fixed linking errors with FLASHUtilCl.exe. 
+
+	Command-Line Utility: Fixed issues with FLASHErase function.
+
+Version 1.45
+	Linking error for GetDLLVersion and GetSAFirmwareVersion functions fixed.
+
+	Support added for F06x devices.
+
+Version 1.44
+	An error occuring when using the MultiDevice function has been fixed.
+        
+Version 1.43
+	Support has been added for F33X devices. 
+
+	Added funtionality to return current Utilities DLL version and required 
+	firmware version. 
+
+	Removed long string of errors when FLASHErase called and power to TB is off.

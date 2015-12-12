@@ -1,0 +1,13 @@
+
+BL51 BANKED LINKER/LOCATER V6.22 - SN: K1SMC-S3H2GC
+COPYRIGHT KEIL ELEKTRONIK GmbH 1987 - 2009
+"C:\Leonid 7\WorkDirectory\kza\SPI_MMC\init.obj",
+"C:\Leonid 7\WorkDirectory\kza\SPI_MMC\servo.obj",
+"C:\Leonid 7\WorkDirectory\kza\SPI_MMC\tarservo.obj",
+"C:\Leonid 7\WorkDirectory\kza\SPI_MMC\mmcflash6.obj"  TO "C:\Leonid 7\WorkDirectory\kza\SPI_MMC\2.omf" RS(256) PL(68) PW(78) 
+
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_READ?SERVO
+
+Program Size: data=13.0 xdata=1185 code=10254
+LINK/LOCATE RUN COMPLETE.  1 WARNING(S),  0 ERROR(S)

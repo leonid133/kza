@@ -1,0 +1,588 @@
+Configuration Wizard 2 Release 2.70 Release Notes
+Copyright (C) 2009 Silicon Laboratories, Inc.
+
+
+This release contains the following components:
+
+* Configuration Wizard 2 (Config2.exe)
+* Device Support Files (DeviceDlls directory)
+* Release Notes (ReleaseNotes.TXT -- this file)
+
+
+KNOWN ISSUES AND LIMITATIONS
+----------------------------
+	
+	1.) Only F00x, F01x, F02x, F04x, F06x, F12x, F13x, F2xx, 
+	F30x, F31x, F32x, F326/7, F33x, F336/7/8/9, F34x, F35x, 
+	F36x, F41x, F50x, F52xA, F53xA, F54x, F55x, F56x, F57x,
+        F58x, F59x, F70x, F71x, F80x, F81x, F82x, F83x, F90x, F91x,  
+        F93x, F92x, T60x, T61x, and T63x devices are supported by this version.
+
+
+Release Dates
+-------------
+
+	Configuration Wizard 2 version 2.70 - October 28, 2009
+	Configuration Wizard 2 version 2.60 - June 3, 2009
+	Configuration Wizard 2 version 2.50 - April 27, 2009
+	Configuration Wizard 2 version 2.40 - March 2, 2009
+	Configuration Wizard 2 version 2.31 - October 8, 2008
+	Configuration Wizard 2 version 2.30 - July 28, 2008
+	Configuration Wizard 2 version 2.21 - June 3, 2008
+	Configuration Wizard 2 version 2.20 - April 15, 2008
+	Configuration Wizard 2 version 2.10 - February 26, 2008
+	Configuration Wizard 2 version 2.01 - January 3, 2008
+	Configuration wizard 2 version 2.00 - December 3, 2007
+	Configuration wizard 2 version 1.90 - September 17, 2007
+	Configuration Wizard 2 Version 1.81 - March 5, 2007
+	Configuration Wizard 2 Version 1.80 - February 12, 2007
+	Configuration Wizard 2 Version 1.72 - September 19, 2006
+
+
+REVISION HISTORY
+----------------
+version 2.70
+
+	New features/Enhancements
+	-------------------------
+	- Added support for C8051F34C/D devices.
+        - Added support for C8051F800/1/2/3/4/5/6/7/8/9 devices.
+        - Added support for C8051F810/1/2/3/4/5/6/7/8/9 devices.
+        - Added support for C8051F820/1/2/3/4/5/6/7/8/9 devices.
+        - Added support for C8051F830/1/2/3/4/5 devices.
+        - Added support for C8051F901/2 devices.
+        - Added support for C8051F911/2 devices.
+
+
+	Corrections
+	-----------
+	- Fixed the CS0 auto scan, it is now allowed for P2.0 to P5.7 as described in datasheet.
+        - Added missing parts from C8051F7xx family.
+
+
+version 2.60
+
+	New features/Enhancements
+	-------------------------
+	- Added support for C8051F540/1/2/3/4/5/6/7 devices.
+	- Added support for C8051F550/1/2/3/4/5/6/7 devices.
+	- Added support for C8051F560/1/2/3/4/5/6/7/8/9 devices.
+	- Added support for C8051F570/1/2/3/4/5 devices.
+
+	Corrections
+	-----------
+	- Removed code generated to wait after setting VDD Monitor Enable
+	  in register VDM0CN since it is enabled by default and in most
+	  cases the wait is unnecessary (F50x-51x, F58x-59x).
+
+	- Changed ADC0 property page 'Repeat Count' drop-down list control 
+	  to shorten option names to prevent cutoff (F50x-51x, F52xA-53xA,
+	  F58x-59x).
+
+	- Fixed behavior of Interrupt Enable and Interrupt Priority
+	  property pages to disable selections for CAN and LIN interrupts
+	  for devices which do not have those peripherals (F50x-51x,
+	  F58x-59x).
+
+	- Changed behavior of Interrupt Enable and Interrupt Priority
+	  property pages (F52xA-53xA) to show disabled selections for LIN
+	  interrupts for devices which do not have that peripheral; this
+	  is to match the behavior for similar device families.
+
+	- Added Port 3 pin 0, which was previously incorrectly
+	  omitted, as an ADC0 MUX input (F50x-51x, F58x-59x).
+
+	- Fixed the display order of Port 3 pins on the Port Match
+	  property page from little-endian to big-endian to conform
+	  with ports 0, 1 and 2 (F50x-51x, F58x-59x).
+
+	- Fixed code generated for setting the OSCICN Internal Oscillator
+	  Control register IOSCEN field to disable the Internal Oscillator
+	  (F50x-51x, F58x-59x).
+
+	- Fixed Port I/O Crossbar property page to disable LIN peripheral
+	  selection for devices which don't have that peripheral
+	  (F52xA-53xA).
+
+version 2.50
+
+	New features/Enhancements
+	-------------------------
+	Added support for C8051T606 device.
+
+version 2.40
+
+	New features/Enhancements
+	-------------------------
+	Added support for C8051F508/9 devices.
+	Added support for C8051F510/1 devices.
+	Added support for C8051F580/1/2/3/4/5/6/7/8/9 devices.
+	Added support for C8051F590/1 devices.
+	Added support for C8051F700/1/2/3/4/5/6/7/8/9 devices.
+	Added support for C8051F710/1/2/3/4/5 devices.
+
+	Corrections
+	-----------
+	- Fixed F50x-51x Reset Sources property page default setting
+	  for "Enable VDD Monitor"
+
+	- Fixed F50x-51x Timer timeout calculations when timer clock
+	  source is external oscillator divided by eight.
+
+	- Fixed some bugs on F50x-51x Timer peripheral property pages
+	  where certain option selections could disappear despite still
+	  being stored in the peripheral state and manifesting in the
+	  generated code.
+
+	- Fixed code generated for F50x-51x PCA0PWM ARSEL assignments
+	  so that code switches to the correct page (CONFIG_PAGE) before
+	  the assignment and back again (to ACTIVE_PAGE) after.
+
+	- Removed EMIF from the peripheral menus for F502, F503, F506
+	  and F507, devices which do not have off-chip memory access,
+	  and enhanced device-specific behavior of the property page.
+
+	- Fixed an incorrect control reference in the F50x-51x Timer 3
+	  property page which could cause a program fault.
+
+	- Fixed F50x-51x Comparator 1 MUX settings that were being
+	  applied to Comparator 0.
+
+	- Fixed F50x-51x Comparator initialization function code
+	  generation which could fail to provide necessary variable
+	  declaration.
+
+	- Fixed bitmap image IDs for F50x Devices to make bitmaps visible.
+
+	- Removed CAN configuration from F50x devices which do not have
+	  CAN peripherals (F501/3/5/7).
+
+version 2.31
+
+	New features/Enhancements
+	-------------------------
+	- Added support for F34A and F34B devices.
+
+	Corrections
+	-----------
+	- The oscillator peripheral now updates the FLRT bit (FLSCL)
+	  for proper flash read timing (F34x).
+
+	- Fixed global SYSCLK frequency so that it is updated properly (F34x).
+
+	- Fixed SFR paging (SFRPAGE) when a peripheral is accessed from another
+	  peripheral property page (F36x).
+
+	- Fixed bitmap image IDs for F92x/93x Devices to make bitmaps visible.
+
+version 2.30
+
+	New features/Enhancements
+	-------------------------
+	- Added support for F500/1/2/3/4/5/6/7 devices.
+
+	Corrections
+	-----------
+	- Fixed UART0/1 baud rate text boxes to display the correct
+	  baud rate (F02x).
+
+version 2.21
+
+	New features/Enhancements
+	-------------------------
+	- Added support for F348 and F349 devices.
+
+	Corrections
+	-----------
+	- Fixed external oscillator property pages to explicitly indicate that
+	  external capacitor and resistor/capacitor circuits' oscillation
+	  frequency will be halved when those modes are slected and used as a
+	  clock source (F30x, F31x, F32x, F33x, F34x, F35x, F36x, F41x, F50x,
+	  F52x-53x, F93x-92x, T60x, T61x, T63x).
+
+	- Fixed clock frequency calculations to correctly consider external
+	  oscillator mode (F04x, F06x, F30x, F31x, F32x, F33x, F34x, F35x, F36x,
+	  F41x, F50x, F52x-53x, F93x-92x, T60x, T61x, T63x).
+
+	- Fixed duplicate assembly code labels generated for clock initialization
+	  when using the clock multiplier simultaneously with certain external
+	  oscillator modes (F32x, F34x, F35x, F41x).
+
+version 2.20
+
+	New features/Enhancements
+	-------------------------
+	- Changed device support from F52x/F53x to F52xA/F53xA.
+
+	Corrections
+	-----------
+	- Fixed IDAC enable checkbox not being checked (F41x).
+	- Fixed the help window so that it will launch after a project
+	  is opened using the common file dialog (All Devices).
+
+version 2.10
+
+	New features/Enhancements
+	-------------------------
+	- Added support for T630/1/2/3/4/5 devices.
+	- Added support for F930/1 devices.
+	- Added support for F920/1 devices.
+
+version 2.01
+
+	Corrections
+	-----------
+	- Fixed timer calculations for square wave frequency (F04x, F06x, F12x,
+	  F13x).
+
+	- Fixed SFR paging for assembly code (F36x).
+
+	- Fixed oscillator configuration so that the internal oscillator is
+	  not disabled prior to changing the system clock source (F12x, F13x,
+	  F34x, F35x, F36x, F41x, F52x/53x).
+
+	- Added #include "compiler_defs.h" for C code format files that include
+	  C8051xxxx_defs.h (F336/7/8/9, T60x, T61x).
+
+	- Fixed Port I/O setting corruption that occured when using the Interrupts, 
+	  INT0/INT1 window to configure Port I/O settings(F41x).
+
+	- Fixed Timer 2 and Timer 3 RTC Capture Clock Source selection button 
+	  labels where Capture and Count sources were reversed (F41x).
+
+version 2.00
+
+	New features/Enhancements
+	-------------------------
+	- Added support for T61x devices.
+
+	Corrections
+	-----------
+	- Changed SFR name from VDM0CN to VDDMON (F52x/F53x).
+
+	- Fixed ADC mux selection (F36x).
+
+	- Updated Crossbar Priority Decoder (F340/1/4/5).
+
+version 1.90
+
+	New features/Enhancements
+	-------------------------
+	- Added support for F336/7/8/9 devices.
+
+	- Support added to the installer for associating Config Wizard 2 project 
+	  files (*.cwg) with the Config Wizard 2 application. 
+
+
+	Corrections
+	-----------
+	- Fixed Comparator 0 enable/disable status text on the Reset Sources
+	  property page (F30x, F31x, F32x, F33x, F34x, F35x, F36x, F41x, F52x).
+
+	- Increased the crossbar grid redraw speed (All Devices).
+
+	- Fixed "Gate Timer Depending on /Int0" and /Int1 so that changing the
+	  SMBus bit rate or UART baud rate on the Timer 0 and Timer 1 property
+	  pages does not disable the Interrupt 0 Type Select radio buttons
+	  (All Devices).
+
+	- Fixed Timer 1 Interrupt enable/disable status text on the Timer 1 
+	  property page (F30x, F31x, F32x, F326/7, F33x, F34x, F35x, F36x, F41x,
+	  T60x).
+
+	- Fixed a crossbar issue where selecting CP0A would appear to skip P1.5
+	  the next time the crossbar page is opened (F35x).
+
+version 1.81
+
+	New features/Enhancements
+	-------------------------
+	- Added support for T60x devices.
+
+	Corrections
+	-----------
+	- Added a Voltage Reference Control 2 property page (F064/5/6/7).
+
+	- Added a PLL and /SYSCLK pin property page to the oscillators peripheral (F36x).
+
+	- Fixed SFRPAGE switches at the beginning of initialization routines (F36x).
+
+version 1.80
+
+	New features/Enhancements
+	-------------------------
+	- Added support for F36x devices.
+
+	Corrections
+	-----------
+	- INT0 and INT1 can be configured to be edge or level sensitive without
+	  enabling the Timer 0 or Timer 1 Gate Control (All Devices).
+
+	- Fixed crossbar assignment comments in Port_IO_Init() (F30x).
+
+version 1.72
+
+	New features/Enhancements
+	-------------------------
+	- Added support for F52x and F53x devices.
+
+version 1.71
+
+	Corrections
+	-----------
+	- Added support for Config2 project files version 1.20 and newer for all devices.
+
+version 1.70
+
+	New features/Enhancements
+	-------------------------
+	- Added support for F00x, F01x and F2xx devices.
+
+	Corrections
+	-----------
+	- Fixed cancel button caption for Windows 2000 Japanese
+
+
+version 1.60
+
+	New features/Enhancements
+	-------------------------
+	- Added support for F316/7, F326/7, F34x, and F41x devices.
+
+	Corrections
+        -----------
+	- Fixed Dialog scaling issues for non-English versions of Windows (All Devices).
+
+	- Timers now use "Disable Baud Rate / 2" UART configuration when
+	  determining baud rates (F02x, F04x, F06x, F12x, F13x).
+
+	- Fixed ADC, CEX Frequency, Square Wave Frequency, SMBus, and 
+          Baud rate calculations so that results are rounded to produce 
+          the closest value (All devices).
+
+	- Renamed "Change Square Wave" button to "Change Interrupt Rate" 
+          in Timers peripheral (F04x, F06x, F12x, F13x).
+
+	- Fixed Help menu problems (missing/grayed/checked menu items).
+
+	- Changed Comparator response mode radio to a slider
+	  (F06x, F12x, F13x, F30x, F31x, F32x, F33x, F35x).
+
+	- Fixed ADC and Voltage Reference crash bug in F041/2/3/4/5/6/7 and F332/4.
+
+	- Main code window updates when a peripheral page is canceled to 
+          reflect sub dialog changes (All Devices).
+
+	- Clock multiplier uses undivided IOSC (ignores OSCICN frequency control bits)
+	  on F32x.
+
+	- Fixed SMBus T (high) calculations (F02x,F04x,F06x,F12x,F13x).
+
+	- Fixed crossbar checkboxes so that they grey when the crossbar is full
+	  (F02x, F04x, F06x, F12x, F13x).
+
+	- Fixed interrupts checkboxes so that they remain checked when the interrupts
+	  peripheral is closed and reopened (F30x, F31x, F32x).
+
+	- Fixed Peripherals->Reset All menu option on F331/2/3/4/5.
+
+	- Fixed print error in F32x and F35x devices.
+
+	- Fixed "Set NSS Signal to 1" checkbox to become enabled/disabled when changing
+	  slave mode (F04x, F06x, F12x, F13x, F31x, F32x, F35x).
+
+
+version 1.40
+
+	New features/Enhancements
+	-------------------------
+	- Added support for F02x and F04x devices.
+
+	Corrections
+        -----------
+
+	- Fixed Timer issues in the F12x.
+
+	- Fixed certain variable definitions in generated source code.
+
+	- Fixed Port I/O legend in F31x.
+
+	- Fixed About box versions and errors.
+
+	- Fixed various ADC bugs in F06x, F30x, and F31x device dlls.
+
+	- Spelling, phrasing issues and typos in dialog boxes fixed.
+
+	- Fixed Save Project bugs.
+
+	- Fixed various program crashes.
+
+	- Fixed various errors in comment windows.
+
+
+version 1.30
+
+	New features/Enhancements
+	-------------------------
+	-Added support for 13x devices.
+
+	Corrections
+        -----------
+
+	-Spelling, phrasing issues and typos in dialog boxes fixed.
+	
+	-Changed Oscillator for F06x so that RC/C is separated to RC and C.
+	
+	-Changed SPI for F12x so that when we are in 3 wire mode, NSS is not assigned 
+	to any port pin.
+
+	-Eliminated Change Square Wave from Timer 3 in F12x.
+
+	-Fixed the Change Square Wave formula for F12x.
+
+	-Fixed the Change Baud Rate formula for F12x.
+
+	-Fixed the change value of AMX2SL in ADC MUX Selection in F12x.
+
+	-Removed VDD monitor from Reset Source in F12x.
+
+	-Fixed SMBus Bit Rate for F12x.
+
+	-Fixed SAR formula for F12x.
+	
+
+
+version 1.20
+
+	New features/Enhancements
+	-------------------------
+	-Added support for 30x, 31x, 32x, and 35x devices.
+
+	-Added support for 064, 065, 066, 067 devices. (06x)
+
+	-Added a warning message to all Port I/O dialogs if it is not enabled while the 
+	peripherals are. (06x, 12x, 33x)
+
+	Corrections
+        -----------
+	-Spelling, phrasing issues and typos in dialog boxes fixed.
+
+	-When Timer 0 is in Mode 3 and TH0 is enabled, then it will also enable Timer 1. (06x, 12x, 33x)
+
+	-When external clock is selected in Timer 0/1 then T0M gets cleared. (06x, 12x, 33x)
+
+	-Gate Timer option is not always disabled in Timer 0/1. (06x, 12x, 33x)
+
+	-Timer 0 no longer deselectsthe clock scaler when disabling TH0. (06x, 12x, 33x)
+
+	-Fixed Timer 3 Enable. (12x)
+
+	-Changed SPI so it doesn't write to read only bits by default in the SPI0CFG sfr. (06x, 12x, 33x)
+
+	-Changed UART so it doesn't write to read only bits by default in the SCON0/1 sfr. (06x, 12x, 33x)
+	
+	-Changed SMBUS so it doesn't write to read only bits by default in the SMB0CN sfr. (06x, 12x, 33x)
+
+	-Fixed WDT enable problem x04 changed to x40, also the assembly xFB became xBF. (33x)
+
+	-Changed the PCA WDT lock to perform the lock last, which will automatically enable the WDT again. (33x)
+	
+	-Added a wait in the Comparator startup function so that the interrupts get cleared
+	in case they were set on startup. (06x, 33x)
+
+	-Fixed ADC2 Conversion mode selection. (06x, 12x)
+
+	-Removed EMI dialog from from 061 and 063 parts. (06x)
+
+	-Removed P4.4 - P4.0 Output Mode selection from the 06x parts. (06x)
+
+	-Paging fixed for Timer 2/4 when calculating the square wave, and paging fixed for
+	Timer 1 when calculating the baud rate. (06x)
+
+	-Oscillator's capacitor selection removed, and listed with the RC/C. (06x)
+
+	-Fixed Port I/O so it doesn't crash when EMI is enabled. (12x)
+
+	-Changed the order of operations so it configures the Port I/O before the Oscillators. (06x, 12x, 33x)
+	
+	-Fixed UART baud rate calculation (12x, 06x)
+
+	-Fixed ADC0/2 clock calculation (F12x).
+
+	
+version 1.11
+
+	New features/Enhancements
+	-------------------------
+	-Added FileType upon install so files can be opened by double clicking in
+	a Windows Explorer window.
+
+	Corrections
+        -----------
+	-Fixed Error in Port IO when trying to open the P4-7 Tab in 06x Support.
+
+	-Modified Baud Rate Calculation process to provide more accurate results in the
+	F12x Support.
+	
+	-Changed the EMIFLE toggle in the Port IO Dialog to skip the proper number of
+	pins in Multiplexed/Non-Multiplexed modes.
+
+	-Changed paging to include the '#' before the page defines.
+
+	-F06x/12x UART dialogs fixed so that the MultiProc Communications Enable 
+	selection stays when switching from UART0 to UART1 and back.
+
+	
+version 1.10
+
+	New features/Enhancements
+	-------------------------
+	-New DLL to provide support for F06x and F12x devices.
+	
+	-Updated to allow either C or ASM Source Code Formats.
+
+	Corrections
+        -----------
+	-Changed Checkbox in Port I/O dialog from Enable Weak Pullup to Disable.
+
+	-Changed the WDT in PCA to set PCA0MD = 0x40 instead of 0x04.
+
+
+version 1.03 (beta release)
+
+	New features/Enhancements
+	-------------------------
+	-Updated to allow either C or ASM Source Code Formats.
+
+	Corrections
+        -----------
+	-Changed Checkbox in Port I/O dialog from Enable Weak Pullup to Disable.
+
+
+Version 1.02
+
+	Corrections
+        -----------
+	-Added Filters on Open/Save Dialogs to only show the files needed.
+
+	-Fixed bug For saving a project, and not being able to reopen it (due to Port I/O Comments)
+
+Version 1.01
+
+	New features/Enhancements
+	-------------------------
+	-Added individual "Reset" Buttons to each dialog for easy reset to default value.
+
+	-When Port I/O function is generated, it will display as comments in the source file the port assignments made.
+
+Version 1.0
+
+	New features/Enhancements
+	-------------------------
+	Initial release, includes support for F33X devices. 
+
+	Corrections
+        -----------
+	Initial release.
+
+

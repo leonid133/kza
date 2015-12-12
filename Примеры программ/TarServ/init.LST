@@ -1,0 +1,216 @@
+C51 COMPILER V9.00   INIT                                                                  03/27/2012 13:33:28 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE INIT
+OBJECT MODULE PLACED IN init.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.exe init.c DB OE BR
+
+line level    source
+
+   1          #include "c8051f120.h"
+   2          #include "init.h"
+   3          
+   4          
+   5          // Config Routine---------------------------------------------------------------------
+   6          void SYSCLK(void)
+   7          {
+   8   1              xdata int n = 0;
+   9   1      
+  10   1              SFRPAGE = 0x00;
+  11   1              FLSCL = 0x10;   // FLASH Memory Control
+  12   1      
+  13   1              SFRPAGE = 0x0F;
+  14   1              OSCXCN = 0x67;  // EXTERNAL Oscillator Control Register 
+  15   1              for (n = 0; n < 256; n++)             // wait for osc to start
+  16   1                      ;
+  17   1              while ( (OSCXCN & 0x80) == 0 )        // wait for xtal to stabilize
+  18   1                      ;
+  19   1              CLKSEL = 0x01;  // Oscillator Clock Selector
+  20   1              OSCICN = 0x00;  // Internal Oscillator Control Register
+  21   1              PLL0CN = 0x05;  // PLL Control Register 
+  22   1      
+  23   1              SFRPAGE = 0x00;
+  24   1              FLSCL = 0x10;
+  25   1      
+  26   1              SFRPAGE = 0x0F;
+  27   1              PLL0CN |= 0x02;
+  28   1              PLL0DIV = 0x04; // PLL pre-divide Register 
+  29   1              PLL0MUL = 0x09; // PLL Clock scaler Register
+  30   1              PLL0FLT = 0x01; // PLL Filter Register
+  31   1              for(n = 0; n < 60; n++) // wait at least 5us
+  32   1                      ;               
+  33   1              PLL0CN |= 0x02;                        // enable PLL
+  34   1              //while ( (PLL0CN & 0x10) == 0 )        // wait for PLL to lock
+  35   1                      ;
+  36   1              CLKSEL = 0x02;  // Oscillator Clock Selector 
+  37   1      }
+  38          
+  39          //SPI---------------------------------------------------------------------------------
+  40          void SPI_Init (void)
+  41          {
+  42   1         SPI0CFG = 0x70;                     // data sampled on rising edge, clk
+  43   1                                             // active low,
+  44   1                                             // 8-bit data words, master mode;
+  45   1      
+  46   1         SPI0CN = 0x0F;                      // 4-wire mode; SPI enabled; flags
+  47   1                                             // cleared
+  48   1         SPI0CKR = 0x03;//SYSCLK/2/10000000;        // SPI clock <= 10MHz
+  49   1      }
+  50          
+  51          //------------------------------------------------------------------------------------------
+  52          void port_init(void)
+  53          {
+  54   1              SFRPAGE = CONFIG_PAGE;
+  55   1              XBR0 = 0x06;    // XBAR0: Initial Reset Value
+C51 COMPILER V9.00   INIT                                                                  03/27/2012 13:33:28 PAGE 2   
+
+  56   1              XBR1 = 0x00;    // XBAR1: Initial Reset Value
+  57   1              XBR2 = 0x44;        // XBAR2: Initial Reset Value
+  58   1                          
+  59   1              // Port configuration (1 = Push Pull Output)
+  60   1              SFRPAGE = 0x0F;
+  61   1              P0MDOUT = 0x75;  // Output configuration for P0 
+  62   1              P1MDOUT = 0x00;  // Output configuration for P1 
+  63   1              P2MDOUT = 0x00;  // Output configuration for P2 
+  64   1              P3MDOUT = 0x3F;  // Output configuration for P3
+  65   1              P4MDOUT = 0x00;  // Output configuration for P4
+  66   1              P5MDOUT = 0x00;  // Output configuration for P5
+  67   1              P6MDOUT = 0x00;  // Output configuration for P6
+  68   1              P7MDOUT = 0x00;  // Output configuration for P7 
+  69   1      
+  70   1              P1MDIN = 0xFF;   // Input configuration for P1
+  71   1      }
+  72          
+  73          //------------------------------------------------------------------------------------------
+  74          void config(void)
+  75          {
+  76   1              SFRPAGE = 0x00;
+  77   1              RSTSRC = 0x00;  // Reset Source Register
+  78   1      
+  79   1              IE = 0x92;          //Interrupt Enable
+  80   1              EIE1 = 0x00;        //Extended Interrupt Enable 1
+  81   1          EIE2 = 0x40;        //Extended Interrupt Enable 2
+  82   1      
+  83   1              IP = 0x10;          //Interrupt Priority
+  84   1              EIP1 = 0x00;        //Extended Interrupt Priority 1           Приоритет SPI = ?
+  85   1              EIP2 = 0x40;        //Extended Interrupt Priority 2
+  86   1      }
+  87          
+  88          //Скорость 57600 бод. Тактируется Timer2------------------------------------------------------
+  89          void UART0_Init(void)
+  90          {
+  91   1              SFRPAGE = 0x00;
+  92   1      
+  93   1              TMR2CF = 0x08; // Timer 2 Configuration
+  94   1         RCAP2L = 0xCA;  // Timer 2 Reload Register Low Byte   BaudRate = 57
+  95   1         RCAP2H = 0xFF;  // Timer 2 Reload Register High Byte
+  96   1      
+  97   1         TMR2L = 0x00;   // Timer 2 Low Byte  
+  98   1         TMR2H = 0x00;   // Timer 2 High Byte 
+  99   1         TMR2CN = 0x04;  // Timer 2 CONTROL
+ 100   1              TR2 = 1;        
+ 101   1              SFRPAGE = UART0_PAGE;
+ 102   1              
+ 103   1              SCON0 = 0x50;
+ 104   1              SSTA0 = 0x15;
+ 105   1      }
+ 106          
+ 107          //-----------------------------------------------------------------
+ 108          //GPS, скорость 4800 бод, тактируется Timer1 
+ 109          void UART1_Init(void)
+ 110          {
+ 111   1              SFRPAGE = UART1_PAGE;
+ 112   1              SCON1 = 0x10;           /* Регистр управления COM1
+ 113   1                                                                              SCON1.7 = S1MODE= 0: 8-ми разрядный COM-порт с изменяемой скоростью передачи данных
+ 114   1                                                                              SCON1.5 = MCE1  = 0: (при S1MODE = SCON1.7 = 0) логический уровень стопового бита игнорируется
+ 115   1                                                                              SCON1.4 = REN1 = 1: Разрешение приема   */
+ 116   1              
+ 117   1              SFRPAGE =0x00;
+C51 COMPILER V9.00   INIT                                                                  03/27/2012 13:33:28 PAGE 3   
+
+ 118   1              CKCON = CKCON | 0x02;   /*регистр управления тактированием
+ 119   1                                                                              CKCON.3 = T0M = 1:      Timer 0 тактируется системным тактовым сигналом 
+ 120   1                                                                              (т.е. биты CKCON.1 и CKCON.0 не влияют)
+ 121   1                                                                              CKCON.1 = SCA1 = 1:     Биты выбора делителя частоты тактирования Timer 0, 1 
+ 122   1                                                                              CKCON.0 = SCA0 = 0:     SYSCLK/48*/
+ 123   1      
+ 124   1              TMOD = TMOD | 0x20;             /*Регистр режима Таймеров 0 и 1
+ 125   1                                                                              TMOD.7 = GATE1 = 0: Таймер 1 включен, если TR1 = 1, независимо от логического уровня на входе /IN
+             -T1.
+ 126   1                                                                              TMOD.6 = C/T1 = 0:  Т/С1  работает  как  таймер:  Таймер 1  инкрементируется  от  внутреннего  си
+             -гнала   
+ 127   1                                                                                                      тактирования, который задается битом T1M (CKCON.4).  
+ 128   1                                                                              TMOD.5 = T1M1 = 1,      
+ 129   1                                                                              TMOD.4 = T1M0 = 0:      Выбор режима работы Таймера 1: 8-разрядный таймер/счетчик с автоперезагрузкой
+             -*/
+ 130   1              TH1 = 148;              
+ 131   1              TL1 = TH1;
+ 132   1              TR1 = 1;  
+ 133   1      }
+ 134          
+ 135          //-----------------------------------------------------------------------------------
+ 136          void DAC0_init(void)
+ 137          {
+ 138   1              SFRPAGE = 0x00;
+ 139   1              REF0CN = 0x03;  // Reference Control Register
+ 140   1      
+ 141   1              DAC0L = 0xff;   // DAC0 Low Byte Register
+ 142   1              DAC0H = 0x0f;   // DAC0 High Byte Register
+ 143   1              DAC0CN = 0x80;  // DAC0 Control Register
+ 144   1      
+ 145   1              SFRPAGE = 0x01; 
+ 146   1              DAC1L = 0xff;   // DAC1 Low Byte Register
+ 147   1              DAC1H = 0x0f;   // DAC1 High Byte Register
+ 148   1              DAC1CN = 0x80;  // DAC1 Control Register
+ 149   1      }
+ 150          
+ 151          //--------------------------------------------------------------------
+ 152          void ADC_init(void)
+ 153          {
+ 154   1              SFRPAGE = 0x00;
+ 155   1              REF0CN = 0x03;  // Reference Control Register
+ 156   1              AMX0CF = 0x00;  // AMUX Configuration Register
+ 157   1              ADC0CF = 0x80;
+ 158   1              ADC0CN = 0x80;
+ 159   1      
+ 160   1              ADC0LT = 0x0000;        // ADC Less-Than High Byte Register
+ 161   1              ADC0GT = 0xFFFF;        // ADC Greater-Than High Byte Register
+ 162   1      
+ 163   1              SFRPAGE = 0x02;
+ 164   1              AMX2CF = 0x00;  // AMUX Configuration Register
+ 165   1              ADC2CF = 0x81;
+ 166   1              ADC2CN = 0x80;
+ 167   1      
+ 168   1              ADC2LT = 0x00;  // ADC Less-Than High Byte Register
+ 169   1              ADC2GT = 0xFF;  // ADC Greater-Than High Byte Register
+ 170   1      }
+ 171          
+ 172          //-------------------------------------------------------------------
+ 173          void Timer0_init(void)
+ 174          {
+ 175   1              SFRPAGE = 0x00;
+ 176   1              CKCON = CKCON | 0x02;   // Clock Control Register       Источник - Sysclk/48
+C51 COMPILER V9.00   INIT                                                                  03/27/2012 13:33:28 PAGE 4   
+
+ 177   1              TH0 = 0xAE;     // 0xFFFF-49766400/48/FREQ = 0xAEFF
+ 178   1              TL0 = 0xFF;     
+ 179   1              TMOD = TMOD | 0x01;    // Timer Mode Register 1 режим - 16 разрядный таймер счетчик
+ 180   1      
+ 181   1              TR0 = 1; 
+ 182   1              return;
+ 183   1      }
+ 184          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    334    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----       2
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

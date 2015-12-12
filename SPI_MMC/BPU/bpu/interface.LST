@@ -1,0 +1,170 @@
+C51 COMPILER V9.00   INTERFACE                                                             10/22/2012 10:01:28 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE INTERFACE
+OBJECT MODULE PLACED IN interface.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.exe interface.c DB OE BR
+
+line level    source
+
+   1          #include "interface1.h"
+   2          #include "bpu1.h" 
+   3          #include "c8051f120.h"
+   4          
+   5          
+   6          xdata char BufferInModem[SIZE_BUFFER0]; // Для отправки в последовательный порт
+   7          xdata int r0, rk;
+   8          bit flTransmiter;       
+   9          
+  10          //----------------------------------------------------------------------------
+  11          void OutModem20(void)
+  12          {
+  13   1              xdata char i;
+  14   1              while (flTransmiter)
+  15   1                      ;                       
+  16   1         BufferInModem[0] = 20 | 0x40;
+  17   1              if(flNoKoord)
+  18   1         {
+  19   2              BufferInModem[1] = 0x80;           
+  20   2            BufferInModem[2] = 0x80;     
+  21   2            BufferInModem[3] = 0x80;     
+  22   2            BufferInModem[4] = 0xff;     
+  23   2            BufferInModem[5] = 0x80;     
+  24   2            BufferInModem[6] = 0x80;     
+  25   2            BufferInModem[7] = 0x80;     
+  26   2            BufferInModem[8] = 0x80;     
+  27   2            BufferInModem[9] = 0x80;     
+  28   2            BufferInModem[10] = 0x80;    
+  29   2            BufferInModem[11] = 0x80;    
+  30   2              }
+  31   1         else
+  32   1         {
+  33   2              OutModem4(LatFly, 1);
+  34   2            OutModem4(LonFly, 5);
+  35   2            OutModem2(koors, 9);      //курс
+  36   2            BufferInModem[11] = 0x80 | (unsigned char)Vz;        //Vзем
+  37   2         }
+  38   1               
+  39   1         OutModem2(H_filtr+5000, 12);
+  40   1              OutModem2(V_dat*10, 14);
+  41   1         OutModem2((Vy_filtr+800)*10, 16);
+  42   1         OutModem2(kren_dat/ToGrad*2500+8000, 18);
+  43   1         OutModem1(delta_z+10, 20);
+  44   1         OutModem1(delta_g, 21);
+  45   1         BufferInModem[22] = 0x80 | dataRSTSRC;        
+  46   1         BufferInModem[23] = 0x80 | SteckPoint;        
+  47   1         BufferInModem[24] = (kren_zad+60) | 0x80;
+  48   1         OutModem2(Vy_zad_ogr_nab*100, 25);
+  49   1         OutModem2(KrenKam_zad/ToGrad*2500+8000, 27); //Временно KrenKam_zad = KrenKam
+  50   1         OutModem2(UgolKam_zad/ToGrad*2500+8000, 29); //Временно UgolKam_zad = UgolKam
+  51   1      
+  52   1         BufferInModem[31] = 0x80;
+  53   1         BufferInModem[32] = 0x80;
+  54   1         BufferInModem[33] = 0x80;
+  55   1         OutModem2(nSU, 34);
+C51 COMPILER V9.00   INTERFACE                                                             10/22/2012 10:01:28 PAGE 2   
+
+  56   1         OutModem1(10*Vtop, 36);
+  57   1      
+  58   1         BufferInModem[37] = 0x80 | Dat37;
+  59   1         BufferInModem[38] = 0x80 | Dat38;
+  60   1         BufferInModem[39] = 0x80;
+  61   1         BufferInModem[40] = 0x80;
+  62   1              BufferInModem[41] = 0x80;
+  63   1      
+  64   1              BufferInModem[42] = 0;
+  65   1         for (i = 0; i < 42; i++ )
+  66   1              BufferInModem[42] = BufferInModem[42] ^ BufferInModem[i];
+  67   1         BufferInModem[42] =  0x80 | BufferInModem[42];
+  68   1      
+  69   1              r0 = 0;
+  70   1              rk = 43;
+  71   1      
+  72   1              flTransmiter = 1;
+  73   1              SFRPAGE = 0x00;
+  74   1              TI0 = 1;
+  75   1              return;
+  76   1      }
+  77          
+  78          //----------------------------------------------------------------------------
+  79          void OutModem21(void)
+  80          {
+  81   1         xdata char i;
+  82   1              while (flTransmiter)
+  83   1                      ;                       
+  84   1      
+  85   1         flCommand = 0;
+  86   1         BufferInModem[0] = 21 | 0x40;
+  87   1      
+  88   1         if (RegimeVy == 0)
+  89   1            OutModem1((Vy_zad_buf+6)*10, 1);
+  90   1         else if (RegimeVy)
+  91   1            OutModem1((H_zad_buf+1000)/50, 1);
+  92   1         if (RegimeV == 0)
+  93   1            OutModem1(delta_g, 2);
+  94   1         else if (RegimeV == 1)
+  95   1            BufferInModem[2] = 0x80 | Vz_zad;
+  96   1         else if (RegimeV == 2)
+  97   1            BufferInModem[2] = 0x80 | (unsigned char)V_zad;
+  98   1         OutModem1(delta_z_zad+10, 3);
+  99   1         if (RegimeKren)
+ 100   1                 BufferInModem[4] = 0x80 | n_;
+ 101   1         else
+ 102   1                 BufferInModem[4] = 0x80 | (unsigned char)(kren_zad+60);
+ 103   1         BufferInModem[5] = 0x80;
+ 104   1         BufferInModem[6] = 0x80 | (unsigned char)(KrenKam_zad+60);
+ 105   1         BufferInModem[7] = 0x80 | (unsigned char)UgolKam_zad;
+ 106   1         BufferInModem[8] = 0x80;
+ 107   1      
+ 108   1         BufferInModem[9] = 0x80 | (RegimeKren & 0x03) | ((RegimeSU & 0x03) << 5);
+ 109   1         BufferInModem[10] = 0x80 | (RegimeStart & 0x03) | ((RegimeVy & 0x03) << 2) | ((RegimeV & 0x03) << 4);
+ 110   1      
+ 111   1         BufferInModem[11] = 0;
+ 112   1         for (i = 0; i < 11; i++ )
+ 113   1            BufferInModem[11] = BufferInModem[11] ^ BufferInModem[i];
+ 114   1         BufferInModem[11] = BufferInModem[11] | 0x80;
+ 115   1      
+ 116   1              r0 = 0;
+ 117   1              rk = 12;
+C51 COMPILER V9.00   INTERFACE                                                             10/22/2012 10:01:28 PAGE 3   
+
+ 118   1              flTransmiter = 1;
+ 119   1              SFRPAGE = 0x00;
+ 120   1              TI0 = 1;
+ 121   1      }
+ 122          //------------------------------------------------------------------------------
+ 123          void OutModem1(unsigned char Data, char i)
+ 124          {
+ 125   1              BufferInModem[i] = Data | 0x80;
+ 126   1      }
+ 127          
+ 128          //------------------------------------------------------------------------------
+ 129          void OutModem2(unsigned int Data, char i)
+ 130          {
+ 131   1              BufferInModem[i] = (Data & 0x007f)| 0x80;
+ 132   1              BufferInModem[i+1] = ((Data & 0x3f80) >> 7)| 0x80;
+ 133   1      }
+ 134          
+ 135          //------------------------------------------------------------------------------
+ 136          void OutModem4(unsigned long int Data, char i)
+ 137          {
+ 138   1              BufferInModem[i] = (Data & 0x0000007f)| 0x80;
+ 139   1              BufferInModem[i+1] = ((Data & 0x3f80) >> 7) | 0x80;
+ 140   1              BufferInModem[i+2] = ((Data & 0x1fc000) >> 14) | 0x80;
+ 141   1         BufferInModem[i+3] = ((Data & 0xfe00000)>> 21) | 0x80;
+ 142   1      }
+ 143          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1295    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =     56       2
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       7
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      1    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

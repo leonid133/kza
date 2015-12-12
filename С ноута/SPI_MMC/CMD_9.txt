@@ -1,0 +1,59 @@
+//CMD9
+    SPI0DAT = 0xFF; while(!SPIF){}    
+   SPIF = 0; ÑS = 0;    
+   SPI0DAT = 0xFF;  while(!SPIF){}
+   SPIF = 0;                              
+   SPI0DAT = (9 | 0x40);
+   old_blklen = current_blklen;     // Command is a GET_CSD or GET_CID,
+   current_blklen = 16;             // set block length to 16-bytes;
+
+   while(!SPIF){}                      // Wait for initial SPI transfer to end;
+   SPIF = 0;                           // Clear SPI Interrupt flag;
+
+                                       // If an argument is required, transmit
+                                       // one, otherwise transmit 4 bytes of
+                                       // 0x00;
+
+   SPI0DAT = 0x00; while(!SPIF){}SPIF = 0;
+   SPI0DAT = 0x00; while(!SPIF){}SPIF = 0;
+   SPI0DAT = 0x00; while(!SPIF){}SPIF = 0;
+
+   SPI0DAT = 0xFF; while(!SPIF){}  SPIF = 0;   
+
+    {
+      do
+      {
+         SPI0DAT = 0xFF;               // Write dummy value to SPI so that 
+         while(!SPIF){}                // the response byte will be shifted in;
+         SPIF = 0;
+         card_response.b[0] = SPI0DAT; // Save the response;
+      }
+      while((card_response.b[0] & BUSY_BIT));
+   }
+ 
+   do                            // Wait for a start read token from
+   {                             // the MMC;
+      SPI0DAT = 0xFF;            // Start a SPI transfer;
+      while(!SPIF){}
+      SPIF = 0;
+   }
+
+   while(SPI0DAT != START_SBR);  // Check for a start read token;
+   counter = 0;                  // Reset byte counter;
+                                 // Read <current_blklen> bytes;
+   while(counter < (unsigned int)16)
+   {
+      SPI0DAT = 0x00; while(!SPIF){} SPIF = 0;
+      *pchar++ = SPI0DAT;  
+      counter++;     
+   }
+
+   SPI0DAT = 0x00;while(!SPIF){} SPIF = 0;   
+   dummy_CRC = SPI0DAT;   
+   SPI0DAT = 0x00; while(!SPIF){}  SPIF = 0;
+   dummy_CRC = SPI0DAT;
+    
+   SPI0DAT = 0xFF; while(!SPIF){} SPIF = 0;
+
+   CS = 1;                         // Deselect memory card;
+   SPI0DAT = 0xFF; while(!SPIF){} SPIF = 0;   

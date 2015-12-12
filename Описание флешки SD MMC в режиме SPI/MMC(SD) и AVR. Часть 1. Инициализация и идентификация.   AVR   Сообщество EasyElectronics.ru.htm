@@ -1,0 +1,1338 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!-- saved from url=(0089)http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html -->
+<html lang="ru"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	
+	
+	<title>MMC(SD) и AVR. Часть 1. Инициализация и идентификация. / AVR / Сообщество EasyElectronics.ru</title>
+	
+	
+	<meta name="description" content="Пришло время поговорить о картах памяти формата MMC и SD(а также все их варианты типа mini, micro и т.д.). Использую">
+	<meta name="keywords" content="MMC,SD,AVR">
+
+	<link rel="stylesheet" type="text/css" href="./MMC(SD) и AVR. Часть 1. Инициализация и идентификация.   AVR   Сообщество EasyElectronics.ru_files/f8dc8ff5052e86884fbd16f9a93fb09f.css">
+
+
+	<link href="http://we.easyelectronics.ru/templates/skin/new-jquery/images/favicon.ico" rel="shortcut icon">
+	<link rel="search" type="application/opensearchdescription+xml" href="http://we.easyelectronics.ru/search/opensearch/" title="Сообщество EasyElectronics.ru">
+
+			<link rel="alternate" type="application/rss+xml" href="http://we.easyelectronics.ru/rss/comments/1077/" title="MMC(SD) и AVR. Часть 1. Инициализация и идентификация.">
+		
+		
+	<script src="./MMC(SD) и AVR. Часть 1. Инициализация и идентификация.   AVR   Сообщество EasyElectronics.ru_files/cb=gapi.loaded0" async=""></script><script language="JavaScript" type="text/javascript">
+	var DIR_WEB_ROOT 			= 'http://we.easyelectronics.ru';
+	var DIR_STATIC_SKIN 		= 'http://we.easyelectronics.ru/templates/skin/new-jquery';
+	var DIR_ROOT_ENGINE_LIB     = 'http://we.easyelectronics.ru/engine/lib'; 
+	var LIVESTREET_SECURITY_KEY = '98088654cf06e76a9b571bd381945f7c';
+	var SESSION_ID              = 'e791hlqbgfrl97nifmes8svpr3'; 
+	var BLOG_USE_TINYMCE		= '';
+
+	var TINYMCE_LANG='en';
+			TINYMCE_LANG='ru';
+	
+	var aRouter = new Array();
+			aRouter['error'] = 'http://we.easyelectronics.ru/error/';
+			aRouter['registration'] = 'http://we.easyelectronics.ru/registration/';
+			aRouter['profile'] = 'http://we.easyelectronics.ru/profile/';
+			aRouter['my'] = 'http://we.easyelectronics.ru/my/';
+			aRouter['blog'] = 'http://we.easyelectronics.ru/blog/';
+			aRouter['personal_blog'] = 'http://we.easyelectronics.ru/personal_blog/';
+			aRouter['top'] = 'http://we.easyelectronics.ru/top/';
+			aRouter['index'] = 'http://we.easyelectronics.ru/index/';
+			aRouter['new'] = 'http://we.easyelectronics.ru/new/';
+			aRouter['topic'] = 'http://we.easyelectronics.ru/topic/';
+			aRouter['login'] = 'http://we.easyelectronics.ru/login/';
+			aRouter['people'] = 'http://we.easyelectronics.ru/people/';
+			aRouter['settings'] = 'http://we.easyelectronics.ru/settings/';
+			aRouter['tag'] = 'http://we.easyelectronics.ru/tag/';
+			aRouter['talk'] = 'http://we.easyelectronics.ru/talk/';
+			aRouter['comments'] = 'http://we.easyelectronics.ru/comments/';
+			aRouter['rss'] = 'http://we.easyelectronics.ru/rss/';
+			aRouter['link'] = 'http://we.easyelectronics.ru/link/';
+			aRouter['question'] = 'http://we.easyelectronics.ru/question/';
+			aRouter['blogs'] = 'http://we.easyelectronics.ru/blogs/';
+			aRouter['search'] = 'http://we.easyelectronics.ru/search/';
+			aRouter['admin'] = 'http://we.easyelectronics.ru/admin/';
+			aRouter['ajax'] = 'http://we.easyelectronics.ru/ajax/';
+			aRouter['feed'] = 'http://we.easyelectronics.ru/feed/';
+			aRouter['stream'] = 'http://we.easyelectronics.ru/stream/';
+			aRouter['photoset'] = 'http://we.easyelectronics.ru/photoset/';
+			aRouter['language'] = 'http://we.easyelectronics.ru/language/';
+			aRouter['attachments'] = 'http://we.easyelectronics.ru/attachments/';
+			aRouter['cleaner_settings'] = 'http://we.easyelectronics.ru/cleaner_settings/';
+			aRouter['ish-socbookmarks'] = 'http://we.easyelectronics.ru/ish-socbookmarks/';
+			aRouter['openid_login'] = 'http://we.easyelectronics.ru/openid_login/';
+			aRouter['openid_settings'] = 'http://we.easyelectronics.ru/openid_settings/';
+			aRouter['page'] = 'http://we.easyelectronics.ru/page/';
+		</script>
+
+	<script type="text/javascript" src="./MMC(SD) и AVR. Часть 1. Инициализация и идентификация.   AVR   Сообщество EasyElectronics.ru_files/d334fdf7017831cab7dacd7536bca92e.js"></script>
+
+    
+	<script language="JavaScript" type="text/javascript">
+		var tinyMCE=false;
+		ls.lang.load({"blog_join":"\u0432\u0441\u0442\u0443\u043f\u0438\u0442\u044c \u0432 \u0431\u043b\u043e\u0433","blog_leave":"\u043f\u043e\u043a\u0438\u043d\u0443\u0442\u044c \u0431\u043b\u043e\u0433"});
+	</script>
+	
+	
+<script type="text/javascript" src="./MMC(SD) и AVR. Часть 1. Инициализация и идентификация.   AVR   Сообщество EasyElectronics.ru_files/share.js" charset="windows-1251"></script>
+
+
+<script src="./MMC(SD) и AVR. Часть 1. Инициализация и идентификация.   AVR   Сообщество EasyElectronics.ru_files/share(1).js" type="text/javascript"></script>
+
+
+<script type="text/javascript" src="./MMC(SD) и AVR. Часть 1. Инициализация и идентификация.   AVR   Сообщество EasyElectronics.ru_files/plusone.js" gapi_processed="true">
+  {lang: 'ru'}
+</script>
+
+
+<script src="./MMC(SD) и AVR. Часть 1. Инициализация и идентификация.   AVR   Сообщество EasyElectronics.ru_files/share.php"></script><script type="text/javascript" src="./MMC(SD) и AVR. Часть 1. Инициализация и идентификация.   AVR   Сообщество EasyElectronics.ru_files/share_count"></script><script src="chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/document_iterator.js"></script><script src="chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/find_proxy.js"></script><script src="chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/get_html_text.js"></script><script src="chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/global_constants.js"></script><script src="chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/name_injection_builder.js"></script><script src="chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/number_injection_builder.js"></script><script src="chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/string_finder.js"></script><script src="chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/change_sink.js"></script><meta name="get_html_text.js"><meta name="find_proxy.js"><meta name="name_injection_builder.js"><meta name="number_injection_builder.js"><meta name="string_finder.js"><meta name="change_sink.js"><meta name="global_constants.js"><meta name="document_iterator.js"></head>
+
+
+<body onload="prettyPrint()">
+	
+	<div id="header">
+			<div class="auth">
+			<a href="http://we.easyelectronics.ru/login/" id="login_form_show" class="login-link">Войти</a> или 
+			<a href="http://we.easyelectronics.ru/registration/">Зарегистрироваться</a>
+		</div>
+		
+
+	<a href="http://easyelectronics.ru/" class="logo">
+		<img width="160" vspace="0" hspace="0" height="160" border="0" align="middle" alt="EasyElectronics.ru" src="./MMC(SD) и AVR. Часть 1. Инициализация и идентификация.   AVR   Сообщество EasyElectronics.ru_files/logo.jpg">
+		</a>
+		<a class="logo" href="http://we.easyelectronics.ru/"><span>Сообщество EasyElectronics.ru</span></a>
+		
+	
+	
+	<ul class="pages">
+		<li class="active"><a href="http://we.easyelectronics.ru/">Топики</a></li>
+		<li><a href="http://we.easyelectronics.ru/blogs/">Блоги</a></li>
+		<li><a href="http://we.easyelectronics.ru/people/">Люди</a></li>
+		<li> <a href="http://forum.easyelectronics.ru/">Форум</a></li>
+		<li> <a href="http://shop.easyelectronics.ru/">Магазин</a></li>
+								
+			<li><a href="http://we.easyelectronics.ru/page/Konkurs/">Конкурс</a></li>
+	<li><a href="http://we.easyelectronics.ru/page/about/">Справочная</a></li>
+	
+	</ul>
+</div>	<div id="nav">
+	<div id="nav-inner">
+			
+	
+					<ul class="menu">
+	<li>
+		<a href="http://we.easyelectronics.ru/">Все</a> <a href="http://we.easyelectronics.ru/new/" class="new">+5</a>			</li>
+
+	<li class="active">
+		<a href="http://we.easyelectronics.ru/blog/">Коллективные</a> <a href="http://we.easyelectronics.ru/blog/new/" class="new">+2</a>					<ul class="sub-menu">
+				<li><a href="http://we.easyelectronics.ru/blog/">Хорошие</a></li>
+				<li><a href="http://we.easyelectronics.ru/blog/new/">Новые</a> +2</li>				<li><a href="http://we.easyelectronics.ru/blog/bad/">Плохие</a></li>
+				
+			</ul>
+			</li>
+
+	<li>
+		<a href="http://we.easyelectronics.ru/personal_blog/">Персональные</a> <a href="http://we.easyelectronics.ru/personal_blog/new/" class="new">+3</a>			</li>
+	
+		
+	<li>
+		<a href="http://we.easyelectronics.ru/top/">TOP</a>
+			</li>
+
+	
+</ul>				
+		
+		<form action="http://we.easyelectronics.ru/search/topics/" method="GET" class="search">
+			<input class="text" type="text" onblur="if (!value) value=defaultValue" onclick="if (value==defaultValue) value=&#39;&#39;" value="Поиск" name="q">
+			<input class="search-submit" type="submit" value="">
+		</form>
+	</div>
+</div>
+
+	<div id="container">
+		<div id="wrapper" class=" ">
+			<div id="content">
+				<div id="content-inner">
+						<div class="login-form jqmWindow jqmID1" id="login_form">
+		<a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" class="close jqmClose"></a>
+		
+		<form action="http://we.easyelectronics.ru/login/" method="POST">
+			<h3>Авторизация</h3>
+
+			<a href="http://we.easyelectronics.ru/login/openid/" title="Войти через OpenID, GMail, ВКонтакте, Facebook, Twitter, Yandex, Rambler"><img src="./MMC(SD) и AVR. Часть 1. Инициализация и идентификация.   AVR   Сообщество EasyElectronics.ru_files/openid.png" alt="OpenID" style="margin-bottom: 10px;"></a><br>
+
+
+			<p><label>Логин или эл. почта:<br>
+			<input type="text" class="input-text" name="login" id="login-input"></label></p>
+			
+			<p><label>Пароль:<br>
+			<input type="password" name="password" class="input-text"></label></p>
+			
+			<label class="label-remember"><input type="checkbox" name="remember" class="checkbox" checked="">Запомнить меня</label>
+
+			
+
+			<input type="submit" name="submit_login" class="button" value="Войти"><br><br>
+			
+			<a href="http://we.easyelectronics.ru/login/reminder/">Напомнить пароль</a><br>
+			<a href="http://we.easyelectronics.ru/registration/">Регистрация</a>
+		</form>
+	</div>
+						
+
+						
+					
+
+
+<div class="topic">
+	<h1 class="title">
+							MMC(SD) и AVR. Часть 1. Инициализация и идентификация.
+			</h1>
+	
+	<a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" onclick="return ls.favourite.toggle(1077,this,&#39;topic&#39;);" class="favourite "></a>
+
+	
+	
+	<div class="info-top">
+		<a href="http://we.easyelectronics.ru/blog/AVR/" class="title-blog">AVR</a>
+	
+		<span class="actions">                                                                   
+								</span>
+	</div>
+
+
+	<div class="content">
+					 Пришло время поговорить о картах памяти формата MMC и SD(а также все их варианты типа mini, micro и т.д.). Использую их в своих проектах довольно таки давно, поэтому вроде как для меня в этом вопросе ничего сложного нет. Поэтому данная статья рассчитана на тех, кому этот вопрос кажется интересным(новым, незнакомым, сложным). Если такие комрады имеются, милости прошу под кат… <cut><br>
+Долго чесались руки написать данную статейку, да все не было времени. Вот сейчас на работе вроде бы расслабон, поэтому начну излагать материал. Сразу оговорюсь, что на звание ОБУЧАТЕЛЯ не претендую, но постараюсь донести материал как можно доступнее.<br>
+И так, карта MMC как SD, по своей природе имеют собственный протокол общения с внешним миром, но уважаемые товарищи разработчики этого формата карт вложили одну очень приятную плюшку в эти карты, а именно работа по SPI. Однажды узнав об этом, я подумал, а не использовать ли мне эту феньку и не заюзать это в своем курсовом? Сказано — сделано!!! Первым делом обратился к datasheet'у на данные девайсы и все вроде как стало понятно, но без гвоздей, как говориться не обошлось.<br>
+На рисунке 1 представлена стандартная карта памяти MMC и SD, а также назначение их выводов.<br>
+<img src="./MMC(SD) и AVR. Часть 1. Инициализация и идентификация.   AVR   Сообщество EasyElectronics.ru_files/96f176.jpg" title="SD MMC pinout" alt="SD MMC pinout"><br>
+Как можно увидеть из рисунка, обе эти карты имеют выводы для подключения по SPI. Долго тянуть не будем и подключим все это дело по схеме, указанной ниже:<br>
+<img src="./MMC(SD) и AVR. Часть 1. Инициализация и идентификация.   AVR   Сообщество EasyElectronics.ru_files/da4883.jpg" title="SD MMC schematic" alt="SD MMC schematic"><br>
+Как обычно печатку не прилагаю, поскольку использую давно провереный девайсик, фотку которого можно увидеть <a href="http://we.easyelectronics.ru/AVR/usb-fleshka-na-atmega8-i-v-usb-ot-idei-k-gotovomu-ustroystvu.html" rel="nofollow">здесь</a><br>
+Вот мы вроде бы все подключили как указано выше. Сейчас перейдем к описанию самой работы с картой памяти. Режим SPI является вторичным (опциональный) протоколом связи с картой памяти. Этот режим является, как бы, подмножеством MMC протокола и разработан для связи по каналу SPI, который присутствует в большинстве современных МК.<br>
+Сам по себе SPI стандарт подразумевает только физическую связь между устройствами и не является полноценным протоколом передачи данных. Поэтому SPI интерфейс в картах MMC и SD имеет свои особенности. Стоит отметить, что при работе с картой памяти по интерфейсу SPI доступны не все возможности карты, но, как правило, эти возможности и не нужны.<br>
+И так, в то время как протокол MMC основывается на командах и битовых потоках, которые начинаются со старт бита и заканчиваются стоп битом, SPI режим является байт-ориентированным. Это значит, что каждая команда или блок данных состоят из 8-ми битных байтов. Так же как и в протоколе MMC в SPI режиме общение с картой состоит из команды, ответа на команду и знаков(tokens) от блоков данных. МК контролирует весь обмен информацией между собой любимым и картой памяти.<br>
+Есть несколько основных аспектов при работе с картой памяти в режиме SPI:<br>
+ — Выбранная карта памяти всегда отвечает на посланную ей команду<br>
+ — Используются дополнительные 8-ми, 16-ти и 40-ка байтные структуры как ответ на посланную команду<br>
+ — В случае ошибки при получение команды или данных от МК, карта памяти ответит структурой содержащей описание ошибки<br>
+<br>
+Следует знать, что в режиме SPI поддерживаются только команды чтения/записи в режиме одного блока или нескольких блоков (в режиме MMC поддерживается режим последовательной чтения/записи). Размер блока для чтения/записи может быть размером в сектор карты памяти и размером в 1 байт. Поддержка операций частичного чтения/записи блока данных хранится в регистре CSD карты памяти.<br>
+Чуть не забыли поговорить о регистрах, которые содержит карта памяти стандарта MMC(SD). Этих регистров чуть больше, чем перечислю я, но те, которые я не укажу либо не особо нужны, либо не доступны в режиме SPI. Основными регистрами, которые представляют для нас интерес являются следующие:<br>
+<br>
+ — CID (Card identification data): содержит данные, по которым можно идентифицировать карту памяти (серийный номер, ID производителя, дату изготовления и т.д.)<br>
+ — CSD (Card-specific data): содержит всевозможную информацию о карте памяти (от размера сектора карты памяти до потребления в режиме чтения/записи).<br>
+ — OCR (Operation Conditions Register): содержит напряжения питания карты памяти, тип питания карты памяти, статус процесса инициализации карты.<br>
+<br>
+Подробнее об этих регистрах мы поговорим чуть позже, когда коснемся написания прошивки для МК.<br>
+Теперь наступило время узнать о том, как эти самые карты включить в режиме SPI. По умолчанию, карта MMC(SD), при подаче на ее напряжения питания, запускается в режиме протокола MMC. Карта перейдет в режим SPI в случае, когда сигнал на выводе _CS будет иметь низкий уровень (карта памяти выбрана) и при этом на карту будет послана команда сброса CMD0. В случае приема CMD0, карта проверяет состояние линии _CS. Если логический уровень на этом выводе равен «1», то на посланную команду карта памяти не ответит и останется в режиме MMC. Если же карта, приняв CMD0, определит, что на выводе _CS низкий уровень, то она переключиться в режим SPI и ответит на посланную команду ответом R1 (По всем видам ответов и token’ов поговорим позже). Единожды перейдя в режим SPI, карта памяти останется в этом режиме до следующего выключения и включения питания, т.е. перейти в режим MMC из режима SPI программным способом не получится!<br>
+Вроде бы основные вступительные моменты мы обговорили и теперь коснемся набора команд, доступных в режиме SPI. Велосипед изобретать не буду, а просто приведу таблицу из <a href="http://we.easyelectronics.ru/attachments/get/290" rel="nofollow">datasheet’а</a>. <br>
+<br>
+Многие, наверное, заметили, что в таблице пропущены некоторые команды. Как я говорил ранее, в режиме SPI недоступны некоторые функции, которые доступны в режиме MMC. Поэтому некоторые команды так же не доступны. Так же из таблицы видно, что у всех команд в поле «Resp» присутствует аббревиатура R1(2, 3, 7 и др.). Это и есть так называемый ответ карты на посылаемую ей команду. Приведу небольшой пример обмена информацией с картой памяти для иллюстрации описанного выше.<br>
+<br>
+<img src="./MMC(SD) и AVR. Часть 1. Инициализация и идентификация.   AVR   Сообщество EasyElectronics.ru_files/2e8ba6.jpg" title="MMC SD cmd resp" alt="MMC SD cmd resp"><br>
+<br>
+Рассмотрим подробнее данный пример. Мы видим, что мы отправляем карте (линия DataIn) некоторою команду, приняв которую, карта через некоторый промежуток времени выдаст ответ (линия DataOut). Размер ответа зависит от посылаемой команды и имеет свой формат. Приведу формат ответов, которые мы можем получить от карты памяти.<br>
+<br>
+<img src="./MMC(SD) и AVR. Часть 1. Инициализация и идентификация.   AVR   Сообщество EasyElectronics.ru_files/76c337.jpg" title="SD MMC R1" alt="SD MMC R1"><br>
+<br>
+<img src="./MMC(SD) и AVR. Часть 1. Инициализация и идентификация.   AVR   Сообщество EasyElectronics.ru_files/886da5.jpg" title="SD MMC R2" alt="SD MMC R2"><br>
+<br>
+<img src="./MMC(SD) и AVR. Часть 1. Инициализация и идентификация.   AVR   Сообщество EasyElectronics.ru_files/f7a2b7.jpg" title="SD MMC R3" alt="SD MMC R3"><br>
+<br>
+Теперь коснемся самих команд для карты памяти. Из таблицы команд видно, что у каждой команды есть свой индекс. Это значение используется для получения истинного значения команды, которую необходимо отправить в карту памяти. Общий вид команды представлен ниже (команда в режиме SPI имеет длину в 6 байт):<br>
+<br>
+{{0x40 + CMDx}, {0x??, 0x??, 0x??, 0x??}, {0x??}}<br>
+Номер команды Аргумент команды CRC<br>
+<br>
+Стоит отметить, что в протоколе MMC весь обмен данными завершается полем CRC, которое является необходимым. Что касается режима SPI, то по умолчанию при переходе в этот режим, контроль CRC отключен. Исключение составляют команды CMD0 и CMD8, поскольку они отправляются в карту, которая еще находится в режиме MMC, поэтому поле CRC для этих команд должно быть верным. Поскольку CMD0 отправляется единожды и все 6 байт этой команды известны заранее и не меняются, то в поле CRC для любой команды мы будем отправлять CRC для команды CMD0 (оно равняется 0x95). Что касается CMD8, то поле CRC в ней не является константой и зависит от передаваемых параметров. Хочу заметить, что проверку поля CRC можно активировать и в режиме SPI. Делается это при помощи соответствующей команды (CMD59).<br>
+Немного разобравшись с теорией, посмотрим на процесс инициализации карты памяти. Попробую представить это в виде блок-схемы. Вот что получилось у меня вымутить из datasheet’а (излагаю только суть, за вычетом некоторых моментов, которые я распишу после блок-схемы):<br>
+<br>
+<img src="./MMC(SD) и AVR. Часть 1. Инициализация и идентификация.   AVR   Сообщество EasyElectronics.ru_files/695c95.jpg" title="SD MMC Init strap" alt="SD MMC Init strap"><br>
+<br>
+Ну вот, скажут некоторые, нарисовал не пойми чего, а вы тут разбирайтесь;) Но все не так уж и плохо. Первое, что необходимо пояснить в этой схеме это то, что карты как бы того не хотелось, бывают разные (поэтому наверное они и называются по разному). И на этой схеме мы видим, что бывает их ни много ни мало, а целых 4: MMC, SD версии 1.х стандартной емкости, SD версии 2.х стандартной емкости и карта SD версии 2.х повышенной емкости (SD карты расширенной емкости или SDHC). Все бы ничего, но все они требуют разной инициализации и это самое обидное. В принципе, есть общий способ инициализации всех их кроме SDHC, но он не есть правильный, поскольку работать с картой SD версии 2.х стандартной емкости и картой MMC как с одинаковыми картами неправильно (отличие в структурах CID и CSD). Конечно, можно построить алгоритм для работы с каждой картой по отдельности, но мы пойдем универсальной дорогой(и самой трудной на первый взгляд).<br>
+Из приведенной структуры намечается следующий путь работы (я буду указывать основные моменты, которые необходимо выполнять, но они не указаны на данной схеме). Мы определили, что в разъем картоприемника вставили какую-то фигню. Мы в свою очередь делаем следующее: подаем питание в пределах от 2.7-3.6 В, ожидаем ~1мс (точно не знаю сколько, но чтобы питание устаканилось). SPI настроен как полагается (я думаю все умеют это делать) и вывод _CS карты памяти выставлен в логическую “1”. После этого нам необходимо подать минимум 74 тактовых импульса на линию SCLK SPI. Выполнив все это мы выставляем логический “0” на вывод _CS карты памяти и отсылаем команду CMD0. Из таблицы команд видим, что ответом на CMD0 является R1, структуру которого мы знаем. Немного отступлю от мысли и обращу внимание на то, что все ответы содержат в себе первым байтом R1, 7-й бит которого всегда является 0. Таким образом, мы можем отличать ответы от идущий по линии MISO байтов 0xFF. Итак, приняв R1, проверяем бит «In idle state» на равенство «1». Если это так, то карта находится на этапе инициализации. А вот теперь пришел первый этап определения типа карты памяти. Посылаем команду CMD8, которая указывает карте поддерживаемые МК напряжения питания для ее и спрашивает у выбранной карты может ли она работать в данном диапазоне напряжений, дожидаемся ответа R7. Как видно из блок-схемы, карты памяти стандарта MMC и SD версии 1.х эту команду не поддерживают и, соответственно, в своем ответе будут содержать бит «illegal command». Если сказанное ранее верно, то установленная карта либо MMC, либо SD версии 1.х. Теперь пришло время распознать, какая именно из этих двух типов карт вставлена в картоприемник. Для этого отправим карте памяти команду ACMD41, которая инициирует процесс инициализации карты. Эта команда посылается в цикле либо для ее выполнения взводится таймер, по которому проверяется ответ на эту команду. В любом случае, карта MMC не поддерживает ACMD41 и вернет «illegal command» в своем ответе. В таком случае вставленная карта есть MMC и для ее инициализации потребуется команда CMD1 (так же посылается в цикле, пока ответ на нее не будет равен 0). Получив ответ на CMD1 равный 0х00 карта MMC готова к работе. Если ответ на ACMD41 не содержит никаких установленных битов (т.е. равен 0х00), то карта SD версии 1.х и она готова к работе. Теперь вернемся чуть выше и предположим, что в ответ на команду CMD8 не содержал бит «illegal command», т.е. у нас карта памяти формата SD версии 2.х стандартной емкости(SDSC версии 2.х) или SDHC. Следующим шагом в таком случае есть отправка команды ACMD41 с параметром, указывающим карте памяти, поддерживает ли наше устройство карты памяти SDHC. Вне зависимости от того, есть поддержка SDHC или ее нет, мы циклически отправляем эту команду карте то тех пор, пока она (карта) не закончит процесс инициализации. Когда ответ от ACMD41 будет равен 0х00, карта памяти проинициализирована и готова к работе. Но для того, чтобы узнать, какая у на карта, мы отправим ей команду CMD58. Ответом от этой команды есть R3, который в свою очередь содержит регистр OCR. Проанализировав OCR на установку бита CSS можно определить тип карты: CCS == 1 – карта SDHC или SDXC, CCS == 0 – карта SDSC. Чтобы не быть голословным, приведу мой участок кода инициализации карты памяти:<br>
+<br>
+<pre class="prettyprint"><code><span class="pln">MMC_PowerUp</span><span class="pun">();</span><span class="pln"><br>&nbsp; &nbsp; <br>&nbsp; &nbsp; </span><span class="com">// As in datasheet min 74 clk before init</span><span class="pln"><br>&nbsp; &nbsp; SPI_SendConst</span><span class="pun">(</span><span class="lit">0xFF</span><span class="pun">,</span><span class="pln"> </span><span class="lit">10</span><span class="pun">);</span><span class="pln"><br><br>&nbsp; &nbsp; m_CardStatus </span><span class="pun">=</span><span class="pln"> ecsNOCARD</span><span class="pun">;</span><span class="pln"><br>&nbsp; &nbsp; m_CardType </span><span class="pun">=</span><span class="pln"> ectNOTSUPPORT</span><span class="pun">;</span><span class="pln"><br><br>&nbsp; &nbsp; </span><span class="com">// Set _CS pin to low</span><span class="pln"><br>&nbsp; &nbsp; MMC_ACTIVATE</span><span class="pun">();</span><span class="pln"><br><br>&nbsp; &nbsp; </span><span class="com">// Send CMD0. Switch up SPI mode</span><span class="pln"><br>&nbsp; &nbsp; m_ucCrc </span><span class="pun">=</span><span class="pln"> </span><span class="lit">0x95</span><span class="pun">;</span><span class="pln"><br>&nbsp; &nbsp; MMC_SendCommand</span><span class="pun">(</span><span class="pln">MMC_GO_IDLE_STATE</span><span class="pun">,</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">unsigned</span><span class="pln"> </span><span class="kwd">long</span><span class="pun">)</span><span class="pln"> </span><span class="lit">0x00</span><span class="pun">,</span><span class="pln"> ertR1</span><span class="pun">);</span><span class="pln"><br>&nbsp; &nbsp; SPI_ReadByte</span><span class="pun">();</span><span class="pln"><br>&nbsp; &nbsp; <br>&nbsp; &nbsp; <br>&nbsp; &nbsp; </span><span class="com">// Card in IDLE state ?</span><span class="pln"><br>&nbsp; &nbsp; </span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(((</span><span class="pln">CCardR1</span><span class="pun">*)&amp;</span><span class="pln">ucRespData</span><span class="pun">)-&gt;</span><span class="pln">ucData </span><span class="pun">==</span><span class="pln"> </span><span class="lit">0x01</span><span class="pun">)</span><span class="pln"> &nbsp; &nbsp; &nbsp; &nbsp;<br>&nbsp; &nbsp; </span><span class="pun">{</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; m_CardStatus </span><span class="pun">=</span><span class="pln"> ecsERROR</span><span class="pun">;</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; <br>&nbsp; &nbsp; &nbsp; </span><span class="com">// Send CMD8. Check for SDC ver.2+ card</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; m_ucCrc </span><span class="pun">=</span><span class="pln"> </span><span class="lit">0x87</span><span class="pun">;</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; MMC_SendCommand</span><span class="pun">(</span><span class="pln">MMC_SEND_IF_COND</span><span class="pun">,</span><span class="pln"> </span><span class="lit">0x01AA</span><span class="pun">,</span><span class="pln"> ertR7</span><span class="pun">);</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; SPI_ReadByte</span><span class="pun">();</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; <br>&nbsp; &nbsp; &nbsp; </span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(((</span><span class="pln">CCardR1</span><span class="pun">*)&amp;</span><span class="pln">ucRespData</span><span class="pun">)-&gt;</span><span class="pln">ucData </span><span class="pun">==</span><span class="pln"> </span><span class="lit">0x01</span><span class="pun">)</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; </span><span class="pun">{</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; <br>&nbsp; &nbsp; &nbsp; &nbsp; </span><span class="com">// Card type is SDC ver.2+</span><span class="pln"><br><br>&nbsp; &nbsp; &nbsp; &nbsp; </span><span class="com">// Check the card support Vdd 2.7-3.6V</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; <br>&nbsp; &nbsp; &nbsp; &nbsp; </span><span class="kwd">if</span><span class="pln"> </span><span class="pun">((</span><span class="lit">0xAA</span><span class="pln"> </span><span class="pun">==</span><span class="pln"> </span><span class="pun">((</span><span class="pln">CCardR7</span><span class="pun">*)&amp;</span><span class="pln">ucRespData</span><span class="pun">)-&gt;</span><span class="pln">R7Data</span><span class="pun">.</span><span class="pln">bits</span><span class="pun">.</span><span class="pln">bitCheckPattern</span><span class="pun">)</span><span class="pln"> </span><span class="pun">&amp;&amp;</span><span class="pln"> </span><span class="pun">(</span><span class="lit">0x01</span><span class="pln"> </span><span class="pun">==</span><span class="pln"> </span><span class="pun">((</span><span class="pln">CCardR7</span><span class="pun">*)&amp;</span><span class="pln">ucRespData</span><span class="pun">)-&gt;</span><span class="pln">R7Data</span><span class="pun">.</span><span class="pln">bits</span><span class="pun">.</span><span class="pln">bitVoltageAccepted</span><span class="pun">))</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; </span><span class="pun">{</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; uiMaxErrorsCMD </span><span class="pun">=</span><span class="pln"> </span><span class="lit">0xFFFF</span><span class="pun">;</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="com">// ACMD41</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="kwd">do</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="pun">{</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; MMC_SendCommandA</span><span class="pun">(</span><span class="pln">MMC_CMD_SD_SEND_OP_COND</span><span class="pun">,</span><span class="pln"> </span><span class="pun">(</span><span class="kwd">unsigned</span><span class="pln"> </span><span class="kwd">long</span><span class="pun">)</span><span class="lit">1</span><span class="pln"> </span><span class="pun">&lt;&lt;</span><span class="pln"> </span><span class="lit">30</span><span class="pun">,</span><span class="pln"> ertR1</span><span class="pun">);</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; SPI_ReadByte</span><span class="pun">();</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="pun">}</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="kwd">while</span><span class="pun">((((</span><span class="pln">CCardR1</span><span class="pun">*)&amp;</span><span class="pln">ucRespData</span><span class="pun">)-&gt;</span><span class="pln">ucData</span><span class="pun">)</span><span class="pln"> </span><span class="pun">&amp;&amp;</span><span class="pln"> </span><span class="pun">(</span><span class="pln">uiMaxErrorsCMD</span><span class="pun">--));</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="com">// CMD58</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="lit">0x00</span><span class="pln"> </span><span class="pun">==</span><span class="pln"> </span><span class="pun">((</span><span class="pln">CCardR1</span><span class="pun">*)&amp;</span><span class="pln">ucRespData</span><span class="pun">)-&gt;</span><span class="pln">ucData</span><span class="pun">)</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="pun">{</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; uiMaxErrorsCMD </span><span class="pun">=</span><span class="pln"> </span><span class="lit">0xFF</span><span class="pun">;</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="kwd">do</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="pun">{</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; MMC_SendCommand</span><span class="pun">(</span><span class="pln">MMC_READ_OCR</span><span class="pun">,</span><span class="pln"> </span><span class="lit">0x00</span><span class="pun">,</span><span class="pln"> ertR3</span><span class="pun">);</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; SPI_ReadByte</span><span class="pun">();</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="pun">}</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="kwd">while</span><span class="pun">((((</span><span class="pln">CCardR1</span><span class="pun">*)&amp;</span><span class="pln">ucRespData</span><span class="pun">)-&gt;</span><span class="pln">ucData</span><span class="pun">)</span><span class="pln"> </span><span class="pun">&amp;&amp;</span><span class="pln"> </span><span class="pun">(</span><span class="pln">uiMaxErrorsCMD</span><span class="pun">--));</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="lit">0x00</span><span class="pln"> </span><span class="pun">==</span><span class="pln"> </span><span class="pun">((</span><span class="pln">CCardR1</span><span class="pun">*)&amp;</span><span class="pln">ucRespData</span><span class="pun">)-&gt;</span><span class="pln">ucData</span><span class="pun">)</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="pun">{</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; m_CardStatus </span><span class="pun">=</span><span class="pln"> ecsOK</span><span class="pun">;</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="lit">0x01</span><span class="pln"> </span><span class="pun">==</span><span class="pln"> </span><span class="pun">((</span><span class="pln">CCardR3</span><span class="pun">*)&amp;</span><span class="pln">ucRespData</span><span class="pun">)-&gt;</span><span class="pln">R3Data</span><span class="pun">.</span><span class="pln">bits</span><span class="pun">.</span><span class="pln">bitCCS</span><span class="pun">)</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="pun">{</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; m_CardType </span><span class="pun">=</span><span class="pln"> ectSDHC</span><span class="pun">;</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="pun">}</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="kwd">else</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="pun">{</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; m_CardType </span><span class="pun">=</span><span class="pln"> ectSDCv2x</span><span class="pun">;</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="pun">}</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="pun">}</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="pun">}</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; </span><span class="pun">}</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; </span><span class="pun">}</span><span class="com">// end CMD8</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; </span><span class="kwd">else</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; </span><span class="pun">{</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; </span><span class="com">// Card is MMC or SDC v1.x</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; uiMaxErrorsCMD </span><span class="pun">=</span><span class="pln"> </span><span class="lit">0x7FF</span><span class="pun">;</span><span class="pln"><br><br>&nbsp; &nbsp; &nbsp; &nbsp; </span><span class="com">// ACMD41</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; </span><span class="kwd">do</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; </span><span class="pun">{</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; MMC_SendCommandA</span><span class="pun">(</span><span class="pln">MMC_CMD_SD_SEND_OP_COND</span><span class="pun">,</span><span class="pln"> </span><span class="lit">0x00</span><span class="pun">,</span><span class="pln"> ertR1</span><span class="pun">);</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; SPI_ReadByte</span><span class="pun">();</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; </span><span class="pun">}</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; </span><span class="kwd">while</span><span class="pun">((((</span><span class="pln">CCardR1</span><span class="pun">*)&amp;</span><span class="pln">ucRespData</span><span class="pun">)-&gt;</span><span class="pln">ucData</span><span class="pun">)</span><span class="pln"> </span><span class="pun">&amp;&amp;</span><span class="pln"> </span><span class="pun">(</span><span class="pln">uiMaxErrorsCMD</span><span class="pun">--));</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; <br>&nbsp; &nbsp; &nbsp; &nbsp; </span><span class="com">// Check for SDC v1.0 card</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; </span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="lit">0x00</span><span class="pln"> </span><span class="pun">==</span><span class="pln"> </span><span class="pun">((</span><span class="pln">CCardR1</span><span class="pun">*)&amp;</span><span class="pln">ucRespData</span><span class="pun">)-&gt;</span><span class="pln">ucData</span><span class="pun">)</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; </span><span class="pun">{</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="com">// Card is SDC v1.0</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; m_CardStatus </span><span class="pun">=</span><span class="pln"> ecsOK</span><span class="pun">;</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; m_CardType </span><span class="pun">=</span><span class="pln"> ectSDCv1x</span><span class="pun">;</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; </span><span class="pun">}</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; </span><span class="kwd">else</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; </span><span class="pun">{</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="com">// Check for MMC card</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; uiMaxErrorsCMD </span><span class="pun">=</span><span class="pln"> </span><span class="lit">0x7FF</span><span class="pun">;</span><span class="pln"><br><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="com">// CMD1</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="kwd">do</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="pun">{</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; MMC_SendCommand</span><span class="pun">(</span><span class="pln">MMC_SEND_OP_COND</span><span class="pun">,</span><span class="pln"> </span><span class="lit">0x00</span><span class="pun">,</span><span class="pln"> ertR1</span><span class="pun">);</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; SPI_ReadByte</span><span class="pun">();</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="pun">}</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="kwd">while</span><span class="pun">((((</span><span class="pln">CCardR1</span><span class="pun">*)&amp;</span><span class="pln">ucRespData</span><span class="pun">)-&gt;</span><span class="pln">ucData</span><span class="pun">)</span><span class="pln"> </span><span class="pun">&amp;&amp;</span><span class="pln"> </span><span class="pun">(</span><span class="pln">uiMaxErrorsCMD</span><span class="pun">--));</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="lit">0x00</span><span class="pln"> </span><span class="pun">==</span><span class="pln"> </span><span class="pun">((</span><span class="pln">CCardR1</span><span class="pun">*)&amp;</span><span class="pln">ucRespData</span><span class="pun">)-&gt;</span><span class="pln">ucData</span><span class="pun">)</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="pun">{</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="com">// Card is MMC</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; m_CardStatus </span><span class="pun">=</span><span class="pln"> ecsOK</span><span class="pun">;</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; m_CardType </span><span class="pun">=</span><span class="pln"> ectMMC</span><span class="pun">;</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><span class="pun">}</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; &nbsp; </span><span class="pun">}</span><span class="pln"> &nbsp; &nbsp;<br>&nbsp; &nbsp; &nbsp; </span><span class="pun">}</span><span class="pln"><br>&nbsp; &nbsp; </span><span class="pun">}</span><span class="pln"><br><br><br>&nbsp; &nbsp; MMC_Finish</span><span class="pun">();</span><span class="pln"><br><br>&nbsp; &nbsp; </span><span class="kwd">if</span><span class="pln"> </span><span class="pun">(</span><span class="pln">m_CardStatus </span><span class="pun">!=</span><span class="pln"> ecsOK</span><span class="pun">)</span><span class="pln"><br>&nbsp; &nbsp; </span><span class="pun">{</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; MMC_PowerDown</span><span class="pun">();</span><span class="pln"><br>&nbsp; &nbsp; </span><span class="pun">}</span><span class="pln"><br>&nbsp; &nbsp; </span><span class="kwd">else</span><span class="pln"><br>&nbsp; &nbsp; </span><span class="pun">{</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; MMC_SendCommand</span><span class="pun">(</span><span class="pln">MMC_SET_BLOCKLEN</span><span class="pun">,</span><span class="pln"> MMC_BLOCK_SIZE</span><span class="pun">,</span><span class="pln"> ertR1</span><span class="pun">);</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; SPI_ReadByte</span><span class="pun">();</span><span class="pln"><br>&nbsp; &nbsp; &nbsp; MMC_Finish</span><span class="pun">();</span><span class="pln"><br></span></code></pre><br>
+Закончив процесс идентификации(тип карты памяти) и инициализации, можно приступать к работе с картой памяти: вычисление объема, чтение и запись данных и т.д.Но это уже вопрос следующей статьи. Жду комментариев и вопросов. Критика и советы оч приветствуются!<br>
+<br>
+P.S. Забегая немного вперед, пару скринов чтения информации с карты памяти:<br>
+<br>
+<img src="./MMC(SD) и AVR. Часть 1. Инициализация и идентификация.   AVR   Сообщество EasyElectronics.ru_files/d40234.jpg" title="SD MMC PC Info" alt="SD MMC PC Info"><br>
+<br>
+Да. и если можно, объясните мне, чайнику, как залить видео? СПС =)
+			</cut></div> 
+
+
+
+	<ul class="tags">
+					<li><a href="http://we.easyelectronics.ru/tag/MMC/">MMC</a>, </li>
+					<li><a href="http://we.easyelectronics.ru/tag/SD/">SD</a>, </li>
+					<li><a href="http://we.easyelectronics.ru/tag/AVR/">AVR</a></li>
+		                                                             
+	</ul>
+
+
+
+	<ul class="info">
+		<li id="vote_area_topic_1077" class="voting positive guest">
+			<a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" class="plus" onclick="return ls.vote.vote(1077,this,1,&#39;topic&#39;);"></a>
+			<span id="vote_total_topic_1077" class="total" title="всего проголосовало: 9"> +9 </span>
+			<a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" class="minus" onclick="return ls.vote.vote(1077,this,-1,&#39;topic&#39;);"></a>
+		</li>
+		<li class="date">13 сентября 2011, 00:39</li>
+		<li class="username"><a href="http://we.easyelectronics.ru/profile/lleeloo/">lleeloo</a></li>
+				
+        <!-- Attachments plugin -->
+    <link rel="stylesheet" type="text/css" href="./MMC(SD) и AVR. Часть 1. Инициализация и идентификация.   AVR   Сообщество EasyElectronics.ru_files/small.css">
+    <li class="FilesInTopic" title="Прикреплено 1 файлов.">
+      1
+    </li>
+    <!-- /Attachments plugin -->
+  
+	</ul>
+			                <!-- Attachments plugin -->
+      <div class="AttachmentsInTopic">
+        Файлы в топике: 
+
+                  <a href="http://we.easyelectronics.ru/attachments/get/290">Simplified_Physical_Layer_Spec.pdf</a>              </div>
+      <!-- /Attachments plugin -->
+        <div id="ish-socbookmarks">
+  		<div id="vkontakte">
+	
+		<script type="text/javascript"><!--  
+		document.write(VK.Share.button(false,{type: "round", text: "Вконтакте"})); 
+		--></script><table cellspacing="0" cellpadding="0" id="vkshare0" onmouseover="VK.Share.change(1, 0);" onmouseout="VK.Share.change(0, 0);" onmousedown="VK.Share.change(2, 0);" onmouseup="VK.Share.change(1, 0);" style="position: relative; width: auto; cursor: pointer; border: 0px;"><tbody><tr style="line-height: normal;"><td style="vertical-align: middle;"><a href="http://vkontakte.ru/share.php?url=http%3A%2F%2Fwe.easyelectronics.ru%2FAVR%2Fmmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html" onmouseup="this._btn=event.button;this.blur();" onclick="return VK.Share.click(0, this);" style="text-decoration:none;"><div style="height: 21px; cursor:pointer; width: 2px; background: url(https://vk.com/images/btns.png) no-repeat -21px -42px;"></div></a></td><td style="vertical-align: middle;"><a href="http://vkontakte.ru/share.php?url=http%3A%2F%2Fwe.easyelectronics.ru%2FAVR%2Fmmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html" onmouseup="this._btn=event.button;this.blur();" onclick="return VK.Share.click(0, this);" style="text-decoration:none;"><div style="border: 1px solid #3b6798; cursor:pointer; border-left: 0px;"><div style="border: 1px solid #5c82ab; border-left: 0px; border-top-color: #7e9cbc; background-color: #6d8fb3; color: #fff; text-shadow: 0px 1px #45688E; height: 15px; padding: 2px 4px 0px 6px; font-family: tahoma, arial; font-size: 10px;">Вконтакте</div></div></a></td><td style="vertical-align: middle;"><a href="http://vkontakte.ru/share.php?url=http%3A%2F%2Fwe.easyelectronics.ru%2FAVR%2Fmmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html" onmouseup="this._btn=event.button;this.blur();" onclick="return VK.Share.click(0, this);" style="text-decoration:none;"><div style="background-image: url(https://vk.com/images/btns.png); background-attachment: initial; background-origin: initial; background-clip: initial; background-color: initial; cursor: pointer; height: 21px; width: 22px; background-position: 0px -21px; background-repeat: no-repeat no-repeat; "></div></a></td><td style="vertical-align: middle;"><a href="http://vkontakte.ru/share.php?url=http%3A%2F%2Fwe.easyelectronics.ru%2FAVR%2Fmmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html" onmouseup="this._btn=event.button;this.blur();" onclick="return VK.Share.click(0, this);" style="text-decoration:none;"><div style="border-top-style: solid; border-right-style: solid; border-bottom-style: solid; border-left-style: solid; border-top-color: rgb(162, 185, 211); border-right-color: rgb(162, 185, 211); border-bottom-color: rgb(162, 185, 211); border-left-color: rgb(162, 185, 211); border-image: initial; border-top-width: 1px; border-right-width: 0px; border-bottom-width: 1px; border-left-width: 0px; cursor: pointer; background-color: rgb(222, 230, 241); color: rgb(0, 0, 0); height: 15px; padding-top: 2px; padding-right: 6px; padding-bottom: 0px; padding-left: 4px; font-size: 10px; font-weight: bold; font-family: tahoma, arial; display: none; ">0</div></a></td><td style="vertical-align: middle;"><a href="http://vkontakte.ru/share.php?url=http%3A%2F%2Fwe.easyelectronics.ru%2FAVR%2Fmmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html" onmouseup="this._btn=event.button;this.blur();" onclick="return VK.Share.click(0, this);" style="text-decoration:none;"><div style="background-image: url(https://vk.com/images/btns.png); background-attachment: initial; background-origin: initial; background-clip: initial; background-color: initial; cursor: pointer; width: 2px; height: 21px; display: none; background-position: -27px -42px; background-repeat: initial initial; "></div></a></td></tr></tbody></table>
+	
+	</div>
+			<div id="facebook">
+    
+    <script type="text/javascript"><!--
+		document.write('<iframe src="http://www.facebook.com/plugins/like.php?href='+escape(document.location.href)+'&layout=button_count&show_faces=false&width=100&action=like&font=arial&colorscheme=light&height=20" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:100px; height:20px;" allowTransparency="true"></iframe>');
+    --></script><iframe src="./MMC(SD) и AVR. Часть 1. Инициализация и идентификация.   AVR   Сообщество EasyElectronics.ru_files/like.htm" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:100px; height:20px;" allowtransparency="true"></iframe>
+    
+	</div>
+			<div id="moimir">
+    
+    <script type="text/javascript"><!--
+    document.write('<a class="mrc__share" type="button_count" href="http://connect.mail.ru/share?share_url='+escape(document.location.href)+'">МойМир</a>');
+    --></script><a class="mrc__share mrc__share_done" type="button_count" href="http://connect.mail.ru/share?share_url=http%3A//we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html" style="white-space: nowrap; text-align: left; position: relative; width: auto; outline-width: 0px; outline-style: initial; outline-color: initial; text-decoration: none; height: 18px; font-size: 11px; line-height: 17px; overflow-x: hidden; overflow-y: hidden; font-weight: normal; "><small style="overflow: hidden; vertical-align: bottom;white-space:nowrap;text-align:left;line-height:17px;position:relative;width:auto;padding:0;margin:0;outline:0; text-decoration:none; display:inline-block; height:18px;background:url(http://img1.imgsmail.ru/r/new_share_buttons_sprite.gif) no-repeat 0 0; padding-left: 22px;line-height: 9px;"><i title="Поделиться страницей с друзьями в Моем Мире@Mail.Ru" style="vertical-align:top;float: none; white-space:nowrap;text-align:left;font-size:11px;line-height:9px;position:relative;width:auto;color:white;padding:0;margin:0;font-weight: bold; display:inline-block;background:url(http://img1.imgsmail.ru/r/new_share_buttons_sprite.gif) no-repeat right -19px; height: 14px; padding: 4px 5px 0 0; font-family: &#39;Lucida Grande&#39;,Tahoma,Verdana,Arial,sans-serif; font-szie: 11px; font-style: normal;cursor: pointer; line-height: 9px; *line-height: 13px; *padding-top: 2px; *height: 18px; ">МойМир</i><span title="Уже поделились" style="float: none; width:auto;color:black;padding:0;margin:0;display:none;background:url(http://img1.imgsmail.ru/r/new_share_buttons_sprite.gif) no-repeat left -123px; height: 13px; font-family: Tahoma; color: #000; padding: 5px 5px 0 10px; border-right: 1px solid #ffc70d; margin-left: 1px; cursor: pointer; font-weight: normal; font-style: normal; line-height: 8px; *line-height: 100%; *padding-top: 3px; *height: 18px">&nbsp;</span></small></a>
+    
+	</div>
+			<div id="tweetme">
+	
+		<script type="text/javascript">
+		tweetmeme_style = 'compact';
+		</script>
+		<script type="text/javascript" src="./MMC(SD) и AVR. Часть 1. Инициализация и идентификация.   AVR   Сообщество EasyElectronics.ru_files/button.js"></script><iframe src="./MMC(SD) и AVR. Часть 1. Инициализация и идентификация.   AVR   Сообщество EasyElectronics.ru_files/button.htm" height="20" width="90" frameborder="0" scrolling="no"></iframe>
+	
+	</div>
+	    
+  	<div id="google_plusone">
+    <div id="___plusone_0" style="height: 24px; width: 106px; display: inline-block; text-indent: 0px; margin-top: 0px; margin-right: 0px; margin-bottom: 0px; margin-left: 0px; padding-top: 0px; padding-right: 0px; padding-bottom: 0px; padding-left: 0px; background-image: initial; background-attachment: initial; background-origin: initial; background-clip: initial; background-color: transparent; border-top-style: none; border-right-style: none; border-bottom-style: none; border-left-style: none; float: none; line-height: normal; font-size: 1px; vertical-align: baseline; background-position: initial initial; background-repeat: initial initial; "><iframe allowtransparency="true" frameborder="0" hspace="0" id="I1_1333369205940" marginheight="0" marginwidth="0" name="I1_1333369205940" scrolling="no" src="./MMC(SD) и AVR. Часть 1. Инициализация и идентификация.   AVR   Сообщество EasyElectronics.ru_files/fastbutton.htm" style="width: 106px; margin-top: 0px; margin-right: 0px; margin-bottom: 0px; margin-left: 0px; border-top-style: none; border-right-style: none; border-bottom-style: none; border-left-style: none; height: 24px; position: static; left: 0px; top: 0px; visibility: visible; " tabindex="0" vspace="0" width="100%" title="+1"></iframe></div>
+	</div>
+	      </div>
+	</div>	
+<div class="comments-header">
+	<h3>Комментарии (<span id="count-comments">16</span>)</h3>
+		<a href="http://we.easyelectronics.ru/rss/comments/1077/" class="rss">RSS</a>
+		<a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" onclick="ls.comments.collapseCommentAll(); return false;" onfocus="blur();">свернуть</a> /
+	<a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" onclick="ls.comments.expandCommentAll(); return false;" onfocus="blur();">развернуть</a>
+</div>
+
+<a name="comments"></a>
+	
+	
+<div class="comments" id="comments">
+						
+				
+		 
+				
+		<div class="comment-wrapper" id="comment_wrapper_id_25236">
+		
+		
+<div id="comment_id_25236" class="comment not-admin ">
+	<a name="comment25236"></a>
+	
+	
+	<div class="folding" style="display: none; "></div>
+	
+	
+	<div id="comment_content_id_25236" class="content">
+			
+			Спасибо за статью. Много имел дела с картами MMC/SD в свзязке с AVR, много подводных камней встречал, но статья некоторые моменты помогла освежить.<br>
+З.Ы. А таких моментов масса. Встречались карты, которые сами по себе порой включали проверку CRC. Таким приходилось принудительно его отключать в процессе инициализации.
+			</div>
+	
+	
+							
+		<div id="vote_area_comment_25236" class="voting  guest     ">
+			<a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" class="plus" onclick="return ls.vote.vote(25236,this,1,&#39;comment&#39;);"></a>
+			<span id="vote_total_comment_25236" class="total">0</span>
+			<a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" class="minus" onclick="return ls.vote.vote(25236,this,-1,&#39;comment&#39;);"></a>
+		</div>
+		
+	
+	<ul class="info">
+		<li class="avatar"><a href="http://we.easyelectronics.ru/profile/Dominikanez/"><img src="./MMC(SD) и AVR. Часть 1. Инициализация и идентификация.   AVR   Сообщество EasyElectronics.ru_files/avatar_24x24.jpg" alt="avatar"></a></li>
+		<li class="username"><a href="http://we.easyelectronics.ru/profile/Dominikanez/">Dominikanez</a></li>
+		<li class="date">13 сентября 2011, 06:31</li>
+				<li><a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#comment25236" class="comment-link"></a></li>	
+				<li class="goto-comment-child"><a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" title="Обратно к ответу">↓</a></li>
+								
+	</ul>
+	
+</div>		
+									
+				
+					</div>
+				
+		<div class="comment-wrapper" id="comment_wrapper_id_25237">
+		
+		
+<div id="comment_id_25237" class="comment not-admin ">
+	<a name="comment25237"></a>
+	
+	
+	<div class="folding"></div>
+	
+	
+	<div id="comment_content_id_25237" class="content">
+			
+			А программа, скрины которой представлены в конце статьи — это твоя терминалка или специальная тулза для картридеров?
+			</div>
+	
+	
+							
+		<div id="vote_area_comment_25237" class="voting  guest     ">
+			<a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" class="plus" onclick="return ls.vote.vote(25237,this,1,&#39;comment&#39;);"></a>
+			<span id="vote_total_comment_25237" class="total">0</span>
+			<a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" class="minus" onclick="return ls.vote.vote(25237,this,-1,&#39;comment&#39;);"></a>
+		</div>
+		
+	
+	<ul class="info">
+		<li class="avatar"><a href="http://we.easyelectronics.ru/profile/Dominikanez/"><img src="./MMC(SD) и AVR. Часть 1. Инициализация и идентификация.   AVR   Сообщество EasyElectronics.ru_files/avatar_24x24.jpg" alt="avatar"></a></li>
+		<li class="username"><a href="http://we.easyelectronics.ru/profile/Dominikanez/">Dominikanez</a></li>
+		<li class="date">13 сентября 2011, 06:40</li>
+				<li><a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#comment25237" class="comment-link"></a></li>	
+				<li class="goto-comment-child"><a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" title="Обратно к ответу">↓</a></li>
+								
+	</ul>
+	
+</div>		
+									
+				
+		 
+				
+		<div class="comment-wrapper" id="comment_wrapper_id_25276">
+		
+		
+<div id="comment_id_25276" class="comment not-admin ">
+	<a name="comment25276"></a>
+	
+	
+	<div class="folding"></div>
+	
+	
+	<div id="comment_content_id_25276" class="content">
+			
+			в устройстве используется софтварный усб. Реализован вендорный класс и при подключении к пк определяется как усб устройство. Работаю с ним через обертку к драйверам. Во второй статье выложу исходники
+			</div>
+	
+	
+							
+		<div id="vote_area_comment_25276" class="voting  guest     ">
+			<a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" class="plus" onclick="return ls.vote.vote(25276,this,1,&#39;comment&#39;);"></a>
+			<span id="vote_total_comment_25276" class="total">0</span>
+			<a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" class="minus" onclick="return ls.vote.vote(25276,this,-1,&#39;comment&#39;);"></a>
+		</div>
+		
+	
+	<ul class="info">
+		<li class="avatar"><a href="http://we.easyelectronics.ru/profile/lleeloo/"><img src="./MMC(SD) и AVR. Часть 1. Инициализация и идентификация.   AVR   Сообщество EasyElectronics.ru_files/avatar_24x24.gif" alt="avatar"></a></li>
+		<li class="username"><a href="http://we.easyelectronics.ru/profile/lleeloo/">lleeloo</a></li>
+		<li class="date">13 сентября 2011, 10:42</li>
+				<li><a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#comment25276" class="comment-link"></a></li>	
+					<li class="goto-comment-parent"><a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" onclick="ls.comments.goToParentComment(25276,25237); return false;" title="Ответ на">↑</a></li>
+				<li class="goto-comment-child"><a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" title="Обратно к ответу">↓</a></li>
+								
+	</ul>
+	
+</div>		
+									
+				
+		 
+				
+		<div class="comment-wrapper" id="comment_wrapper_id_25330">
+		
+		
+<div id="comment_id_25330" class="comment not-admin ">
+	<a name="comment25330"></a>
+	
+	
+	<div class="folding" style="display: none; "></div>
+	
+	
+	<div id="comment_content_id_25330" class="content">
+			
+			С нетерпением жду остальных частей.
+			</div>
+	
+	
+							
+		<div id="vote_area_comment_25330" class="voting  guest     ">
+			<a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" class="plus" onclick="return ls.vote.vote(25330,this,1,&#39;comment&#39;);"></a>
+			<span id="vote_total_comment_25330" class="total">0</span>
+			<a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" class="minus" onclick="return ls.vote.vote(25330,this,-1,&#39;comment&#39;);"></a>
+		</div>
+		
+	
+	<ul class="info">
+		<li class="avatar"><a href="http://we.easyelectronics.ru/profile/Dominikanez/"><img src="./MMC(SD) и AVR. Часть 1. Инициализация и идентификация.   AVR   Сообщество EasyElectronics.ru_files/avatar_24x24.jpg" alt="avatar"></a></li>
+		<li class="username"><a href="http://we.easyelectronics.ru/profile/Dominikanez/">Dominikanez</a></li>
+		<li class="date">13 сентября 2011, 14:48</li>
+				<li><a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#comment25330" class="comment-link"></a></li>	
+					<li class="goto-comment-parent"><a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" onclick="ls.comments.goToParentComment(25330,25276); return false;" title="Ответ на">↑</a></li>
+				<li class="goto-comment-child"><a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" title="Обратно к ответу">↓</a></li>
+								
+	</ul>
+	
+</div>		
+									
+				
+		    	
+			</div></div></div>				
+		<div class="comment-wrapper" id="comment_wrapper_id_25254">
+		
+		
+<div id="comment_id_25254" class="comment not-admin ">
+	<a name="comment25254"></a>
+	
+	
+	<div class="folding" style="display: none; "></div>
+	
+	
+	<div id="comment_content_id_25254" class="content">
+			
+			Очень хорошо. Перенес в коллективный блог. Видео заливается на ютуб и полученная от него ссылка вставляется в теги для видео.
+			</div>
+	
+	
+							
+		<div id="vote_area_comment_25254" class="voting  guest     ">
+			<a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" class="plus" onclick="return ls.vote.vote(25254,this,1,&#39;comment&#39;);"></a>
+			<span id="vote_total_comment_25254" class="total">0</span>
+			<a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" class="minus" onclick="return ls.vote.vote(25254,this,-1,&#39;comment&#39;);"></a>
+		</div>
+		
+	
+	<ul class="info">
+		<li class="avatar"><a href="http://we.easyelectronics.ru/profile/DIHALT/"><img src="./MMC(SD) и AVR. Часть 1. Инициализация и идентификация.   AVR   Сообщество EasyElectronics.ru_files/avatar_24x24(1).jpg" alt="avatar"></a></li>
+		<li class="username"><a href="http://we.easyelectronics.ru/profile/DIHALT/">DIHALT</a></li>
+		<li class="date">13 сентября 2011, 09:53</li>
+				<li><a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#comment25254" class="comment-link"></a></li>	
+				<li class="goto-comment-child"><a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" title="Обратно к ответу">↓</a></li>
+								
+	</ul>
+	
+</div>		
+									
+				
+					</div>
+				
+		<div class="comment-wrapper" id="comment_wrapper_id_25270">
+		
+		
+<div id="comment_id_25270" class="comment not-admin ">
+	<a name="comment25270"></a>
+	
+	
+	<div class="folding" style="display: none; "></div>
+	
+	
+	<div id="comment_content_id_25270" class="content">
+			
+			Познавательная статья +1
+			</div>
+	
+	
+							
+		<div id="vote_area_comment_25270" class="voting  guest     ">
+			<a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" class="plus" onclick="return ls.vote.vote(25270,this,1,&#39;comment&#39;);"></a>
+			<span id="vote_total_comment_25270" class="total">0</span>
+			<a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" class="minus" onclick="return ls.vote.vote(25270,this,-1,&#39;comment&#39;);"></a>
+		</div>
+		
+	
+	<ul class="info">
+		<li class="avatar"><a href="http://we.easyelectronics.ru/profile/bomond/"><img src="./MMC(SD) и AVR. Часть 1. Инициализация и идентификация.   AVR   Сообщество EasyElectronics.ru_files/avatar_24x24(2).gif" alt="avatar"></a></li>
+		<li class="username"><a href="http://we.easyelectronics.ru/profile/bomond/">bomond</a></li>
+		<li class="date">13 сентября 2011, 10:31</li>
+				<li><a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#comment25270" class="comment-link"></a></li>	
+				<li class="goto-comment-child"><a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" title="Обратно к ответу">↓</a></li>
+								
+	</ul>
+	
+</div>		
+									
+				
+					</div>
+				
+		<div class="comment-wrapper" id="comment_wrapper_id_25296">
+		
+		
+<div id="comment_id_25296" class="comment not-admin ">
+	<a name="comment25296"></a>
+	
+	
+	<div class="folding"></div>
+	
+	
+	<div id="comment_content_id_25296" class="content">
+			
+			<blockquote>Из таблицы команд видно, что у каждой команды есть свой индекс</blockquote>Так и не понял куда смотреть.
+			</div>
+	
+	
+							
+		<div id="vote_area_comment_25296" class="voting  guest     ">
+			<a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" class="plus" onclick="return ls.vote.vote(25296,this,1,&#39;comment&#39;);"></a>
+			<span id="vote_total_comment_25296" class="total">0</span>
+			<a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" class="minus" onclick="return ls.vote.vote(25296,this,-1,&#39;comment&#39;);"></a>
+		</div>
+		
+	
+	<ul class="info">
+		<li class="avatar"><a href="http://we.easyelectronics.ru/profile/opolo84/"><img src="./MMC(SD) и AVR. Часть 1. Инициализация и идентификация.   AVR   Сообщество EasyElectronics.ru_files/avatar_24x24(3).jpg" alt="avatar"></a></li>
+		<li class="username"><a href="http://we.easyelectronics.ru/profile/opolo84/">opolo84</a></li>
+		<li class="date">13 сентября 2011, 12:45</li>
+				<li><a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#comment25296" class="comment-link"></a></li>	
+				<li class="goto-comment-child"><a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" title="Обратно к ответу">↓</a></li>
+								
+	</ul>
+	
+</div>		
+									
+				
+		 
+				
+		<div class="comment-wrapper" id="comment_wrapper_id_25310">
+		
+		
+<div id="comment_id_25310" class="comment not-admin ">
+	<a name="comment25310"></a>
+	
+	
+	<div class="folding"></div>
+	
+	
+	<div id="comment_content_id_25310" class="content">
+			
+			Прошу прощения, рисунок с таблицей по размерам не влез. Сейчас поправлю. Индекс это номер команды: например чтобы отправить команду CMD9 (индекс равен 9), нужно прибавить к 0x40 этот индекс.
+			</div>
+	
+	
+							
+		<div id="vote_area_comment_25310" class="voting  guest     ">
+			<a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" class="plus" onclick="return ls.vote.vote(25310,this,1,&#39;comment&#39;);"></a>
+			<span id="vote_total_comment_25310" class="total">0</span>
+			<a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" class="minus" onclick="return ls.vote.vote(25310,this,-1,&#39;comment&#39;);"></a>
+		</div>
+		
+	
+	<ul class="info">
+		<li class="avatar"><a href="http://we.easyelectronics.ru/profile/lleeloo/"><img src="./MMC(SD) и AVR. Часть 1. Инициализация и идентификация.   AVR   Сообщество EasyElectronics.ru_files/avatar_24x24.gif" alt="avatar"></a></li>
+		<li class="username"><a href="http://we.easyelectronics.ru/profile/lleeloo/">lleeloo</a></li>
+		<li class="date">13 сентября 2011, 13:47</li>
+				<li><a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#comment25310" class="comment-link"></a></li>	
+					<li class="goto-comment-parent"><a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" onclick="ls.comments.goToParentComment(25310,25296); return false;" title="Ответ на">↑</a></li>
+				<li class="goto-comment-child"><a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" title="Обратно к ответу">↓</a></li>
+								
+	</ul>
+	
+</div>		
+									
+				
+		 
+				
+		<div class="comment-wrapper" id="comment_wrapper_id_25311">
+		
+		
+<div id="comment_id_25311" class="comment not-admin ">
+	<a name="comment25311"></a>
+	
+	
+	<div class="folding" style="display: none; "></div>
+	
+	
+	<div id="comment_content_id_25311" class="content">
+			
+			Во второй части статьи я выложу исходники для AVR'ки и datasheet'ы на карты памяти
+			</div>
+	
+	
+							
+		<div id="vote_area_comment_25311" class="voting  guest     ">
+			<a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" class="plus" onclick="return ls.vote.vote(25311,this,1,&#39;comment&#39;);"></a>
+			<span id="vote_total_comment_25311" class="total">0</span>
+			<a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" class="minus" onclick="return ls.vote.vote(25311,this,-1,&#39;comment&#39;);"></a>
+		</div>
+		
+	
+	<ul class="info">
+		<li class="avatar"><a href="http://we.easyelectronics.ru/profile/lleeloo/"><img src="./MMC(SD) и AVR. Часть 1. Инициализация и идентификация.   AVR   Сообщество EasyElectronics.ru_files/avatar_24x24.gif" alt="avatar"></a></li>
+		<li class="username"><a href="http://we.easyelectronics.ru/profile/lleeloo/">lleeloo</a></li>
+		<li class="date">13 сентября 2011, 13:48</li>
+				<li><a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#comment25311" class="comment-link"></a></li>	
+					<li class="goto-comment-parent"><a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" onclick="ls.comments.goToParentComment(25311,25310); return false;" title="Ответ на">↑</a></li>
+				<li class="goto-comment-child"><a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" title="Обратно к ответу">↓</a></li>
+								
+	</ul>
+	
+</div>		
+									
+				
+		    	
+			</div></div></div>				
+		<div class="comment-wrapper" id="comment_wrapper_id_25774">
+		
+		
+<div id="comment_id_25774" class="comment not-admin ">
+	<a name="comment25774"></a>
+	
+	
+	<div class="folding"></div>
+	
+	
+	<div id="comment_content_id_25774" class="content">
+			
+			Спасибо!<br>
+Читал где-то слухи, что SDHC по спецификации не обязаны поддерживать SPI. Надеюсь это брехня?
+			</div>
+	
+	
+							
+		<div id="vote_area_comment_25774" class="voting  guest     ">
+			<a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" class="plus" onclick="return ls.vote.vote(25774,this,1,&#39;comment&#39;);"></a>
+			<span id="vote_total_comment_25774" class="total">0</span>
+			<a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" class="minus" onclick="return ls.vote.vote(25774,this,-1,&#39;comment&#39;);"></a>
+		</div>
+		
+	
+	<ul class="info">
+		<li class="avatar"><a href="http://we.easyelectronics.ru/profile/lasttry/"><img src="./MMC(SD) и AVR. Часть 1. Инициализация и идентификация.   AVR   Сообщество EasyElectronics.ru_files/avatar_24x24.jpg" alt="avatar"></a></li>
+		<li class="username"><a href="http://we.easyelectronics.ru/profile/lasttry/">lasttry</a></li>
+		<li class="date">16 сентября 2011, 10:38</li>
+				<li><a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#comment25774" class="comment-link"></a></li>	
+				<li class="goto-comment-child"><a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" title="Обратно к ответу">↓</a></li>
+								
+	</ul>
+	
+</div>		
+									
+				
+		 
+				
+		<div class="comment-wrapper" id="comment_wrapper_id_25785">
+		
+		
+<div id="comment_id_25785" class="comment not-admin ">
+	<a name="comment25785"></a>
+	
+	
+	<div class="folding" style="display: none; "></div>
+	
+	
+	<div id="comment_content_id_25785" class="content">
+			
+			Во-первых, зачем важему контроллеру 4Гб+ памяти ?? фильмы что ли хранить?<br>
+Во-вторых, если какая и не поддерживает, то можно спокойно пойти в магаз и за разумные деньги купить длугую карточку.<br>
+Так что не шибко парьтесь по этому поводу. единственное чем оно вам грозит — это при запуске она не проинициализируется, что вполне можно обнаружить.
+			</div>
+	
+	
+							
+		<div id="vote_area_comment_25785" class="voting  guest     ">
+			<a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" class="plus" onclick="return ls.vote.vote(25785,this,1,&#39;comment&#39;);"></a>
+			<span id="vote_total_comment_25785" class="total">0</span>
+			<a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" class="minus" onclick="return ls.vote.vote(25785,this,-1,&#39;comment&#39;);"></a>
+		</div>
+		
+	
+	<ul class="info">
+		<li class="avatar"><a href="http://we.easyelectronics.ru/profile/angel5a/"><img src="./MMC(SD) и AVR. Часть 1. Инициализация и идентификация.   AVR   Сообщество EasyElectronics.ru_files/avatar_24x24.jpg" alt="avatar"></a></li>
+		<li class="username"><a href="http://we.easyelectronics.ru/profile/angel5a/">angel5a</a></li>
+		<li class="date">16 сентября 2011, 13:16</li>
+				<li><a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#comment25785" class="comment-link"></a></li>	
+					<li class="goto-comment-parent"><a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" onclick="ls.comments.goToParentComment(25785,25774); return false;" title="Ответ на">↑</a></li>
+				<li class="goto-comment-child"><a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" title="Обратно к ответу">↓</a></li>
+								
+	</ul>
+	
+</div>		
+									
+				
+					</div>
+				
+		<div class="comment-wrapper" id="comment_wrapper_id_25786">
+		
+		
+<div id="comment_id_25786" class="comment not-admin ">
+	<a name="comment25786"></a>
+	
+	
+	<div class="folding" style="display: none; "></div>
+	
+	
+	<div id="comment_content_id_25786" class="content">
+			
+			Китайские карточки иногда не поддерживают спи несмотря на спецификации. Тут уж как повезёт.
+			</div>
+	
+	
+							
+		<div id="vote_area_comment_25786" class="voting  guest     ">
+			<a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" class="plus" onclick="return ls.vote.vote(25786,this,1,&#39;comment&#39;);"></a>
+			<span id="vote_total_comment_25786" class="total">0</span>
+			<a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" class="minus" onclick="return ls.vote.vote(25786,this,-1,&#39;comment&#39;);"></a>
+		</div>
+		
+	
+	<ul class="info">
+		<li class="avatar"><a href="http://we.easyelectronics.ru/profile/Lifelover/"><img src="./MMC(SD) и AVR. Часть 1. Инициализация и идентификация.   AVR   Сообщество EasyElectronics.ru_files/avatar_24x24(4).jpg" alt="avatar"></a></li>
+		<li class="username"><a href="http://we.easyelectronics.ru/profile/Lifelover/">Lifelover</a></li>
+		<li class="date">16 сентября 2011, 13:20</li>
+				<li><a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#comment25786" class="comment-link"></a></li>	
+					<li class="goto-comment-parent"><a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" onclick="ls.comments.goToParentComment(25786,25774); return false;" title="Ответ на">↑</a></li>
+				<li class="goto-comment-child"><a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" title="Обратно к ответу">↓</a></li>
+								
+	</ul>
+	
+</div>		
+									
+				
+					</div>
+				
+		<div class="comment-wrapper" id="comment_wrapper_id_25791">
+		
+		
+<div id="comment_id_25791" class="comment not-admin ">
+	<a name="comment25791"></a>
+	
+	
+	<div class="folding"></div>
+	
+	
+	<div id="comment_content_id_25791" class="content">
+			
+			Все что я юзал с SPI дружили. По спецификации положено всем, но как говорят товарищи по сообществу, то видимо бывают и поделки которые не держат. Но, опять же я таких не встречал
+			</div>
+	
+	
+							
+		<div id="vote_area_comment_25791" class="voting  guest     ">
+			<a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" class="plus" onclick="return ls.vote.vote(25791,this,1,&#39;comment&#39;);"></a>
+			<span id="vote_total_comment_25791" class="total">0</span>
+			<a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" class="minus" onclick="return ls.vote.vote(25791,this,-1,&#39;comment&#39;);"></a>
+		</div>
+		
+	
+	<ul class="info">
+		<li class="avatar"><a href="http://we.easyelectronics.ru/profile/lleeloo/"><img src="./MMC(SD) и AVR. Часть 1. Инициализация и идентификация.   AVR   Сообщество EasyElectronics.ru_files/avatar_24x24.gif" alt="avatar"></a></li>
+		<li class="username"><a href="http://we.easyelectronics.ru/profile/lleeloo/">lleeloo</a></li>
+		<li class="date">16 сентября 2011, 13:28</li>
+				<li><a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#comment25791" class="comment-link"></a></li>	
+					<li class="goto-comment-parent"><a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" onclick="ls.comments.goToParentComment(25791,25774); return false;" title="Ответ на">↑</a></li>
+				<li class="goto-comment-child"><a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" title="Обратно к ответу">↓</a></li>
+								
+	</ul>
+	
+</div>		
+									
+				
+		 
+				
+		<div class="comment-wrapper" id="comment_wrapper_id_25803">
+		
+		
+<div id="comment_id_25803" class="comment not-admin ">
+	<a name="comment25803"></a>
+	
+	
+	<div class="folding"></div>
+	
+	
+	<div id="comment_content_id_25803" class="content">
+			
+			Где-то я читал, что поддержка SPI не обязательна для microSD и что microSDHC и выше часто ее не имеют (microSDSC большинство SPI поддерживает).
+			</div>
+	
+	
+							
+		<div id="vote_area_comment_25803" class="voting  guest     ">
+			<a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" class="plus" onclick="return ls.vote.vote(25803,this,1,&#39;comment&#39;);"></a>
+			<span id="vote_total_comment_25803" class="total">0</span>
+			<a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" class="minus" onclick="return ls.vote.vote(25803,this,-1,&#39;comment&#39;);"></a>
+		</div>
+		
+	
+	<ul class="info">
+		<li class="avatar"><a href="http://we.easyelectronics.ru/profile/Vga/"><img src="./MMC(SD) и AVR. Часть 1. Инициализация и идентификация.   AVR   Сообщество EasyElectronics.ru_files/avatar_24x24(5).gif" alt="avatar"></a></li>
+		<li class="username"><a href="http://we.easyelectronics.ru/profile/Vga/">Vga</a></li>
+		<li class="date">16 сентября 2011, 14:25</li>
+				<li><a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#comment25803" class="comment-link"></a></li>	
+					<li class="goto-comment-parent"><a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" onclick="ls.comments.goToParentComment(25803,25791); return false;" title="Ответ на">↑</a></li>
+				<li class="goto-comment-child"><a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" title="Обратно к ответу">↓</a></li>
+								
+	</ul>
+	
+</div>		
+									
+				
+		 
+				
+		<div class="comment-wrapper" id="comment_wrapper_id_25807">
+		
+		
+<div id="comment_id_25807" class="comment not-admin ">
+	<a name="comment25807"></a>
+	
+	
+	<div class="folding"></div>
+	
+	
+	<div id="comment_content_id_25807" class="content">
+			
+			Согласно докам SanDisk, Toshiba и чего-то там еще обязательно есть SPI причем в любой. Если производитель придерживается документации (не зряже стандар написан), то SPI должен быть
+			</div>
+	
+	
+							
+		<div id="vote_area_comment_25807" class="voting  guest     ">
+			<a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" class="plus" onclick="return ls.vote.vote(25807,this,1,&#39;comment&#39;);"></a>
+			<span id="vote_total_comment_25807" class="total">0</span>
+			<a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" class="minus" onclick="return ls.vote.vote(25807,this,-1,&#39;comment&#39;);"></a>
+		</div>
+		
+	
+	<ul class="info">
+		<li class="avatar"><a href="http://we.easyelectronics.ru/profile/lleeloo/"><img src="./MMC(SD) и AVR. Часть 1. Инициализация и идентификация.   AVR   Сообщество EasyElectronics.ru_files/avatar_24x24.gif" alt="avatar"></a></li>
+		<li class="username"><a href="http://we.easyelectronics.ru/profile/lleeloo/">lleeloo</a></li>
+		<li class="date">16 сентября 2011, 14:35</li>
+				<li><a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#comment25807" class="comment-link"></a></li>	
+					<li class="goto-comment-parent"><a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" onclick="ls.comments.goToParentComment(25807,25803); return false;" title="Ответ на">↑</a></li>
+				<li class="goto-comment-child"><a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" title="Обратно к ответу">↓</a></li>
+								
+	</ul>
+	
+</div>		
+									
+				
+		 
+				
+		<div class="comment-wrapper" id="comment_wrapper_id_25815">
+		
+		
+<div id="comment_id_25815" class="comment not-admin ">
+	<a name="comment25815"></a>
+	
+	
+	<div class="folding" style="display: none; "></div>
+	
+	
+	<div id="comment_content_id_25815" class="content">
+			
+			Возможно это связано с тем, что microSD (вроде бы) сначала были отдельным стандартом T-Flash. Ну и источник, откуда я инфу брал — нечто в духе википедии, так что не уверен. Ну и инфа выглядит в духе «бывают microSD без SPI и для microSDHC на такую нарваться шансов больше» (хотя я когда читал так понял, что microSDHC с SPI вообще сложно найти). Сам не проверял. Из того, что с SD по SPI работает у меня только NanoDSO, а он по любому SDHC не держит. Хотя нет, еще анлокер/ресеттер карт, но на SDHC его тоже еще не приходилось натравливать.
+			</div>
+	
+	
+							
+		<div id="vote_area_comment_25815" class="voting  guest     ">
+			<a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" class="plus" onclick="return ls.vote.vote(25815,this,1,&#39;comment&#39;);"></a>
+			<span id="vote_total_comment_25815" class="total">0</span>
+			<a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" class="minus" onclick="return ls.vote.vote(25815,this,-1,&#39;comment&#39;);"></a>
+		</div>
+		
+	
+	<ul class="info">
+		<li class="avatar"><a href="http://we.easyelectronics.ru/profile/Vga/"><img src="./MMC(SD) и AVR. Часть 1. Инициализация и идентификация.   AVR   Сообщество EasyElectronics.ru_files/avatar_24x24(5).gif" alt="avatar"></a></li>
+		<li class="username"><a href="http://we.easyelectronics.ru/profile/Vga/">Vga</a></li>
+		<li class="date">16 сентября 2011, 14:57</li>
+				<li><a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#comment25815" class="comment-link"></a></li>	
+					<li class="goto-comment-parent"><a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" onclick="ls.comments.goToParentComment(25815,25807); return false;" title="Ответ на">↑</a></li>
+				<li class="goto-comment-child"><a href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html#" title="Обратно к ответу">↓</a></li>
+								
+	</ul>
+	
+</div>		
+							</div></div></div></div></div>    
+			</div>				
+	
+
+			Только зарегистрированные и авторизованные пользователи могут оставлять комментарии.
+		
+
+
+	
+
+
+			
+			</div><!-- /content-inner -->
+		</div><!-- /content -->
+
+					<div id="sidebar">
+										<div class="block stream" id="block_stream">
+	<h2>Прямой эфир</h2>
+	
+	
+	<ul class="switcher">						
+		<li id="block_stream_item_comment" class="active">Комментарии</li>
+		<li id="block_stream_item_topic">Публикации</li>
+		
+		
+	</ul>					
+	
+	
+	<div class="block-content" id="block_stream_content">
+		<ul class="list">
+									
+		<li class="even">
+			<a href="http://we.easyelectronics.ru/profile/uschema/" class="user">uschema</a> →
+			<span class="stream-comment-icon"></span>
+			<a href="http://we.easyelectronics.ru/uschema/altium-trassirovka-plat-avtomaticheskaya-ili-vruchnuyu.html#comment53842" class="topic-title">Altium: Трассировка плат “Автоматическая” или “Вручную”</a>
+			<span>47</span> →
+			<a href="http://we.easyelectronics.ru/my/uschema/" class="blog-title">Блог им. uschema</a>
+		</li>
+									
+		<li>
+			<a href="http://we.easyelectronics.ru/profile/snb/" class="user">snb</a> →
+			<span class="stream-comment-icon"></span>
+			<a href="http://we.easyelectronics.ru/GYUR22/3d-modelki-dlya-diptrace.html#comment53838" class="topic-title">3D модельки для DipTrace</a>
+			<span>12</span> →
+			<a href="http://we.easyelectronics.ru/my/GYUR22/" class="blog-title">Блог им. GYUR22</a>
+		</li>
+									
+		<li class="even">
+			<a href="http://we.easyelectronics.ru/profile/coocos/" class="user">coocos</a> →
+			<span class="stream-comment-icon"></span>
+			<a href="http://we.easyelectronics.ru/msp430/audiobooster-pack-dlya-msp430-launchpad.html#comment53835" class="topic-title">Audiobooster Pack для MSP430 Launchpad</a>
+			<span>22</span> →
+			<a href="http://we.easyelectronics.ru/blog/msp430/" class="blog-title">MSP430</a>
+		</li>
+									
+		<li>
+			<a href="http://we.easyelectronics.ru/profile/Celeron/" class="user">Celeron</a> →
+			<span class="stream-comment-icon"></span>
+			<a href="http://we.easyelectronics.ru/Tools/vybor-laboratornogo-bloka-pitaniya-chast-2.html#comment53834" class="topic-title">Выбор лабораторного блока питания (часть 2)</a>
+			<span>8</span> →
+			<a href="http://we.easyelectronics.ru/blog/Tools/" class="blog-title">Инструмент</a>
+		</li>
+									
+		<li class="even">
+			<a href="http://we.easyelectronics.ru/profile/pirsddd/" class="user">pirsddd</a> →
+			<span class="stream-comment-icon"></span>
+			<a href="http://we.easyelectronics.ru/AVR/usb-fleshka-na-atmega8-i-v-usb-ot-idei-k-gotovomu-ustroystvu.html#comment53833" class="topic-title">USB флешка на ATmega8 и V-USB. От идеи к готовому устройству...</a>
+			<span>153</span> →
+			<a href="http://we.easyelectronics.ru/blog/AVR/" class="blog-title">AVR</a>
+		</li>
+									
+		<li>
+			<a href="http://we.easyelectronics.ru/profile/dansar/" class="user">dansar</a> →
+			<span class="stream-comment-icon"></span>
+			<a href="http://we.easyelectronics.ru/Tools/vybor-laboratornogo-bloka-pitaniya-chast-1.html#comment53824" class="topic-title">Выбор лабораторного блока питания (часть 1)</a>
+			<span>7</span> →
+			<a href="http://we.easyelectronics.ru/blog/Tools/" class="blog-title">Инструмент</a>
+		</li>
+									
+		<li class="even">
+			<a href="http://we.easyelectronics.ru/profile/andrey_p/" class="user">andrey_p</a> →
+			<span class="stream-comment-icon"></span>
+			<a href="http://we.easyelectronics.ru/Karlson/kak-kupit-de0-nano-u-proizvoditelya.html#comment53820" class="topic-title">Как купить de0-nano у производителя</a>
+			<span>27</span> →
+			<a href="http://we.easyelectronics.ru/my/Karlson/" class="blog-title">Блог им. Karlson</a>
+		</li>
+									
+		<li>
+			<a href="http://we.easyelectronics.ru/profile/yars/" class="user">yars</a> →
+			<span class="stream-comment-icon"></span>
+			<a href="http://we.easyelectronics.ru/warning_guano/izgotovlenie-pechatnyh-plat.html#comment53819" class="topic-title">Изготовление Печатных Плат</a>
+			<span>74</span> →
+			<a href="http://we.easyelectronics.ru/blog/warning_guano/" class="blog-title">Осторожно, говно!</a>
+		</li>
+									
+		<li class="even">
+			<a href="http://we.easyelectronics.ru/profile/berrymorr/" class="user">berrymorr</a> →
+			<span class="stream-comment-icon"></span>
+			<a href="http://we.easyelectronics.ru/loshvitalik/remont-ipod-shuffle-2-generation-nuzhna-pomosch.html#comment53804" class="topic-title">Ремонт iPod Shuffle 2 generation - нужна помощь</a>
+			<span>26</span> →
+			<a href="http://we.easyelectronics.ru/my/loshvitalik/" class="blog-title">Блог им. loshvitalik</a>
+		</li>
+									
+		<li>
+			<a href="http://we.easyelectronics.ru/profile/angel5a/" class="user">angel5a</a> →
+			<span class="stream-comment-icon"></span>
+			<a href="http://we.easyelectronics.ru/angel5a/stm8-vstrechaet-internet.html#comment53802" class="topic-title">STM8 встречает Интернет</a>
+			<span>25</span> →
+			<a href="http://we.easyelectronics.ru/my/angel5a/" class="blog-title">Блог им. angel5a</a>
+		</li>
+									
+		<li class="even">
+			<a href="http://we.easyelectronics.ru/profile/Frolls/" class="user">Frolls</a> →
+			<span class="stream-comment-icon"></span>
+			<a href="http://we.easyelectronics.ru/GYUR22/coocox-141-cortex-m4.html#comment53799" class="topic-title">CooCox 1.4.1 Cortex M4</a>
+			<span>4</span> →
+			<a href="http://we.easyelectronics.ru/my/GYUR22/" class="blog-title">Блог им. GYUR22</a>
+		</li>
+									
+		<li>
+			<a href="http://we.easyelectronics.ru/profile/Celeron/" class="user">Celeron</a> →
+			<span class="stream-comment-icon"></span>
+			<a href="http://we.easyelectronics.ru/Tools/otzyv-na-vattmetr-el-epm02fq-bytovoy.html#comment53784" class="topic-title">Отзыв на 'Ваттметр EL-EPM02FQ (бытовой)'</a>
+			<span>34</span> →
+			<a href="http://we.easyelectronics.ru/blog/Tools/" class="blog-title">Инструмент</a>
+		</li>
+									
+		<li class="even">
+			<a href="http://we.easyelectronics.ru/profile/Vga/" class="user">Vga</a> →
+			<span class="stream-comment-icon"></span>
+			<a href="http://we.easyelectronics.ru/upgrade-repair/zamena-shnura-payalnoy-stancii-lukey-852d.html#comment53774" class="topic-title">Замена шнура паяльной станции Lukey 852D+</a>
+			<span>38</span> →
+			<a href="http://we.easyelectronics.ru/blog/upgrade-repair/" class="blog-title">Модернизация и ремонт</a>
+		</li>
+									
+		<li>
+			<a href="http://we.easyelectronics.ru/profile/lleeloo/" class="user">lleeloo</a> →
+			<span class="stream-comment-icon"></span>
+			<a href="http://we.easyelectronics.ru/Melnik_Andrew/audiometr-prodolzhenie.html#comment53752" class="topic-title">Аудиометр. Продолжение</a>
+			<span>28</span> →
+			<a href="http://we.easyelectronics.ru/my/Melnik_Andrew/" class="blog-title">Блог им. Melnik_Andrew</a>
+		</li>
+									
+		<li class="even">
+			<a href="http://we.easyelectronics.ru/profile/GDA230105/" class="user">GDA230105</a> →
+			<span class="stream-comment-icon"></span>
+			<a href="http://we.easyelectronics.ru/DIHALT/eagle-3d-povray.html#comment53749" class="topic-title">Eagle 3D (PovRay)</a>
+			<span>19</span> →
+			<a href="http://we.easyelectronics.ru/my/DIHALT/" class="blog-title">Блог им. DIHALT</a>
+		</li>
+									
+		<li>
+			<a href="http://we.easyelectronics.ru/profile/geko/" class="user">geko</a> →
+			<span class="stream-comment-icon"></span>
+			<a href="http://we.easyelectronics.ru/msp430/dupleksnyy-uart-na-taymere-timer_a.html#comment53735" class="topic-title">Дуплексный UART на таймере Timer_A</a>
+			<span>16</span> →
+			<a href="http://we.easyelectronics.ru/blog/msp430/" class="blog-title">MSP430</a>
+		</li>
+									
+		<li class="even">
+			<a href="http://we.easyelectronics.ru/profile/AlexeyArt/" class="user">AlexeyArt</a> →
+			<span class="stream-comment-icon"></span>
+			<a href="http://we.easyelectronics.ru/part/cifrovoy-izmeritel-absolyutnogo-davleniya-barometr-mpl115a2.html#comment53724" class="topic-title">Цифровой измеритель абсолютного давления (барометр) MPL115A2</a>
+			<span>47</span> →
+			<a href="http://we.easyelectronics.ru/blog/part/" class="blog-title">Деталька</a>
+		</li>
+									
+		<li>
+			<a href="http://we.easyelectronics.ru/profile/executer/" class="user">executer</a> →
+			<span class="stream-comment-icon"></span>
+			<a href="http://we.easyelectronics.ru/STM32/podklyuchenie-lcd-na-baze-kontrollera-ssd1289-k-stm32f4-discovery-ispolzuya-fsmc_2.html#comment53714" class="topic-title">Подключение LCD на базе контроллера SSD1289, к STM32F4-Discovery используя FSMC</a>
+			<span>8</span> →
+			<a href="http://we.easyelectronics.ru/blog/STM32/" class="blog-title">STM32</a>
+		</li>
+									
+		<li class="even">
+			<a href="http://we.easyelectronics.ru/profile/e_mc2/" class="user">e_mc2</a> →
+			<span class="stream-comment-icon"></span>
+			<a href="http://we.easyelectronics.ru/lcd_gfx/biblioteka-dlya-raboty-s-displeem-nokia-3310.html#comment53708" class="topic-title">Библиотека для работы с дисплеем Nokia 3310</a>
+			<span>88</span> →
+			<a href="http://we.easyelectronics.ru/blog/lcd_gfx/" class="blog-title">Работа с дисплеями и графикой</a>
+		</li>
+									
+		<li>
+			<a href="http://we.easyelectronics.ru/profile/Ozze/" class="user">Ozze</a> →
+			<span class="stream-comment-icon"></span>
+			<a href="http://we.easyelectronics.ru/part/rabota-s-bluetooth-modulem-hc05.html#comment53617" class="topic-title">Работа с Bluetooth модулем HC05</a>
+			<span>73</span> →
+			<a href="http://we.easyelectronics.ru/blog/part/" class="blog-title">Деталька</a>
+		</li>
+	</ul>
+
+
+<div class="bottom">
+	<a href="http://we.easyelectronics.ru/comments/">Весь эфир</a> | <a href="http://we.easyelectronics.ru/rss/allcomments/">RSS</a>
+</div>
+	</div>
+</div>
+
+
+															<div class="block tags">
+	<ul class="cloud">						
+					<li><a class="w1" rel="tag" href="http://we.easyelectronics.ru/tag/1-Wire/">1-Wire</a></li>	
+					<li><a class="w2" rel="tag" href="http://we.easyelectronics.ru/tag/Altera/">Altera</a></li>	
+					<li><a class="w2" rel="tag" href="http://we.easyelectronics.ru/tag/arduino/">arduino</a></li>	
+					<li><a class="w3" rel="tag" href="http://we.easyelectronics.ru/tag/ARM/">ARM</a></li>	
+					<li><a class="w10" rel="tag" href="http://we.easyelectronics.ru/tag/AVR/">AVR</a></li>	
+					<li><a class="w2" rel="tag" href="http://we.easyelectronics.ru/tag/avr-gcc/">avr-gcc</a></li>	
+					<li><a class="w1" rel="tag" href="http://we.easyelectronics.ru/tag/C%2B%2B/">C++</a></li>	
+					<li><a class="w2" rel="tag" href="http://we.easyelectronics.ru/tag/CodeRed/">CodeRed</a></li>	
+					<li><a class="w3" rel="tag" href="http://we.easyelectronics.ru/tag/Cortex-M3/">Cortex-M3</a></li>	
+					<li><a class="w1" rel="tag" href="http://we.easyelectronics.ru/tag/DIY/">DIY</a></li>	
+					<li><a class="w2" rel="tag" href="http://we.easyelectronics.ru/tag/DX/">DX</a></li>	
+					<li><a class="w2" rel="tag" href="http://we.easyelectronics.ru/tag/enc28j60/">enc28j60</a></li>	
+					<li><a class="w3" rel="tag" href="http://we.easyelectronics.ru/tag/ethernet/">ethernet</a></li>	
+					<li><a class="w2" rel="tag" href="http://we.easyelectronics.ru/tag/gcc/">gcc</a></li>	
+					<li><a class="w3" rel="tag" href="http://we.easyelectronics.ru/tag/I2C/">I2C</a></li>	
+					<li><a class="w2" rel="tag" href="http://we.easyelectronics.ru/tag/IAR/">IAR</a></li>	
+					<li><a class="w2" rel="tag" href="http://we.easyelectronics.ru/tag/KEIL/">KEIL</a></li>	
+					<li><a class="w1" rel="tag" href="http://we.easyelectronics.ru/tag/lan/">lan</a></li>	
+					<li><a class="w4" rel="tag" href="http://we.easyelectronics.ru/tag/LCD/">LCD</a></li>	
+					<li><a class="w4" rel="tag" href="http://we.easyelectronics.ru/tag/led/">led</a></li>	
+					<li><a class="w1" rel="tag" href="http://we.easyelectronics.ru/tag/linux/">linux</a></li>	
+					<li><a class="w3" rel="tag" href="http://we.easyelectronics.ru/tag/LPC1343/">LPC1343</a></li>	
+					<li><a class="w1" rel="tag" href="http://we.easyelectronics.ru/tag/LPC1768/">LPC1768</a></li>	
+					<li><a class="w4" rel="tag" href="http://we.easyelectronics.ru/tag/LPCXpresso/">LPCXpresso</a></li>	
+					<li><a class="w5" rel="tag" href="http://we.easyelectronics.ru/tag/MSP430/">MSP430</a></li>	
+					<li><a class="w2" rel="tag" href="http://we.easyelectronics.ru/tag/nxp/">nxp</a></li>	
+					<li><a class="w4" rel="tag" href="http://we.easyelectronics.ru/tag/PIC/">PIC</a></li>	
+					<li><a class="w2" rel="tag" href="http://we.easyelectronics.ru/tag/Quartus/">Quartus</a></li>	
+					<li><a class="w2" rel="tag" href="http://we.easyelectronics.ru/tag/RS-485/">RS-485</a></li>	
+					<li><a class="w2" rel="tag" href="http://we.easyelectronics.ru/tag/RTOS/">RTOS</a></li>	
+					<li><a class="w10" rel="tag" href="http://we.easyelectronics.ru/tag/STM32/">STM32</a></li>	
+					<li><a class="w7" rel="tag" href="http://we.easyelectronics.ru/tag/STM8/">STM8</a></li>	
+					<li><a class="w2" rel="tag" href="http://we.easyelectronics.ru/tag/STM8L/">STM8L</a></li>	
+					<li><a class="w1" rel="tag" href="http://we.easyelectronics.ru/tag/STM8L-Discovery/">STM8L-Discovery</a></li>	
+					<li><a class="w2" rel="tag" href="http://we.easyelectronics.ru/tag/TI/">TI</a></li>	
+					<li><a class="w5" rel="tag" href="http://we.easyelectronics.ru/tag/UART/">UART</a></li>	
+					<li><a class="w1" rel="tag" href="http://we.easyelectronics.ru/tag/USART/">USART</a></li>	
+					<li><a class="w5" rel="tag" href="http://we.easyelectronics.ru/tag/USB/">USB</a></li>	
+					<li><a class="w1" rel="tag" href="http://we.easyelectronics.ru/tag/Verilog/">Verilog</a></li>	
+					<li><a class="w2" rel="tag" href="http://we.easyelectronics.ru/tag/VHDL/">VHDL</a></li>	
+					<li><a class="w2" rel="tag" href="http://we.easyelectronics.ru/tag/%D0%B0%D0%BB%D0%B3%D0%BE%D1%80%D0%B8%D1%82%D0%BC/">алгоритм</a></li>	
+					<li><a class="w1" rel="tag" href="http://we.easyelectronics.ru/tag/%D0%B0%D1%81%D1%81%D0%B5%D0%BC%D0%B1%D0%BB%D0%B5%D1%80/">ассемблер</a></li>	
+					<li><a class="w3" rel="tag" href="http://we.easyelectronics.ru/tag/%D0%B2%D0%BE%D0%BF%D1%80%D0%BE%D1%81/">вопрос</a></li>	
+					<li><a class="w3" rel="tag" href="http://we.easyelectronics.ru/tag/%D0%B8%D0%B4%D0%B5%D1%8F/">идея</a></li>	
+					<li><a class="w6" rel="tag" href="http://we.easyelectronics.ru/tag/%D0%B8%D0%BD%D1%81%D1%82%D1%80%D1%83%D0%BC%D0%B5%D0%BD%D1%82/">инструмент</a></li>	
+					<li><a class="w9" rel="tag" href="http://we.easyelectronics.ru/tag/%D0%BA%D0%BE%D0%BD%D0%BA%D1%83%D1%80%D1%81/">конкурс</a></li>	
+					<li><a class="w5" rel="tag" href="http://we.easyelectronics.ru/tag/%D0%BA%D0%BE%D0%BD%D0%BA%D1%83%D1%80%D1%812/">конкурс2</a></li>	
+					<li><a class="w3" rel="tag" href="http://we.easyelectronics.ru/tag/%D0%9B%D0%A3%D0%A2/">ЛУТ</a></li>	
+					<li><a class="w1" rel="tag" href="http://we.easyelectronics.ru/tag/%D0%BC%D0%B0%D0%B3%D0%B0%D0%B7%D0%B8%D0%BD%D1%8B/">магазины</a></li>	
+					<li><a class="w2" rel="tag" href="http://we.easyelectronics.ru/tag/%D0%BC%D0%B8%D0%BA%D1%80%D0%BE%D0%BA%D0%BE%D0%BD%D1%82%D1%80%D0%BE%D0%BB%D0%BB%D0%B5%D1%80%D1%8B/">микроконтроллеры</a></li>	
+					<li><a class="w5" rel="tag" href="http://we.easyelectronics.ru/tag/%D0%BD%D0%B0%D1%87%D0%B8%D0%BD%D0%B0%D1%8E%D1%89%D0%B8%D0%BC/">начинающим</a></li>	
+					<li><a class="w1" rel="tag" href="http://we.easyelectronics.ru/tag/%D0%BE%D0%B1%D0%B7%D0%BE%D1%80/">обзор</a></li>	
+					<li><a class="w2" rel="tag" href="http://we.easyelectronics.ru/tag/%D0%9E%D1%82%D0%BB%D0%B0%D0%B4%D0%BE%D1%87%D0%BD%D0%B0%D1%8F%20%D0%BF%D0%BB%D0%B0%D1%82%D0%B0/">Отладочная плата</a></li>	
+					<li><a class="w1" rel="tag" href="http://we.easyelectronics.ru/tag/%D0%BF%D0%B0%D1%8F%D0%BB%D1%8C%D0%BD%D0%B8%D0%BA/">паяльник</a></li>	
+					<li><a class="w2" rel="tag" href="http://we.easyelectronics.ru/tag/%D0%BF%D0%B5%D1%87%D0%B0%D1%82%D0%BD%D0%B0%D1%8F%20%D0%BF%D0%BB%D0%B0%D1%82%D0%B0/">печатная плата</a></li>	
+					<li><a class="w2" rel="tag" href="http://we.easyelectronics.ru/tag/%D0%BF%D0%BB%D0%B0%D1%82%D0%B0/">плата</a></li>	
+					<li><a class="w5" rel="tag" href="http://we.easyelectronics.ru/tag/%D0%9F%D0%9B%D0%98%D0%A1/">ПЛИС</a></li>	
+					<li><a class="w2" rel="tag" href="http://we.easyelectronics.ru/tag/%D0%BF%D0%BE%D0%B4%D0%B5%D0%BB%D0%BA%D0%B8/">поделки</a></li>	
+					<li><a class="w2" rel="tag" href="http://we.easyelectronics.ru/tag/%D0%BF%D0%BE%D0%BA%D1%83%D0%BF%D0%BA%D0%B8/">покупки</a></li>	
+					<li><a class="w3" rel="tag" href="http://we.easyelectronics.ru/tag/%D0%BF%D1%80%D0%BE%D0%B3%D1%80%D0%B0%D0%BC%D0%BC%D0%B0%D1%82%D0%BE%D1%80/">программатор</a></li>	
+					<li><a class="w3" rel="tag" href="http://we.easyelectronics.ru/tag/%D0%BF%D1%80%D0%BE%D0%B3%D1%80%D0%B0%D0%BC%D0%BC%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5/">программирование</a></li>	
+					<li><a class="w2" rel="tag" href="http://we.easyelectronics.ru/tag/%D1%80%D0%BE%D0%B1%D0%BE%D1%82/">робот</a></li>	
+					<li><a class="w1" rel="tag" href="http://we.easyelectronics.ru/tag/%D1%81%D0%B5%D0%BC%D0%BF%D0%BB%D1%8B/">семплы</a></li>	
+					<li><a class="w3" rel="tag" href="http://we.easyelectronics.ru/tag/%D1%81%D0%BE%D1%84%D1%82/">софт</a></li>	
+					<li><a class="w2" rel="tag" href="http://we.easyelectronics.ru/tag/%D1%81%D1%85%D0%B5%D0%BC%D0%BE%D1%82%D0%B5%D1%85%D0%BD%D0%B8%D0%BA%D0%B0/">схемотехника</a></li>	
+					<li><a class="w3" rel="tag" href="http://we.easyelectronics.ru/tag/%D0%A2%D0%B5%D1%85%D0%BD%D0%BE%D0%BB%D0%BE%D0%B3%D0%B8%D0%B8/">Технологии</a></li>	
+					<li><a class="w1" rel="tag" href="http://we.easyelectronics.ru/tag/%D1%83%D0%BC%D0%BD%D1%8B%D0%B9%20%D0%B4%D0%BE%D0%BC/">умный дом</a></li>	
+					<li><a class="w6" rel="tag" href="http://we.easyelectronics.ru/tag/%D1%85%D0%B0%D0%BB%D1%8F%D0%B2%D0%B0/">халява</a></li>	
+					<li><a class="w3" rel="tag" href="http://we.easyelectronics.ru/tag/%D1%85%D1%80%D0%B5%D0%BD%D1%8C/">хрень</a></li>	
+					<li><a class="w3" rel="tag" href="http://we.easyelectronics.ru/tag/%D1%8E%D0%BC%D0%BE%D1%80/">юмор</a></li>	
+			</ul>
+</div>
+															<div class="block blogs" id="block_blogs">
+	<h2>Блоги</h2>
+	
+	
+	<ul class="switcher">
+		<li id="block_blogs_item_top" class="active">Топ</li>
+			</ul>
+	
+	
+	<div class="block-content" id="block_blogs_content">
+		<ul class="list">
+			<li>
+			<span class="rating">35.25</span>
+			<a href="http://we.easyelectronics.ru/blog/STM8/">STM8</a> 
+					</li>
+			<li>
+			<span class="rating">29.19</span>
+			<a href="http://we.easyelectronics.ru/blog/AVR/">AVR</a> 
+					</li>
+			<li>
+			<span class="rating">25.66</span>
+			<a href="http://we.easyelectronics.ru/blog/JunkBox/">Мусоровоз</a> 
+			<img src="./MMC(SD) и AVR. Часть 1. Инициализация и идентификация.   AVR   Сообщество EasyElectronics.ru_files/lock.png" alt="[x]" title="Закрытый блог">		</li>
+			<li>
+			<span class="rating">18.20</span>
+			<a href="http://we.easyelectronics.ru/blog/STM32/">STM32</a> 
+					</li>
+			<li>
+			<span class="rating">16.33</span>
+			<a href="http://we.easyelectronics.ru/blog/electro-and-pc/">Связь железа с компьютером.</a> 
+					</li>
+			<li>
+			<span class="rating">15.86</span>
+			<a href="http://we.easyelectronics.ru/blog/smarthouse/">Умный дом</a> 
+					</li>
+			<li>
+			<span class="rating">14.13</span>
+			<a href="http://we.easyelectronics.ru/blog/part/">Деталька</a> 
+					</li>
+			<li>
+			<span class="rating">13.69</span>
+			<a href="http://we.easyelectronics.ru/blog/Shematech/">Схемотехника</a> 
+					</li>
+			<li>
+			<span class="rating">13.60</span>
+			<a href="http://we.easyelectronics.ru/blog/audio/">Аудиотехника</a> 
+					</li>
+			<li>
+			<span class="rating">12.99</span>
+			<a href="http://we.easyelectronics.ru/blog/plis/">ПЛИС</a> 
+					</li>
+	</ul>				
+	</div>
+
+	
+	<div class="bottom">
+		<a href="http://we.easyelectronics.ru/blogs/">Все блоги</a>
+	</div>
+</div>
+
+									</div>			</div><!-- /wrapper -->
+
+	<div id="footer">
+		<div id="footer-inner">
+			<div class="right">© Powered by <a href="http://livestreetcms.ru/">LiveStreet CMS</a></div>
+			Design by — <a href="http://www.xeoart.com/">Студия XeoArt</a>
+			<img border="0" src="./MMC(SD) и AVR. Часть 1. Инициализация и идентификация.   AVR   Сообщество EasyElectronics.ru_files/xeoart.gif">
+						
+		</div>
+	</div>
+
+</div><!-- /container -->
+
+
+
+
+<!-- Yandex.Metrika counter -->
+<div style="display:none;"><script type="text/javascript">
+(function(w, c) {
+    (w[c] = w[c] || []).push(function() {
+        try {
+            w.yaCounter4558804 = new Ya.Metrika({id:4558804,
+                    clickmap:true,
+                    trackLinks:true});
+        }
+        catch(e) { }
+    });
+})(window, "yandex_metrika_callbacks");
+</script></div>
+<script src="./MMC(SD) и AVR. Часть 1. Инициализация и идентификация.   AVR   Сообщество EasyElectronics.ru_files/watch.js" type="text/javascript" defer="defer"></script>
+<noscript>&lt;div&gt;&lt;img src="//mc.yandex.ru/watch/4558804" style="position:absolute; left:-9999px;" alt="" /&gt;&lt;/div&gt;</noscript>
+<!-- /Yandex.Metrika counter -->
+
+
+</body><span id="skype_highlighting_settings" display="none" autoextractnumbers="1"></span><object id="skype_plugin_object" location.href="http://we.easyelectronics.ru/AVR/mmcsd-i-avr-chast-1-inicializaciya-i-identifikaciya.html" location.hostname="we.easyelectronics.ru" style="position: absolute; visibility: hidden; left: -100px; top: -100px; " width="0" height="0" type="application/x-vnd.skype.click2call.chrome.5.7.0"></object></html>

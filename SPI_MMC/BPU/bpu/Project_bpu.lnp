@@ -1,0 +1,4 @@
+"STARTUP.obj",
+"bpu.obj" 
+TO "Project_bpu" 
+RAMSIZE(256) 

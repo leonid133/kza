@@ -1,0 +1,1950 @@
+C51 COMPILER V9.00   BPU                                                                   06/29/2011 09:52:47 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE BPU
+OBJECT MODULE PLACED IN bpu.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.exe bpu.c DB OE BR
+
+line level    source
+
+   1          #include "c8051f120.h"
+   2          #include <math.h>
+   3          #include <stdlib.h>
+   4          #include <intrins.h>
+   5          #include <float.h>
+   6          
+   7          sfr16 DP       = 0x82;                 // data pointer
+   8          sfr16 ADC0     = 0xbe;                 // ADC0 data
+   9          sfr16 ADC0GT   = 0xc4;                 // ADC0 greater than window
+  10          sfr16 ADC0LT   = 0xc6;                 // ADC0 less than window
+  11          sfr16 RCAP2    = 0xca;                 // Timer2 capture/reload
+  12          sfr16 RCAP3    = 0xca;                 // Timer3 capture/reload
+  13          sfr16 RCAP4    = 0xca;                 // Timer4 capture/reload
+  14          sfr16 TMR2     = 0xcc;                 // Timer2
+  15          sfr16 TMR3     = 0xcc;                 // Timer3
+  16          sfr16 TMR4     = 0xcc;                 // Timer4
+  17          sfr16 DAC0     = 0xd2;                 // DAC0 data
+  18          sfr16 DAC1     = 0xd5;  //???          // DAC1 data
+  19          
+  20          //-------------------------------------------------------------------
+  21          sbit bitStart = P2^6; //int0
+  22          sbit int1 = P2^7;
+  23          //sbit pow = P6^6;  
+  24          
+  25          //-------------------------------------------------------------------
+  26          void config(void);
+  27          void sysclk(void);
+  28          void UART0_Init(void);
+  29          void UART1_Init(void);
+  30          void port_init(void);
+  31          void UART0_isr(void);
+  32          void UART1_isr(void);
+  33          void DAC0_init(void);
+  34          void ADC_init(void);
+  35          
+  36          void Timer0_init(void);
+  37          void Timer0_isr(void);
+  38          
+  39          //-------------------------------------------------------------------------------------
+  40          //SYSCLK = 49766400 - тактовая частота
+  41          #define FREQ         50                 // Частота прерываний таймера Гц
+  42          #define Rz  6380.
+  43          
+  44          #define ToGrad 57.2957795130823
+  45          #define M_PI   3.14159265358979323846
+  46          #define D_PI    6.28318530717958647692
+  47          #define M_PI_2 1,57079632679489661
+  48          
+  49          #define delta_e_max 25
+  50          #define delta_v_max 50
+  51          #define delta_v_min -30
+  52          #define delta_n_max 50
+  53          #define delta_k_max 10
+  54          #define delta_z_max 50
+  55          #define delta_z_min -10
+C51 COMPILER V9.00   BPU                                                                   06/29/2011 09:52:47 PAGE 2   
+
+  56          #define delta_g_max 100
+  57          #define delta_t_max 100
+  58          
+  59          #define NBFM            25
+  60          xdata char BuferFromModem [NBFM]; // Для анализа с последовательного порта
+  61          xdata char wBFM, rBFM, marBFM;   
+  62          
+  63          void OutModem(void);
+  64          void PackageInModem2(unsigned int Data, char i);
+  65          void PackageInModem4(unsigned long int Data, char i);
+  66          #define SIZE_BUFFER0    528
+  67                  xdata char BufferInModem[SIZE_BUFFER0]; // Для отправки в последовательный порт
+  68                  xdata int r0, rk;
+  69             bit flTransmiter;    
+  70          
+  71          char ContrlSumma(char *Array, char NByteContrlSumma);
+  72          
+  73          xdata int koors;
+  74          unsigned long DecodeLatOrLon(char *Array, char nomer);
+  75          xdata unsigned long lLatFly, lLonFly, lLatZad, lLonZad, lLatZad_pr, lLonZad_pr;
+  76                  xdata unsigned long int LatMar[128], LonMar[128];
+  77                  xdata unsigned char n_, i_mar;
+  78                  xdata float cos_Lat0;
+  79          
+  80          //время(сек) = timer_tick*FREQ
+  81          xdata unsigned int timer_tick;   //относительное (счётчик) 
+  82          xdata long int liTimer_tick;     //абсолютное
+  83          xdata long int liTimer_tick_GPS; //прихода последней GPS посылки
+  84          xdata unsigned int i_Vzlet;             
+  85          
+  86          #define EPSILON 400
+  87          #define G 9.81
+  88          #define V_MIN 60/3.6
+  89          #define V_BUM 50/3.6
+  90          
+  91          xdata float H0, H_tmp, H, s_Vy_filtr, s_H_filtr, s_H_filtr_pr, V, H_filtr, H_filtr_pr, Vy;
+  92          xdata float Kren_dat, int_dKren, int_dV, delta_e, delta_v; 
+  93          xdata int  H_zad;
+  94          xdata float V_zad, V_vetra;
+  95          xdata char Kren_zad, Kren_zad_buf, Vz_zad, KrenKam_zad;
+  96          xdata unsigned char Vz;
+  97          xdata unsigned int NoCommand;
+  98          xdata float int_delta_ax, Vy_zad_ogr_nab, int_delta_Vy_zad_ogr_nab, Vy_zad_ogr_sn;
+  99          xdata char Vy_zad_max, Vy_zad_min;
+ 100          #define NS      75
+ 101          xdata char mess [NS], r, w, mar;                // Для анализа посылки GPS
+ 102          //idata char mess[NS]="$GPRMC,064600,A,5551.8573,N,04906.4012,E,251.315,312.7,200500,11.5,E*40"; 
+ 103          //idata char mess[NS]="$GPRMC,100508,A,5550.9399,N,04906.4464,E,1.640,343.1,170703,11.6,E*4E"; 
+ 104          
+ 105          /*void ReadKZA(void);*/
+ 106          void WriteByteInKZA(unsigned char Byte);
+ 107          //void EraseKZA(void);
+ 108          sbit CS = P3^0;
+ 109          sbit WP = P3^1;
+ 110          sbit RESET_FLASH = P3^2;
+ 111          sbit RDY = P3^3; 
+ 112          
+ 113          bdata unsigned char  Dat1 = 0x80; /*    В битах 0:1 содержится информация о режиме наведения:
+ 114                                           0 - ручное управление
+ 115                                                                                        1 - автомат
+ 116                                                                                        2 - автоном       
+ 117                                           4 - Возврат*/
+C51 COMPILER V9.00   BPU                                                                   06/29/2011 09:52:47 PAGE 3   
+
+ 118          sbit flStart = Dat1^2;
+ 119          sbit flSleep = Dat1^3;
+ 120          sbit flOtkazRK = Dat1^4;
+ 121          sbit flStopSU = Dat1^5;
+ 122          sbit flAvtomatV = Dat1^6;
+ 123          
+ 124          bdata unsigned char  Dat2 = 0x80; 
+ 125          sbit flAvtomatK = Dat2^0;
+ 126          
+ 127          xdata char flOk, CountRun, dataRSTSRC;
+ 128          bit flRun   //сработал таймер основного цикла
+ 129          //, flWDTRun
+ 130          , flNoKoord
+ 131          , flAnswer
+ 132          , flGPS
+ 133          , flCommand
+ 134          , flNew
+ 135          , flPriv
+ 136          , fln_
+ 137          , flFromStart;
+ 138          
+ 139          xdata float q, delta_g, delta_n, delta_k, delta_z, delta_tl, delta_tp;//, Delta_G_pr, int_Delta_G;
+ 140          
+ 141          #define xx_gir -0.05
+ 142          #define yy_gir 0.5
+ 143          #define zz_gir 0.14
+ 144          xdata unsigned long lLatFly0, lLonFly0;
+ 145          xdata char Lat0;
+ 146          xdata float ax_gir, ay_gir, az_gir;
+ 147          xdata float Wx, Wy, Wz, ex_gir, ey_gir, ez_gir, cos_tang_gir;
+ 148          xdata float Tx, Ty, Tz, Wx_pr, Wy_pr, Wz_pr;
+ 149          
+ 150          xdata char KrenKam, UgolKam;
+ 151          
+ 152          //--------------------------------
+ 153          //      P6 = addr;
+ 154          //      P4 = data_lsb write to fpga
+ 155          //      P5 = data_msb write to fpga
+ 156          //      P7 = data_lsb read from fpga
+ 157          //      P2 = data_msb read from fpga
+ 158          sbit we = P3^3; //write enabled
+ 159          sbit re = P3^4; //read enabled
+ 160          sbit wr = P3^5; //write push
+ 161          sbit rd = P3^6; //read pull
+ 162          
+ 163          unsigned int read(unsigned char adress);
+ 164          void write(unsigned  char adress, unsigned int PWM);
+ 165          
+ 166          
+ 167          //--------------------------------------------------------------------------------------
+ 168          /*float code a0_wx, a1_wx, a2_wx, 
+ 169                                    a0_wy, a1_wy, a2_wy, 
+ 170                                    a0_H,  a1_H,  a2_H, 
+ 171                                    a0_q,  a1_q,  a2_q, N_OfWorks;*/
+ 172          /*float code a[256] _at_ 0x1000;
+ 173          
+ 174          void GetValue(char NPackage);
+ 175          //------------------------------------------------------------------------------------
+ 176          void GetValue(char NPackage)
+ 177          {
+ 178                  unsigned long int Buf = *(unsigned long int *) &a[NPackage];
+ 179          
+C51 COMPILER V9.00   BPU                                                                   06/29/2011 09:52:47 PAGE 4   
+
+ 180             BufferInModem[0] = 0x40 | NPackage;
+ 181             BufferInModem[1] = 0x80 | (Buf&0x7f);
+ 182             BufferInModem[2] = 0x80 | ((Buf &     0x3f80   ) >> 7 );
+ 183                  BufferInModem[3] = 0x80 | ((Buf &   0x1fc000 ) >> 14);
+ 184             BufferInModem[4] = 0x80 | ((Buf &  0xfe00000) >> 21);
+ 185             BufferInModem[5] = 0x80 | ((Buf & 0xf0000000) >> 28);
+ 186             BufferInModem[6] = (BufferInModem[0]^BufferInModem[1]^BufferInModem[2]^BufferInModem[3]
+ 187                          ^BufferInModem[4]^BufferInModem[5]) | 0x80;
+ 188                  r0 = 0;
+ 189                  rk = 7;
+ 190                  flTransmiter = 1;
+ 191          
+ 192                  SFRPAGE = 0x00;
+ 193                  TI0 = 1;
+ 194                  return;
+ 195          }*/
+ 196          
+ 197          xdata unsigned char SteckPoint;
+ 198          unsigned char code RLB _at_ 0xfbff;
+ 199          unsigned char code WELB _at_ 0xfbfe;
+ 200          unsigned char xdata *pwrite;
+ 201          
+ 202          xdata float delta_ro, V_pr, ax;
+ 203          
+ 204          xdata char flInit;
+ 205          //--------------------------------------------------------------
+ 206          //xdata char BufferInGPS[25]="PSRF103,02,00,00,01*21";
+ 207          xdata char BufferInGPS1[25]="$PSRF100,1,4800,8,1,0*0C";
+ 208          xdata char r01 = 0, rk1 = 25, flTransmiter1 = 1;
+ 209          xdata char BufferInGPS2[23]="$PSRF103,02,00,00,01*21";
+ 210          xdata char r02 = 0, rk2 = 23;
+ 211          int Mycount=0; 
+ 212          //-----------------------------------------------------------------------
+ 213          void main(void)
+ 214          {
+ 215   1              //Для работы с последовательным портом "Модем"
+ 216   1              xdata char RK_code[26], nByte = 0, KontrSumma = 0, temp1, NPackage;     
+ 217   1      
+ 218   1         xdata float angle, tmp, napr_vetv_mar, otkl_ot_mar, dz, dx, dz_pr, dx_pr; //Для автоуправления
+ 219   1      
+ 220   1         bit ValidGPS, flPoint;       
+ 221   1              xdata unsigned char i, i_comma, tmpGPS[6], nLetter = 7;
+ 222   1              xdata unsigned long temp_koord;
+ 223   1              xdata long int tt;
+ 224   1      
+ 225   1              xdata float delta_Vy;
+ 226   1      
+ 227   1         SFRPAGE = 0;
+ 228   1         dataRSTSRC = RSTSRC; //Управление источниками сброса
+ 229   1              WDTCN = 0xde;                   //Стоп сторожевой таймер
+ 230   1              WDTCN = 0xad;
+ 231   1         //WDTCN = 0x07;         // Макс время = 0,021 с
+ 232   1      
+ 233   1         FLSCL = FLSCL | 1;   //Разрешение стирания/записи FLASH памяти
+ 234   1      
+ 235   1              port_init(); 
+ 236   1              sysclk();       
+ 237   1              UART0_Init();   
+ 238   1              UART1_Init(); 
+ 239   1              DAC0_init();    
+ 240   1              ADC_init();
+ 241   1              Timer0_init(); 
+C51 COMPILER V9.00   BPU                                                                   06/29/2011 09:52:47 PAGE 5   
+
+ 242   1      
+ 243   1              //SPI Configuration----------------------------------------------
+ 244   1      /*      SFRPAGE = 0x00; 
+ 245   1              SPI0CFG = 0x60; // SPI Configuration Register
+ 246   1              SPI0CKR = 0x03; // SPI Clock Rate Register--- частота 12441600 Гц  Fsck=0.5*Fsysclk/(SPI0CKR+1)
+ 247   1              SPI0CN = 0x09;//0x01;   // SPI Control Register
+ 248   1      
+ 249   1         WP = 1;
+ 250   1         RESET_FLASH = 1; 
+ 251   1      */
+ 252   1              config();
+ 253   1      //      DAC0 = 0x00;
+ 254   1              SteckPoint = SP;        
+ 255   1      
+ 256   1              //---------------------------------------------------------------
+ 257   1                  
+ 258   1      /*            i = PSBANK;       
+ 259   1                            EA = 0;           // Disable interrupts                 
+ 260   1                                 
+ 261   1                                 SFRPAGE = 0x0f;      // Enable FLASH block writes
+ 262   1                  PSBANK &= 0xcf;
+ 263   1                  PSBANK |= 0x3f;
+ 264   1                                 CCH0CN &= 0xfe;                   
+ 265   1      
+ 266   1                                 SFRPAGE = 0;
+ 267   1      
+ 268   1                            FLSCL |= 0x01;    // Enable FLASH writes/erases
+ 269   1                            PSCTL = 0x01;
+ 270   1                  pwrite = (char xdata *)&WELB;
+ 271   1                            *pwrite = 0;      // Write Data to FLASH                   
+ 272   1                            PSCTL = 0;        // MOVX targets XRAM
+ 273   1      
+ 274   1                            PSCTL = 0x01;     // MOVX writes write FLASH byte
+ 275   1                  pwrite = (char xdata *)&RLB;
+ 276   1                            *pwrite = 0;      // Write Data to FLASH                   
+ 277   1                    PSCTL = 0;        // MOVX targets XRAM
+ 278   1                            FLSCL &= ~0x01;   // Disable FLASH writes/erases
+ 279   1         
+ 280   1                                 SFRPAGE = CONFIG_PAGE;
+ 281   1                                 CCH0CN &= ~0x01;           // Clear the CHBLKW bit
+ 282   1                            EA = 1;                    // Restore interrupt state      
+ 283   1                  PSBANK = i;
+ 284   1      */
+ 285   1              //Управление источниками сброса-------------------------------------------------
+ 286   1         //если сброс от собаки
+ 287   1              if(dataRSTSRC == 0x08 && flOk && flInit) 
+ 288   1              {
+ 289   2                      ;
+ 290   2              }
+ 291   1              else
+ 292   1              {
+ 293   2              //Инициализация переменных------------------------------------------------------
+ 294   2                      for (r0 = 0; r0 < SIZE_BUFFER0; r0++)
+ 295   2                              BufferInModem[r0] = 0x80;       
+ 296   2                      r0 = rk = 0;
+ 297   2                      r = w = mar = 0;
+ 298   2                      rBFM = wBFM = marBFM = 0;
+ 299   2      
+ 300   2                      H_zad = 300;
+ 301   2                      H0 = 0;
+ 302   2                      Vz_zad = 30;
+ 303   2      
+C51 COMPILER V9.00   BPU                                                                   06/29/2011 09:52:47 PAGE 6   
+
+ 304   2              flOk = 0;
+ 305   2      
+ 306   2                      int_delta_Vy_zad_ogr_nab = Vy_zad_ogr_nab = 0.5;
+ 307   2              Vy_zad_ogr_sn = -4;
+ 308   2              Vy_zad_max = 40; Vy_zad_min = 20;       
+ 309   2              int_dV = -4.5; 
+ 310   2              Kren_dat = int_dKren = 0;
+ 311   2      
+ 312   2              liTimer_tick = liTimer_tick_GPS = timer_tick = 0;
+ 313   2      
+ 314   2              flInit = 0;
+ 315   2                      timer_tick = 0;
+ 316   2                      H0 = 0;
+ 317   2              delta_k = delta_n = delta_e = delta_g = delta_z = delta_v = delta_tl = delta_tp = 0;
+ 318   2              }
+ 319   1              SFRPAGE = 0;
+ 320   1              TI0 = 0;
+ 321   1      //      TR0 = 0;
+ 322   1      SFRPAGE = UART1_PAGE;
+ 323   1              TI1 = 1;
+ 324   1      for ( Mycount= 0; Mycount < 10000; Mycount++)
+ 325   1                              _nop_();                        
+ 326   1              while(1)        //Управление движением -----------------------------------------------------------
+ 327   1              { 
+ 328   2      
+ 329   2              
+ 330   2            CountRun = 0;
+ 331   2      //              flStart = !bitStart;
+ 332   2                      if (flTransmiter1 == 2)
+ 333   2                      {
+ 334   3                               for(tt = 0; tt < 10000; tt++)
+ 335   3                                      _nop_();
+ 336   3                              SFRPAGE = UART1_PAGE;
+ 337   3                              flTransmiter1 = 3;
+ 338   3                              TI1 = 1;
+ 339   3                      }
+ 340   2                      
+ 341   2      
+ 342   2              if(rBFM < wBFM+marBFM*NBFM)
+ 343   2              {
+ 344   3                              if ((BuferFromModem[rBFM] & 0xC0) == 0x40)      
+ 345   3                              {
+ 346   4                                      nByte = 0;
+ 347   4                                      KontrSumma = 0;
+ 348   4                                      NPackage = BuferFromModem[rBFM] & 0x3f;
+ 349   4                                      NoCommand = 0;
+ 350   4      
+ 351   4                                      WriteByteInKZA (0x40|21);       
+ 352   4                                      WriteByteInKZA( (liTimer_tick & 0x007f) | 0x80 );
+ 353   4                                      WriteByteInKZA( ((liTimer_tick & 0x3f80) >> 7) | 0x80 );
+ 354   4                                      WriteByteInKZA( ((liTimer_tick & 0x1fc000) >> 14) | 0x80 );
+ 355   4                                      WriteByteInKZA( ((liTimer_tick & 0xfe00000) >> 21) | 0x80 );
+ 356   4                              }
+ 357   3                      WriteByteInKZA( BuferFromModem[rBFM] );
+ 358   3      
+ 359   3                              if (nByte > 11)
+ 360   3                                      nByte = 11;
+ 361   3                              RK_code[nByte] = BuferFromModem[rBFM] & 0x7f;
+ 362   3                              KontrSumma = KontrSumma^RK_code[nByte++];
+ 363   3      
+ 364   3                              if ( (nByte == 3) && (KontrSumma == 0) )
+ 365   3                              {
+C51 COMPILER V9.00   BPU                                                                   06/29/2011 09:52:47 PAGE 7   
+
+ 366   4                  if ( NPackage == 1 )        //H_zad
+ 367   4                                      {
+ 368   5                                              if (flStopSU != 1)
+ 369   5                                              {
+ 370   6                        flCommand = 1;
+ 371   6                                                      H_zad = RK_code[1];
+ 372   6                                                      H_zad = 10*H_zad - 200;
+ 373   6                                                      if (H_zad < -200)
+ 374   6                                                              H_zad = -200;
+ 375   6                                                      else if (H_zad > 1000)
+ 376   6                                                              H_zad = 1000;
+ 377   6                                              }
+ 378   5                                      }
+ 379   4                                 else if (NPackage == 2)
+ 380   4                                 {
+ 381   5                                 if(RK_code[1] == 1 && flOk == 0)  //Телеметрия
+ 382   5                     {
+ 383   6                        flGPS = 1;
+ 384   6                        OutModem();
+ 385   6                     }
+ 386   5                                 else if(RK_code[1] == 2)    //Стоп двигатель Режим планирования
+ 387   5                                              {
+ 388   6                        flCommand = 1;
+ 389   6                                              flStopSU = 1;
+ 390   6                                                      H_zad = 0;
+ 391   6                                              }
+ 392   5                                 else if(RK_code[1] == 3)    //Стоп двигатель Посадка
+ 393   5                                              {
+ 394   6                        flCommand = 1;
+ 395   6                                              flStopSU = 1;
+ 396   6                                                      H_zad = 0;
+ 397   6                                              }
+ 398   5                              else if (RK_code[1] == 4)  //Инициализация Ок
+ 399   5                              {
+ 400   6                                              BufferInModem[0] = 0x40 | 25;
+ 401   6                                                      BufferInModem[1] = 0x80;
+ 402   6                                              BufferInModem[2] = (BufferInModem[0]^BufferInModem[1]) | 0x80;
+ 403   6                              while (flTransmiter)
+ 404   6                                  ;                   
+ 405   6                        flTransmiter = 1;
+ 406   6                             r0 = 0;
+ 407   6                             rk = 3;
+ 408   6                                                 SFRPAGE = 0x00;
+ 409   6                                              TI0 = 1;
+ 410   6                                                      flOk = 1;
+ 411   6      
+ 412   6                                                      n_ = 1;
+ 413   6                                            lLatZad = LatMar[n_];
+ 414   6                                                 lLonZad = LonMar[n_];
+ 415   6                                      lLatZad_pr = LatMar[n_-1];
+ 416   6                                         lLonZad_pr = LonMar[n_-1];
+ 417   6                                      }
+ 418   5                              else if (RK_code[1] == 7)  //Тест рулей + Инициализация
+ 419   5                                              {
+ 420   6                        flCommand = 1;
+ 421   6                                                      flInit = 0;
+ 422   6                                                      timer_tick = H0 = 0;
+ 423   6                                              delta_k = delta_n = delta_e = delta_g = delta_z = delta_v = delta_tl = delta_tp = 0;
+ 424   6                                              }
+ 425   5                              else if (RK_code[1] == 10)  //Возврат
+ 426   5                                         {
+ 427   6                        flCommand = 1;
+C51 COMPILER V9.00   BPU                                                                   06/29/2011 09:52:47 PAGE 8   
+
+ 428   6                                            n_ = 0;
+ 429   6                                            Dat1 = Dat1 | 0x03;
+ 430   6                                            lLatZad = LatMar[n_];
+ 431   6                                            lLonZad = LonMar[n_];
+ 432   6                                       lLatZad_pr = lLatFly;  //либо ReadKoord(LatMar, 1); - наведение на первую ветвь 
+ 433   6                                    lLonZad_pr = lLonFly;     //либо ReadKoord(LonMar, 1);
+ 434   6                                              }
+ 435   5                                      }
+ 436   4                                      else if ( NPackage == 3 )//Kren_zad
+ 437   4                                      {
+ 438   5                                              if ((RK_code[1] > 17) && (RK_code[1] < 103))
+ 439   5                                              {
+ 440   6                                                      tmp = RK_code[1];
+ 441   6                                                      Kren_zad_buf = tmp-60;
+ 442   6                     }
+ 443   5                                    Dat1 = Dat1 & 0xfc;
+ 444   5                                      }
+ 445   4                                 else if(NPackage == 4)                //автономный полет
+ 446   4                                 {
+ 447   5                     flCommand = 1;
+ 448   5                                    n_ = RK_code[1];
+ 449   5                                              if (n_ <= i_mar)
+ 450   5                                              {
+ 451   6                                            Dat1 = (Dat1 & 0xfc) | 0x02;
+ 452   6                                            lLatZad = LatMar[n_];
+ 453   6                                            lLonZad = LonMar[n_];
+ 454   6                                       lLatZad_pr = LatMar[n_-1];
+ 455   6                                       lLonZad_pr = LonMar[n_-1];
+ 456   6                                              }
+ 457   5                                 }
+ 458   4                                 else if(NPackage == 5)       //Vz_zad
+ 459   4                                 {
+ 460   5                     flCommand = 1;
+ 461   5      /*                            if ((Dat & 0x0060) != 0x40)
+ 462   5                                      int_delta_ax = nSU;*/
+ 463   5                     
+ 464   5      //                            Dat1 = Dat1 | 0x40;
+ 465   5                                    Vz_zad = RK_code[1];
+ 466   5                                 }
+ 467   4                                 else if(NPackage == 8)       //Крен камеры зад.
+ 468   4                                 {
+ 469   5                     flCommand = 1;
+ 470   5                                    KrenKam_zad = RK_code[1];
+ 471   5                                              KrenKam_zad = KrenKam_zad-60;
+ 472   5                                 }
+ 473   4                                 else if(NPackage == 9)       //Угол камеры к горизонту зад.UgolKam_zad
+ 474   4                                 {
+ 475   5                     flCommand = 1;
+ 476   5      //                            UgolKam_zad = RK_code[1];
+ 477   5                                 }
+ 478   4                                 else if(NPackage == 10) //Номер точки во время неавтономного полета
+ 479   4                                 {
+ 480   5                     flCommand = 1;
+ 481   5                                    n_ = RK_code[1];
+ 482   5                                      }
+ 483   4                                 else if(NPackage == 12)      //Газ зад.
+ 484   4                                 {
+ 485   5                     flCommand = 1;
+ 486   5                                              flStopSU = 0;
+ 487   5                     flAvtomatV = 0;
+ 488   5                                    delta_g = RK_code[1];
+ 489   5                                              if(delta_g > 100)
+C51 COMPILER V9.00   BPU                                                                   06/29/2011 09:52:47 PAGE 9   
+
+ 490   5                                                      delta_g = 100;
+ 491   5                                              else if(delta_g < 0)
+ 492   5                                                      delta_g = 0;
+ 493   5                                 }
+ 494   4                                 else if(NPackage == 13) //Vy_zad_max
+ 495   4                                 {
+ 496   5                     flCommand = 1;
+ 497   5                                    Vy_zad_max = RK_code[1];
+ 498   5                                      }
+ 499   4                                 else if(NPackage == 14) //Vy_zad_min
+ 500   4                                 {
+ 501   5                     flCommand = 1;
+ 502   5                                    Vy_zad_min = RK_code[1];
+ 503   5                                      }
+ 504   4                                 else if(NPackage == 15) //Delta_Zak
+ 505   4                                 {
+ 506   5                     flCommand = 1;
+ 507   5                                    delta_z = -10+RK_code[1];
+ 508   5                                      }
+ 509   4                              }       //if ( nByte == 3 )
+ 510   3                         else if((NPackage == 6) && (nByte == 10))    //наводиться на точку
+ 511   3                              {
+ 512   4                                      if ( KontrSumma == 0)
+ 513   4                                      {
+ 514   5                                    lLatZad_pr = lLatFly;
+ 515   5                                    lLonZad_pr = lLonFly;
+ 516   5      
+ 517   5                                    Dat1 = (Dat1 & 0xfc) | 0x01;
+ 518   5                                              lLatZad = DecodeLatOrLon(RK_code, 1);
+ 519   5                                              lLonZad = DecodeLatOrLon(RK_code, 5);
+ 520   5                                      }
+ 521   4                              }
+ 522   3               //Координаты ППМ
+ 523   3                              else if ((NPackage == 11) && (nByte == 11) && (flOk == 0) && (KontrSumma == 0))
+ 524   3                              {
+ 525   4                                      temp1 = RK_code[9];     //temp1 = n_point
+ 526   4                                      if(temp1 < 127)
+ 527   4                                      {
+ 528   5                                              if(temp1 > i_mar)
+ 529   5                                                      i_mar = temp1;
+ 530   5                                              LatMar[temp1] = DecodeLatOrLon(RK_code, 1);
+ 531   5                                              if (temp1 == 0)
+ 532   5                                              {
+ 533   6                                                      cos_Lat0 = LatMar[0];
+ 534   6                                                      cos_Lat0 = cos((cos_Lat0/60/10000-90)/ToGrad);
+ 535   6                                                      flPriv = 1;
+ 536   6                                              }
+ 537   5      
+ 538   5                                              LonMar[temp1] = DecodeLatOrLon(RK_code, 5);
+ 539   5      
+ 540   5                                              BufferInModem[0] = 24 | 0x40;
+ 541   5                                         PackageInModem4(LatMar[temp1], 1);   
+ 542   5                                              PackageInModem4(LonMar[temp1], 5);      
+ 543   5                                    BufferInModem[9] = temp1 | 0x80;  
+ 544   5                              BufferInModem[10] = ContrlSumma(BufferInModem, 10) | 0x80;
+ 545   5              
+ 546   5                      while (flTransmiter)
+ 547   5                                  ;                   
+ 548   5                     flTransmiter = 1;
+ 549   5                          r0 = 0;
+ 550   5                          rk = 11;
+ 551   5                                              SFRPAGE = 0x00;
+C51 COMPILER V9.00   BPU                                                                   06/29/2011 09:52:47 PAGE 10  
+
+ 552   5                                              TI0 = 1;
+ 553   5                                      }
+ 554   4               }
+ 555   3               rBFM++;
+ 556   3                              if(rBFM >= NBFM)
+ 557   3                              {
+ 558   4                              rBFM = 0;
+ 559   4                                      marBFM = 0;     
+ 560   4                              }
+ 561   3            }
+ 562   2      
+ 563   2                      //-----------------------------------------------------------------------------------
+ 564   2                      if(flPriv && (Dat1 & 0x03) && flNew && flOk)    //не ручное управление
+ 565   2                      {
+ 566   3                              flNew = 0;
+ 567   3      start:
+ 568   3                              dz = lLonZad;
+ 569   3                              dz = 0.1856*(dz - lLonFly)*cos_Lat0;
+ 570   3                         dx = lLatZad;
+ 571   3                         dx = 0.1856*(dx-lLatFly);
+ 572   3      
+ 573   3                              if( (Dat1 & 0xfc) != 1)//автономный полет
+ 574   3                              {
+ 575   4                              dz_pr = lLonZad_pr;
+ 576   4                                 dz_pr = 0.1856*(dz_pr-lLonFly)*cos_Lat0;
+ 577   4                              dx_pr = lLatZad_pr;
+ 578   4                              dx_pr = 0.1856*(dx_pr-lLatFly);
+ 579   4      
+ 580   4                                 tmp =sqrt(dz*dz+dx*dx);              //tmp = rasst_toch_mar
+ 581   4                              if ((EPSILON > tmp) && (n_ != i_mar) && (n_ != 0))
+ 582   4                                 {
+ 583   5                                              n_++;
+ 584   5                                    lLatZad = LatMar[n_];
+ 585   5                                 lLonZad = LonMar[n_];
+ 586   5                              lLatZad_pr = LatMar[n_-1];
+ 587   5                                 lLonZad_pr = LonMar[n_-1];
+ 588   5                                              
+ 589   5      //                              OutModem(-1);           //Уведомление Земли
+ 590   5      
+ 591   5                                 goto start;
+ 592   5                              }
+ 593   4      
+ 594   4                         if ( (fabs(dx-dx_pr) <= FLT_EPSILON) && (fabs(dz-dz_pr) <= FLT_EPSILON) )
+ 595   4                              napr_vetv_mar = 0;
+ 596   4                              else
+ 597   4                              napr_vetv_mar = atan2(dz-dz_pr, dx-dx_pr);
+ 598   4      
+ 599   4                      if ( (fabs(dx) <= FLT_EPSILON) && (fabs(dz) <= FLT_EPSILON) )
+ 600   4                              angle = 0;
+ 601   4                      else
+ 602   4                              angle = atan2(dz, dx);  //napr_toch_mar = atan2(dz, dx),
+ 603   4                      angle = angle-napr_vetv_mar;
+ 604   4      
+ 605   4                                 otkl_ot_mar = tmp*sin(angle);
+ 606   4                                      if (fabs(otkl_ot_mar) > 500) tmp = 200; //tmp = l_km
+ 607   4                                      else                         tmp = 500;
+ 608   4                                 dz = otkl_ot_mar*cos(napr_vetv_mar)+tmp*sin(napr_vetv_mar);  //dz = z_toch_pricel
+ 609   4                              dx = -otkl_ot_mar*sin(napr_vetv_mar)+tmp*cos(napr_vetv_mar);    //dx = x_toch_pricel
+ 610   4                              }
+ 611   3                              tmp = koors;
+ 612   3                              tmp =  -tmp/ToGrad;
+ 613   3                      if ( (fabs(dx) > FLT_EPSILON) && (fabs(dz) > FLT_EPSILON) )
+C51 COMPILER V9.00   BPU                                                                   06/29/2011 09:52:47 PAGE 11  
+
+ 614   3                                      tmp =  tmp + atan2(dz, dx);
+ 615   3      
+ 616   3                         while (tmp > M_PI)
+ 617   3                      tmp -= D_PI;
+ 618   3                         while (tmp < -M_PI)
+ 619   3                      tmp += D_PI;
+ 620   3      
+ 621   3                         tmp = ToGrad*tmp;            
+ 622   3                              if(tmp > 42)
+ 623   3                                      tmp = 42;
+ 624   3                         else if(tmp < -42)
+ 625   3                                      tmp = -42;
+ 626   3                              Kren_zad_buf = tmp;
+ 627   3                      }
+ 628   2      
+ 629   2                      //Расшифровка посылки GPS
+ 630   2                      if (r < w+mar*NS) 
+ 631   2                      {
+ 632   3                              if(mess[r] == '$')
+ 633   3                              {
+ 634   4                  nLetter = 0;
+ 635   4                              }
+ 636   3               else if ((nLetter == 0) && (mess[r] == 'G'))
+ 637   3                  nLetter++;
+ 638   3               else if ((nLetter == 1) && (mess[r] == 'P'))
+ 639   3                  nLetter++;
+ 640   3               else if ((nLetter == 2) && (mess[r] == 'R'))
+ 641   3                  nLetter++;
+ 642   3               else if ((nLetter == 3) && (mess[r] == 'M'))
+ 643   3                  nLetter++;
+ 644   3               else if ((nLetter == 4) && (mess[r] == 'C'))
+ 645   3               {
+ 646   4                  nLetter++;
+ 647   4                                      i_comma = 0;
+ 648   4                                      ValidGPS = 0;
+ 649   4               } 
+ 650   3                         else if(mess[r] == ',')
+ 651   3                              {
+ 652   4                                      i_comma++;
+ 653   4                                      i = 0;
+ 654   4                                      flPoint = 0;
+ 655   4                              }
+ 656   3                         else if(i_comma == 2)
+ 657   3                              {
+ 658   4                                      if(mess[r] == 'A') 
+ 659   4                                              ValidGPS = 1;
+ 660   4                                      else
+ 661   4                                      {
+ 662   5                                              ValidGPS = 0;
+ 663   5                                              flNoKoord = 1;
+ 664   5                     flGPS = 1;
+ 665   5                                              liTimer_tick_GPS = liTimer_tick;
+ 666   5                                      }
+ 667   4                              }
+ 668   3               else if (ValidGPS)
+ 669   3                              {
+ 670   4                                      if (i_comma == 3)                //Latitude
+ 671   4                                      {
+ 672   5                                              if(mess[r] == '.')
+ 673   5                                              {
+ 674   6                                                      flPoint = 1;
+ 675   6                                                      i = 0;
+C51 COMPILER V9.00   BPU                                                                   06/29/2011 09:52:47 PAGE 12  
+
+ 676   6                                              }
+ 677   5                                              else if (flPoint == 0)                  //Целая часть
+ 678   5                                              {
+ 679   6                                                      tmpGPS[i++] = mess[r];
+ 680   6                                                      if(i == 2)
+ 681   6                                                      {
+ 682   7                                         tmpGPS[i] = 0;
+ 683   7                                                              temp_koord = atoi(tmpGPS);
+ 684   7                                      temp_koord = 60UL*10000*temp_koord;
+ 685   7                                                      }       
+ 686   6                                                      else if(i == 4)
+ 687   6                                                      {
+ 688   7                                                              tmpGPS[0] = tmpGPS[1] = '0';
+ 689   7                                         tmpGPS[i] = 0;
+ 690   7                                            temp_koord = temp_koord+10000UL*atoi(tmpGPS);
+ 691   7                                                      }       
+ 692   6                                              }
+ 693   5                                              else                                    //Дробная часть
+ 694   5                                              {
+ 695   6                                                      tmpGPS[i++] = mess[r];
+ 696   6                                 tmpGPS[i] = 0;
+ 697   6                                              }
+ 698   5                                      }
+ 699   4                                      else if (i_comma == 4)
+ 700   4                                      {
+ 701   5                              temp_koord = temp_koord+atoi(tmpGPS);
+ 702   5      //-----------
+ 703   5      //lLatFly = 55UL*60*10000+50UL*10000+8680;
+ 704   5      //--------
+ 705   5                                              if (mess[r] == 'S')                             //знак Latitude
+ 706   5                                                      lLatFly = 54000000UL-temp_koord;                //90UL*60*10000-koord;
+ 707   5                                              else              
+ 708   5                                                      lLatFly = 54000000UL+temp_koord;        //90UL*60*10000+koord;
+ 709   5                                              liTimer_tick_GPS = liTimer_tick;
+ 710   5                                      }
+ 711   4                                      else if (i_comma == 5)                //Longitude
+ 712   4                                      {
+ 713   5                                              if(mess[r] == '.')
+ 714   5                                              {
+ 715   6                                                      flPoint = 1;
+ 716   6                                                      i = 0;
+ 717   6                                              }
+ 718   5                                              else if (flPoint == 0)                  //Целая часть
+ 719   5                                              {
+ 720   6                                                      tmpGPS[i++] = mess[r];
+ 721   6                                                      if(i == 3)
+ 722   6                                                      {
+ 723   7                                         tmpGPS[i] = 0;
+ 724   7                                      temp_koord = atoi(tmpGPS);
+ 725   7                                      temp_koord = 60UL*10000*temp_koord;
+ 726   7                                                      }       
+ 727   6                                                      else if(i == 5)
+ 728   6                                                      {
+ 729   7                                                              tmpGPS[0] = tmpGPS[1] = tmpGPS[2] = '0';
+ 730   7                                         tmpGPS[i] = 0;
+ 731   7                                            temp_koord = temp_koord+10000UL*atoi(tmpGPS);
+ 732   7                                                      }       
+ 733   6                                              }
+ 734   5                                              else                                    //Дробная часть
+ 735   5                                              {
+ 736   6                                                      tmpGPS[i++] = mess[r];
+ 737   6                                 tmpGPS[i] = 0;
+C51 COMPILER V9.00   BPU                                                                   06/29/2011 09:52:47 PAGE 13  
+
+ 738   6                                              }
+ 739   5                                      }
+ 740   4                                      else if (i_comma == 6)
+ 741   4                                      {
+ 742   5                              temp_koord = temp_koord+atoi(tmpGPS);
+ 743   5      //----------------
+ 744   5      //lLonFly = 49UL*60*10000+6UL*10000+3760;
+ 745   5      //----------------
+ 746   5                                              if (mess[r] == 'W')   //знак Longitude
+ 747   5                                                      lLonFly = 108000000UL-temp_koord;               //180UL*60*10000-koord;
+ 748   5                                              else       
+ 749   5                                                      lLonFly = temp_koord+108000000UL;       //180UL*60*10000;
+ 750   5                                      }
+ 751   4                                      else if (i_comma == 7)  //скорость в узлах
+ 752   4                                      {
+ 753   5                                              if(mess[r] == '.')
+ 754   5                                              {
+ 755   6                                                      flPoint = 1;
+ 756   6                              Vz = 1.852*atoi(tmpGPS)/3.6;   //??? Преобразовать из узлов в м/с
+ 757   6      //---------
+ 758   6      //Vz = 20;
+ 759   6      //-----------
+ 760   6                                              }
+ 761   5                                              else if(flPoint == 0)
+ 762   5                                              {
+ 763   6                                                      tmpGPS[i++] = mess[r];
+ 764   6                              tmpGPS[i] = 0;
+ 765   6                                              }
+ 766   5                  }
+ 767   4                                      else if (i_comma == 8)  //курс в градусах
+ 768   4                                      {
+ 769   5                                              if(mess[r] == '.')
+ 770   5                                              {
+ 771   6                                                      flPoint = 1;
+ 772   6                              koors = atoi(tmpGPS);
+ 773   6                        if (koors < 0)
+ 774   6                           koors = 360+koors;
+ 775   6      
+ 776   6                                                      flNoKoord = 0;
+ 777   6                                                      flGPS =1;
+ 778   6                                                      flNew = 1;
+ 779   6                                                      liTimer_tick_GPS = liTimer_tick;        
+ 780   6      //-----------                                              
+ 781   6      //koors = 30;
+ 782   6      //-----------
+ 783   6                                              }
+ 784   5                                              else if(flPoint == 0)
+ 785   5                                              {
+ 786   6                                                      tmpGPS[i++] = mess[r];
+ 787   6                              tmpGPS[i] = 0;
+ 788   6                                              }
+ 789   5                  }
+ 790   4                              }
+ 791   3                              r++;
+ 792   3                      if(r >= NS)
+ 793   3                              {
+ 794   4                      r = 0;
+ 795   4                                      mar = 0;        
+ 796   4                              }      
+ 797   3                      }
+ 798   2      
+ 799   2                      //Инициализация ----------------------------------------------------------------------------
+C51 COMPILER V9.00   BPU                                                                   06/29/2011 09:52:47 PAGE 14  
+
+ 800   2            if (flInit == 0 && flRun)
+ 801   2            {
+ 802   3                              flRun = 0;
+ 803   3                      if (timer_tick < FREQ)          //элероны
+ 804   3                              delta_e = 0;     
+ 805   3                      else if (timer_tick < 2.0*FREQ)         //элероны
+ 806   3                              delta_e = delta_e_max;     
+ 807   3                      else if (timer_tick < 3.0*FREQ)
+ 808   3                              delta_e = -delta_e_max;
+ 809   3                      else if (timer_tick < 4.0*FREQ)         //руль высоты
+ 810   3                              {
+ 811   4                              delta_e = 0;                    
+ 812   4                              delta_v = delta_v_max;          
+ 813   4                              }
+ 814   3                      else if (timer_tick < 5.0*FREQ)
+ 815   3                              delta_v = delta_v_min;
+ 816   3                      else if (timer_tick < 6.0*FREQ)  //закрылок
+ 817   3                              {
+ 818   4                              delta_v = 0;                    
+ 819   4                              delta_z = delta_z_max;          
+ 820   4                              }
+ 821   3                      else if (timer_tick < 7.0*FREQ)
+ 822   3                              delta_z = delta_z_min;
+ 823   3                         else if (timer_tick < 8.0*FREQ)  //рули направления
+ 824   3                      {
+ 825   4                              delta_z = 0;                    
+ 826   4                              delta_n = delta_n_max;          
+ 827   4                      }
+ 828   3                      else if (timer_tick < 9.0*FREQ)
+ 829   3                              delta_n = -delta_n_max;
+ 830   3                      else if (timer_tick < 10.0*FREQ)        //колесо
+ 831   3                              {
+ 832   4                              delta_n = 0;                    
+ 833   4                              delta_k = delta_k_max;          
+ 834   4                              }
+ 835   3                      else if (timer_tick < 11.0*FREQ)
+ 836   3                              delta_k = -delta_k_max;
+ 837   3                      else if (timer_tick < 12.0*FREQ)        //газ
+ 838   3                              {
+ 839   4                              delta_k = 0;                    
+ 840   4                              delta_g = delta_g_max;          
+ 841   4                              }
+ 842   3                              else if (timer_tick < 13.0*FREQ)
+ 843   3                              {
+ 844   4                              delta_g = 0;
+ 845   4                                      delta_tl = delta_t_max;
+ 846   4                              }
+ 847   3                              else if (timer_tick < 14.0*FREQ)
+ 848   3                              {
+ 849   4                              delta_tl = 0;
+ 850   4                                      delta_tp = delta_t_max;
+ 851   4                              }
+ 852   3                              else
+ 853   3                              {
+ 854   4                                      delta_tp = 0;
+ 855   4                              H0 = s_H_filtr;    //установим H0
+ 856   4                              s_H_filtr = s_H_filtr_pr = 0;
+ 857   4      
+ 858   4                      lLatFly0 = lLatFly;
+ 859   4                      lLonFly0 = lLatFly;
+ 860   4                      Lat0 = lLatFly0*ToGrad;                     //Установить опорную широту
+ 861   4      
+C51 COMPILER V9.00   BPU                                                                   06/29/2011 09:52:47 PAGE 15  
+
+ 862   4                                      flInit = 1;
+ 863   4                              }
+ 864   3            }
+ 865   2                      
+ 866   2                      //Работа---------------------------------------------------------------------
+ 867   2                      if(flInit && flRun)             
+ 868   2                      {
+ 869   3                              flRun = 0;
+ 870   3      
+ 871   3               //Находим скорость-----------------------------------------------
+ 872   3               tmp = q*2./0.125/delta_ro;
+ 873   3              if ( tmp > 0 )
+ 874   3                            V = sqrt(tmp);
+ 875   3              else
+ 876   3                            V = FLT_EPSILON;
+ 877   3               if (V < FLT_EPSILON)
+ 878   3                  V = FLT_EPSILON;
+ 879   3               ax = ax+((V-V_pr)*FREQ-ax)/FREQ/0.4;
+ 880   3               V_pr = V;
+ 881   3      
+ 882   3               if(flGPS && flNoKoord == 0)
+ 883   3               {
+ 884   4      
+ 885   4                  //посадка-----------------------------------------------------
+ 886   4      /*            float sVx_dat = V_dat*V_dat-Vy_dat*Vy_dat;
+ 887   4                  if (sVx_dat > 0)
+ 888   4                     V_vetra = Vz-sqrt(sVx_dat);
+ 889   4                  else
+ 890   4                     V_vetra = 0;
+ 891   4                  if (n_ == i_mar)
+ 892   4                  {
+ 893   4                      float dz = lLonMar[n_];
+ 894   4                      dz = 0.1856*(dz - lLonFly)*cos_Lat0;
+ 895   4                     float dx = lLatMar[n_];
+ 896   4                     dx = 0.1856*(dx-lLatFly);
+ 897   4                         float r = sqrt(dz*dz+dx*dx);
+ 898   4                     if (r < min_float)
+ 899   4                        r = min_float;
+ 900   4                     teta_zad = atan(H_dat/r)*ToGrad;
+ 901   4                  }*/
+ 902   4               }
+ 903   3      
+ 904   3                              //Ограничение набора высоты--------------------------------------------
+ 905   3               if ((H_zad-s_H_filtr) > Vy_zad_ogr_nab*3)
+ 906   3               {
+ 907   4                  if (flAvtomatV)
+ 908   4                  {
+ 909   5                     tmp = Vz_zad-(Vz-V);     //tmp = V_zad
+ 910   5                     if (tmp < V_MIN)
+ 911   5                        tmp = V_MIN;
+ 912   5                      delta_Vy = -0.15*(tmp-V);
+ 913   5                  }
+ 914   4                  else
+ 915   4                     delta_Vy = -0.15*(100/3.6-V);
+ 916   4                                              
+ 917   4                                      if (flStart == 0)
+ 918   4                                      {
+ 919   5                            int_delta_Vy_zad_ogr_nab = Vy_zad_ogr_nab = 0.5;
+ 920   5                                      }
+ 921   4                                      else
+ 922   4                                      {
+ 923   5                                 int_delta_Vy_zad_ogr_nab += 0.075*delta_Vy/FREQ;
+C51 COMPILER V9.00   BPU                                                                   06/29/2011 09:52:47 PAGE 16  
+
+ 924   5                          if (int_delta_Vy_zad_ogr_nab > 0.1*Vy_zad_max) int_delta_Vy_zad_ogr_nab = 0.1*Vy_zad_max;
+ 925   5                       else if (int_delta_Vy_zad_ogr_nab < 0.5)       int_delta_Vy_zad_ogr_nab = 0.5;
+ 926   5                                              
+ 927   5                          Vy_zad_ogr_nab = 0.3*delta_Vy+int_delta_Vy_zad_ogr_nab;
+ 928   5                     if (Vy_zad_ogr_nab > 0.1*Vy_zad_max) Vy_zad_ogr_nab = 0.1*Vy_zad_max;
+ 929   5                            else if (Vy_zad_ogr_nab < 0.5)       Vy_zad_ogr_nab = 0.5;
+ 930   5                                      }
+ 931   4               }
+ 932   3      
+ 933   3                              //Управление СУ----------------------------------------------------------
+ 934   3      /*                      if (flStopSU == 0)
+ 935   3                              {
+ 936   3                       if (flAvtomatV /*&& flNabor == 0*/// )         //стабилизация скорости
+ 937   3      /*                    {
+ 938   3                            tmp = Vz_zad-(Vz-V);      //tmp = V_zad
+ 939   3                                 if (tmp < V_MIN)
+ 940   3                                 tmp = V_MIN;
+ 941   3      
+ 942   3                          if (V < V_MIN)              //tmp = ax_zad
+ 943   3                                  tmp = -0.8*(V-tmp);
+ 944   3                            else
+ 945   3                                    tmp = -0.5*(V-tmp);
+ 946   3      
+ 947   3                              tmp = 0.15*V*V*(-ax+tmp);       //tmp = delta_ax
+ 948   3                      if (tmp > 500)
+ 949   3                              tmp = 500;
+ 950   3                    else if (tmp < -500)
+ 951   3                            tmp = -500;
+ 952   3      
+ 953   3      /*              int_delta_ax += 0.1*tmp/FREQ;
+ 954   3                    if (int_delta_ax > n_maxSU+200)
+ 955   3                            int_delta_ax = n_maxSU+200;
+ 956   3                      else if (int_delta_ax < n_minSU-200)
+ 957   3                              int_delta_ax = n_minSU-200;
+ 958   3      */      
+ 959   3      //                      n_zad = tmp + int_delta_ax;
+ 960   3      //                    tmp = n_zad-nSU;          //tmp = delta_n
+ 961   3              
+ 962   3      /*                 j = Delta_G/20;
+ 963   3                    if (j > 4)
+ 964   3                                 j = 4;
+ 965   3                                              else if (j < 0)
+ 966   3                                                              j = 0;
+ 967   3      //                                      tmp = tmp/FREQ/dn_Delta_G[j];
+ 968   3      
+ 969   3                              int_Delta_G = int_Delta_G+0.08*tmp;
+ 970   3                                              if(int_Delta_G > 100)
+ 971   3                                                      int_Delta_G = 100;
+ 972   3                                              else if(int_Delta_G < 0)
+ 973   3                                                      int_Delta_G = 0;
+ 974   3      
+ 975   3                       Delta_G = int_Delta_G + 0.22*tmp;
+ 976   3                                      }
+ 977   3                              }       //if(flStopSU == 0)
+ 978   3      */
+ 979   3               if (flOk)
+ 980   3                  OutModem();
+ 981   3               
+ 982   3               //Отсутствие координат----------------------------------------------
+ 983   3                              if (liTimer_tick-liTimer_tick_GPS > 2*FREQ)
+ 984   3                              {
+ 985   4                                      flNoKoord = 1;
+C51 COMPILER V9.00   BPU                                                                   06/29/2011 09:52:47 PAGE 17  
+
+ 986   4                                      liTimer_tick_GPS = liTimer_tick;        
+ 987   4                  flGPS = 1;
+ 988   4                              }
+ 989   3               if (SteckPoint > 100)
+ 990   3                  tmp = 1;
+ 991   3                      }       //if (flRun)
+ 992   2              
+ 993   2              if (TI1)
+ 994   2              {
+ 995   3                      if (flTransmiter1 == 1)
+ 996   3                      {
+ 997   4                              if(r01 < rk1)
+ 998   4                                      SBUF1 = BufferInGPS1[r01++];
+ 999   4                              else                                            
+1000   4                                      flTransmiter1 = 2;      
+1001   4                                                              //Окончание передачи
+1002   4                      }
+1003   3                      else if (flTransmiter1 == 3)
+1004   3                      {
+1005   4                              for(Mycount = 0; Mycount < 100; Mycount++)
+1006   4                                      _nop_();
+1007   4                              if(r02 < rk2)
+1008   4                                      SBUF1 = BufferInGPS2[r02++];
+1009   4                              else                                            
+1010   4                                      flTransmiter1 = 0;                      //Окончание передачи
+1011   4              
+1012   4                      }
+1013   3      
+1014   3              TI1 = 0;
+1015   3                      
+1016   3              }
+1017   2              
+1018   2              }       //while (1)
+1019   1              return;
+1020   1      }
+1021          
+1022          //----------------------------------------------------------------------------
+1023          void OutModem(void)
+1024          {
+1025   1         xdata char i;
+1026   1         xdata unsigned long tmp;
+1027   1         static bit fl;
+1028   1      
+1029   1         if (flOk)
+1030   1         {
+1031   2            tmp = (liTimer_tick/50)*50;
+1032   2            if ((liTimer_tick - tmp) == 0)
+1033   2               return;
+1034   2      
+1035   2            fl = !fl;
+1036   2            if (fl)
+1037   2               return;
+1038   2         }
+1039   1              while (flTransmiter)
+1040   1                      ;                       
+1041   1      
+1042   1              r0 = 0;
+1043   1         if (flAnswer == 0)
+1044   1         {
+1045   2            BufferInModem[0] = 21 | 0x40;
+1046   2            PackageInModem4(liTimer_tick, 1); 
+1047   2      
+C51 COMPILER V9.00   BPU                                                                   06/29/2011 09:52:47 PAGE 18  
+
+1048   2            BufferInModem[5] = dataRSTSRC | 0x80;   
+1049   2      //      dataRSTSRC = 0;
+1050   2            BufferInModem[6] = 0x80;
+1051   2            BufferInModem[7] = 0x80;
+1052   2            BufferInModem[8] = 0x80;
+1053   2            BufferInModem[9] = 0x80;
+1054   2            BufferInModem[10] = 0x80;
+1055   2            BufferInModem[11] = 0x80;
+1056   2            BufferInModem[12] = 0x80;
+1057   2            BufferInModem[13] = 0x80;
+1058   2      /*      PackageInModem2((vV.x+800)*10, 14);
+1059   2            PackageInModem2((vV.y+800)*10, 16);
+1060   2            PackageInModem2((vV.z+800)*10, 18);*/
+1061   2            PackageInModem2((ax_gir+800)*10, 20);
+1062   2            PackageInModem2((ay_gir+800)*10, 22);
+1063   2            PackageInModem2((az_gir+800)*10, 24);
+1064   2      /*      PackageInModem2(kren_gir*2500+8000, 26);
+1065   2            PackageInModem2(tang_gir*2500+8000, 28);
+1066   2            PackageInModem2((rsk_gir-M_PI)*2500+8000, 30);
+1067   2        */    PackageInModem2(Wx/ToGrad*2500+8000, 32);
+1068   2            PackageInModem2(Wy/ToGrad*2500+8000, 34);
+1069   2            PackageInModem2(Wz/ToGrad*2500+8000, 36);
+1070   2            PackageInModem2(ex_gir/ToGrad*2500+8000, 38);
+1071   2            PackageInModem2(ey_gir/ToGrad*2500+8000, 40);
+1072   2            PackageInModem2(ez_gir/ToGrad*2500+8000, 42);
+1073   2            PackageInModem2(s_H_filtr+5000, 44);
+1074   2                 PackageInModem2(V*10, 46);
+1075   2            
+1076   2            BufferInModem[48] = SteckPoint/2 | 0x80;   
+1077   2      
+1078   2            BufferInModem[49] = 0;
+1079   2            for (i = 0; i < 49; i++ )
+1080   2               BufferInModem[49] = BufferInModem[49] ^ BufferInModem[i];
+1081   2            BufferInModem[49] = BufferInModem[49] | 0x80;
+1082   2                      rk = 50;
+1083   2         }
+1084   1         else
+1085   1         {
+1086   2            BufferInModem[0] = 22 | 0x40;
+1087   2            BufferInModem[1] = (Kren_zad_buf+60) | 0x80;
+1088   2      
+1089   2              PackageInModem2((int_dV+30)*100, 2);
+1090   2              PackageInModem2((int_dKren+30)*100, 4);
+1091   2              PackageInModem2((delta_v+30)*100, 6);
+1092   2              PackageInModem2((delta_e+30)*100, 8);
+1093   2              PackageInModem2(Vy_zad_ogr_nab*100, 10);
+1094   2              BufferInModem[12] = (char)delta_g | 0x80;
+1095   2              BufferInModem[13] = 0x80;   //Wak
+1096   2      
+1097   2            PackageInModem2(KrenKam/ToGrad*2500+8000, 14); 
+1098   2            PackageInModem2(UgolKam/ToGrad*2500+8000, 16); 
+1099   2            BufferInModem[18] = 0x80 | Dat1;
+1100   2            BufferInModem[19] = 0x80 | Dat2;
+1101   2            PackageInModem2((ax+800)*10, 20);
+1102   2            PackageInModem2((s_Vy_filtr+800)*10, 22);
+1103   2            PackageInModem2(Kren_dat/ToGrad*2500+8000, 24);
+1104   2            BufferInModem[26] = (char)(delta_z+10) | 0x80;
+1105   2            BufferInModem[27] = 0x80;
+1106   2      
+1107   2            BufferInModem[28] = 0;
+1108   2            for (i = 0; i < 28; i++ )
+1109   2               BufferInModem[28] = BufferInModem[28] ^ BufferInModem[i];
+C51 COMPILER V9.00   BPU                                                                   06/29/2011 09:52:47 PAGE 19  
+
+1110   2            BufferInModem[28] = BufferInModem[28] | 0x80;
+1111   2                      rk = 29;
+1112   2      
+1113   2            if(flGPS)
+1114   2            {
+1115   3               flGPS = 0;
+1116   3               BufferInModem[rk] = 20 | 0x40;
+1117   3                              if(flNoKoord)
+1118   3                      {
+1119   4                  BufferInModem[rk+1] = 0x80;    
+1120   4                  BufferInModem[rk+2] = 0x80;    
+1121   4                  BufferInModem[rk+3] = 0x80;    
+1122   4                  BufferInModem[rk+4] = 0xff;    
+1123   4                  BufferInModem[rk+5] = 0x80;    
+1124   4                  BufferInModem[rk+6] = 0x80;    
+1125   4                  BufferInModem[rk+7] = 0x80;    
+1126   4                  BufferInModem[rk+8] = 0x80;    
+1127   4                  BufferInModem[rk+9] = 0x80;    
+1128   4                  BufferInModem[rk+10] = 0x80;           
+1129   4                  BufferInModem[rk+11] = 0x80;           
+1130   4                              }
+1131   3               else
+1132   3               {
+1133   4                  PackageInModem4(lLatFly, rk+1);
+1134   4                      PackageInModem4(lLonFly, rk+5);
+1135   4                      PackageInModem2(koors, rk+9);   //курс
+1136   4                  BufferInModem[rk+11] = Vz | 0x80;      //Vзем
+1137   4               }
+1138   3      
+1139   3               BufferInModem[rk+20] = 0;
+1140   3               for (i = rk; i < rk+20; i++ )
+1141   3                       BufferInModem[rk+20] = BufferInModem[rk+20] ^ BufferInModem[i];
+1142   3                 BufferInModem[rk+20] = BufferInModem[rk+20] | 0x80;
+1143   3                      rk = 50;
+1144   3            }
+1145   2            else if(flCommand)
+1146   2            {
+1147   3               flCommand = 0;
+1148   3               BufferInModem[rk] = 23 | 0x40;
+1149   3      
+1150   3                    BufferInModem[rk+1] = (H_zad+200)/10 | 0x80;
+1151   3                    BufferInModem[rk+2] = (char)delta_g | 0x80;
+1152   3                 BufferInModem[rk+3] = n_ | 0x80;
+1153   3                    BufferInModem[rk+4] = Vz_zad | 0x80;
+1154   3                    BufferInModem[rk+5] = Vy_zad_max | 0x80;
+1155   3                 BufferInModem[rk+6] = Vy_zad_min | 0x80;
+1156   3               BufferInModem[rk+7] = (KrenKam_zad+60) | 0x80;
+1157   3      //         BufferInModem[rk+8] = UgolKam_zad | 0x80;
+1158   3               BufferInModem[rk+9] = (char)(delta_z+10) | 0x80;
+1159   3      
+1160   3               BufferInModem[rk+10] = 0;
+1161   3               for (i = rk; i < rk+10; i++ )
+1162   3                       BufferInModem[rk+10] = BufferInModem[rk+10] ^ BufferInModem[i];
+1163   3                 BufferInModem[rk+10] = BufferInModem[rk+10] | 0x80;
+1164   3                      rk = 48;
+1165   3            }
+1166   2         }
+1167   1         flAnswer = !flAnswer;
+1168   1              flTransmiter = 1;
+1169   1              SFRPAGE = 0x00;
+1170   1              TI0 = 1;
+1171   1              return;
+C51 COMPILER V9.00   BPU                                                                   06/29/2011 09:52:47 PAGE 20  
+
+1172   1      }
+1173          
+1174          //------------------------------------------------------------------------------
+1175          void PackageInModem2(unsigned int Data, char i)
+1176          {
+1177   1              BufferInModem[i] = (Data & 0x007f)| 0x80;
+1178   1              BufferInModem[i+1] = ((Data & 0x3f80) >> 7)| 0x80;
+1179   1      }
+1180          
+1181          //------------------------------------------------------------------------------
+1182          void PackageInModem4(unsigned long int Data, char i)
+1183          {
+1184   1              BufferInModem[i] = (Data & 0x0000007f)| 0x80;
+1185   1              BufferInModem[i+1] = ((Data & 0x3f80) >> 7) | 0x80;
+1186   1              BufferInModem[i+2] = ((Data & 0x1fc000) >> 14) | 0x80;
+1187   1         BufferInModem[i+3] = ((Data & 0xfe00000)>> 21) | 0x80;
+1188   1      }
+1189          
+1190          //---------------------------------------------------------------------------
+1191          char ContrlSumma(char Array[], char NByteContrlSumma)
+1192          {
+1193   1              xdata char i, KontrSumma = 0;
+1194   1              for (i = 0; i < NByteContrlSumma; i++)
+1195   1                      KontrSumma = KontrSumma^Array[i];
+1196   1      
+1197   1              return KontrSumma;
+1198   1      }
+1199          
+1200          //----------------------------------------------------------------------------
+1201          unsigned long DecodeLatOrLon(char Array[], char n)
+1202          {
+1203   1              xdata unsigned long koord, tmp;
+1204   1              koord = Array[n] & 0x7f;
+1205   1              tmp = Array[n+1] & 0x7f;
+1206   1              koord = koord+(tmp << 7);
+1207   1              tmp = Array[n+2] & 0x7f;
+1208   1              koord = koord+(tmp << 14);
+1209   1              tmp = Array[n+3] & 0x7f;
+1210   1              koord = koord+(tmp << 21);
+1211   1              return koord;
+1212   1      }
+1213          
+1214          // Config Routine---------------------------------------------------------------------
+1215          void SYSCLK(void)
+1216          {
+1217   1              xdata int n = 0;
+1218   1      
+1219   1              SFRPAGE = 0x00;
+1220   1              FLSCL = 0x10;   // FLASH Memory Control
+1221   1      
+1222   1              SFRPAGE = 0x0F;
+1223   1              OSCXCN = 0x67;  // EXTERNAL Oscillator Control Register 
+1224   1              for (n = 0; n < 256; n++)             // wait for osc to start
+1225   1                      ;
+1226   1              while ( (OSCXCN & 0x80) == 0 )        // wait for xtal to stabilize
+1227   1                      ;
+1228   1              CLKSEL = 0x01;  // Oscillator Clock Selector
+1229   1              OSCICN = 0x00;  // Internal Oscillator Control Register
+1230   1              PLL0CN = 0x05;  // PLL Control Register 
+1231   1      
+1232   1              SFRPAGE = 0x00;
+1233   1              FLSCL = 0x10;
+C51 COMPILER V9.00   BPU                                                                   06/29/2011 09:52:47 PAGE 21  
+
+1234   1      
+1235   1              SFRPAGE = 0x0F;
+1236   1              PLL0CN |= 0x02;
+1237   1              PLL0DIV = 0x04; // PLL pre-divide Register 
+1238   1              PLL0MUL = 0x09; // PLL Clock scaler Register
+1239   1              PLL0FLT = 0x01; // PLL Filter Register
+1240   1              for(n = 0; n < 60; n++) // wait at least 5us
+1241   1                      ;               
+1242   1              PLL0CN |= 0x02;                        // enable PLL
+1243   1              //while ( (PLL0CN & 0x10) == 0 )        // wait for PLL to lock
+1244   1                      ;
+1245   1              CLKSEL = 0x02;  // Oscillator Clock Selector 
+1246   1      }
+1247          
+1248          //------------------------------------------------------------------------------------------
+1249          void port_init(void)
+1250          {
+1251   1         SFRPAGE = CONFIG_PAGE;
+1252   1              XBR0 = 0x06;    // XBAR0: Initial Reset Value
+1253   1              XBR1 = 0x00;    // XBAR1: Initial Reset Value
+1254   1         XBR2 = 0x44; // XBAR2: Initial Reset Value
+1255   1                          
+1256   1              // Port configuration (1 = Push Pull Output)
+1257   1              SFRPAGE = 0x0F;
+1258   1         P0MDOUT = 0x75; // Output configuration for P0 
+1259   1         P1MDOUT = 0x00; // Output configuration for P1 
+1260   1         P2MDOUT = 0x00; // Output configuration for P2 
+1261   1         P3MDOUT = 0x3F; // Output configuration for P3
+1262   1              P4MDOUT = 0x00; // Output configuration for P4
+1263   1         P5MDOUT = 0x00; // Output configuration for P5
+1264   1         P6MDOUT = 0x00; // Output configuration for P6
+1265   1              P7MDOUT = 0x00; // Output configuration for P7 
+1266   1      
+1267   1              P1MDIN = 0xFF;  // Input configuration for P1
+1268   1      }
+1269          
+1270          //------------------------------------------------------------------------------------------
+1271          void config(void)
+1272          {
+1273   1              SFRPAGE = 0x00;
+1274   1              RSTSRC = 0x00;  // Reset Source Register
+1275   1      
+1276   1              IE = 0x92;          //Interrupt Enable
+1277   1              EIE1 = 0x00;        //Extended Interrupt Enable 1
+1278   1         EIE2 = 0x40;        //Extended Interrupt Enable 2
+1279   1      
+1280   1              IP = 0x10;          //Interrupt Priority
+1281   1              EIP1 = 0x00;        //Extended Interrupt Priority 1           Приоритет SPI = ?
+1282   1              EIP2 = 0x40;        //Extended Interrupt Priority 2
+1283   1      
+1284   1      //      EA = 1;
+1285   1      }
+1286          
+1287          //Скорость 57600 бод. Тактируется Timer2------------------------------------------------------
+1288          void UART0_Init(void)
+1289          {
+1290   1              SFRPAGE = 0x00;
+1291   1      
+1292   1              TMR2CF = 0x08;  // Timer 2 Configuration
+1293   1         RCAP2L = 0xCA;  // Timer 2 Reload Register Low Byte   BaudRate = 57
+1294   1         RCAP2H = 0xFF;  // Timer 2 Reload Register High Byte
+1295   1      
+C51 COMPILER V9.00   BPU                                                                   06/29/2011 09:52:47 PAGE 22  
+
+1296   1         TMR2L = 0x00;   // Timer 2 Low Byte  
+1297   1         TMR2H = 0x00;   // Timer 2 High Byte 
+1298   1         TMR2CN = 0x04;  // Timer 2 CONTROL
+1299   1              TR2 = 1;        
+1300   1              SFRPAGE = UART0_PAGE;
+1301   1              
+1302   1              SCON0 = 0x50;
+1303   1              SSTA0 = 0x15;
+1304   1      }
+1305          
+1306          //-------------------------------------------------------------------
+1307          void UART0_isr(void) interrupt 4
+1308          {
+1309   1              xdata char SFRPAGE_SAVE = SFRPAGE;
+1310   1              SFRPAGE = UART0_PAGE;
+1311   1              if (SteckPoint < SP)
+1312   1                      SteckPoint = SP;        
+1313   1              
+1314   1              if (RI0)  
+1315   1              { 
+1316   2                      BuferFromModem [wBFM++] = SBUF0;  // read character
+1317   2                      if(wBFM >= NBFM)
+1318   2                      {
+1319   3                      wBFM = 0;
+1320   3                              marBFM = 1;     
+1321   3                      }      
+1322   2                      RI0 = 0;                
+1323   2              }
+1324   1              if (TI0)
+1325   1              {
+1326   2      //SBUF0  = 11;
+1327   2                      
+1328   2      /*              if(r0 < rk)
+1329   2                              SBUF0 = BufferInModem[r0++];
+1330   2                      else                                            
+1331   2                              flTransmiter = 0;                       //Окончание передачи*/
+1332   2                      TI0 = 0;
+1333   2              }
+1334   1              SFRPAGE = SFRPAGE_SAVE;
+1335   1              return;
+1336   1      }
+1337          
+1338          //-----------------------------------------------------------------
+1339          //GPS, скорость 4800 бод, тактируется Timer1 
+1340          void UART1_Init(void)
+1341          {
+1342   1              SFRPAGE = UART1_PAGE;
+1343   1              SCON1 = 0x10;                   /* Регистр управления COM1
+1344   1                                                                              SCON1.7 = S1MODE= 0: 8-ми разрядный COM-порт с изменяемой скоростью передачи данных
+1345   1                                                                              SCON1.5 = MCE1  = 0: (при S1MODE = SCON1.7 = 0) логический уровень стопового бита игнорируется
+1346   1                                                                              SCON1.4 = REN1 = 1: Разрешение приема   */
+1347   1              
+1348   1              SFRPAGE =0x00;
+1349   1              CKCON = CKCON | 0x02;   /*регистр управления тактированием
+1350   1                                                                              CKCON.3 = T0M = 1:      Timer 0 тактируется системным тактовым сигналом 
+1351   1                                                                              (т.е. биты CKCON.1 и CKCON.0 не влияют)
+1352   1                                                                              CKCON.1 = SCA1 = 1:     Биты выбора делителя частоты тактирования Timer 0, 1 
+1353   1                                                                              CKCON.0 = SCA0 = 0:     SYSCLK/48*/
+1354   1      
+1355   1              TMOD = TMOD | 0x20;             /*Регистр режима Таймеров 0 и 1
+1356   1                                                                              TMOD.7 = GATE1 = 0: Таймер 1 включен, если TR1 = 1, независимо от логического уровня на входе /IN
+             -T1.
+C51 COMPILER V9.00   BPU                                                                   06/29/2011 09:52:47 PAGE 23  
+
+1357   1                                                                              TMOD.6 = C/T1 = 0:  Т/С1  работает  как  таймер:  Таймер 1  инкрементируется  от  внутреннего  си
+             -гнала   
+1358   1                                                                                                      тактирования, который задается битом T1M (CKCON.4).  
+1359   1                                                                              TMOD.5 = T1M1 = 1,      
+1360   1                                                                              TMOD.4 = T1M0 = 0:      Выбор режима работы Таймера 1: 8-разрядный таймер/счетчик с автоперезагрузкой
+             -*/
+1361   1              TH1 = 148;              
+1362   1              TL1 = TH1;
+1363   1              TR1 = 1;  
+1364   1      }
+1365          
+1366          //---------------------------------------------------------------------------------
+1367          void UART1_isr(void) interrupt 20
+1368          {
+1369   1              xdata char SFRPAGE_SAVE = SFRPAGE, tmp;
+1370   1              //xdata long int tt;
+1371   1              SFRPAGE = UART1_PAGE;                                                     
+1372   1              if (SteckPoint < SP)
+1373   1                      SteckPoint = SP;        
+1374   1      
+1375   1              if (RI1)  
+1376   1              {  
+1377   2                      mess [w++] = SBUF1;  // read character  
+1378   2                      if(w >= NS)
+1379   2                      {
+1380   3              w = 0;
+1381   3                              mar = 1;        
+1382   3                      }      
+1383   2                      RI1 = 0;
+1384   2      
+1385   2                      tmp = SBUF1;
+1386   2                      SFRPAGE = UART0_PAGE;
+1387   2                      SBUF0 = tmp;
+1388   2                      TI0 = 1;
+1389   2                      SFRPAGE = UART1_PAGE;                     
+1390   2              }       
+1391   1              
+1392   1               
+1393   1      //      TI1 = 0;
+1394   1              SFRPAGE = SFRPAGE_SAVE;
+1395   1              return;
+1396   1      }
+1397          
+1398          //-----------------------------------------------------------------------------------
+1399          void DAC0_init(void)
+1400          {
+1401   1              SFRPAGE = 0x00;
+1402   1              REF0CN = 0x03;  // Reference Control Register
+1403   1      
+1404   1              DAC0L = 0xff;   // DAC0 Low Byte Register
+1405   1              DAC0H = 0x0f;   // DAC0 High Byte Register
+1406   1              DAC0CN = 0x80;  // DAC0 Control Register
+1407   1      
+1408   1              SFRPAGE = 0x01; 
+1409   1              DAC1L = 0xff;   // DAC1 Low Byte Register
+1410   1              DAC1H = 0x0f;   // DAC1 High Byte Register
+1411   1              DAC1CN = 0x80;  // DAC1 Control Register
+1412   1      }
+1413          
+1414          //--------------------------------------------------------------------
+1415          void ADC_init(void)
+1416          {
+C51 COMPILER V9.00   BPU                                                                   06/29/2011 09:52:47 PAGE 24  
+
+1417   1              SFRPAGE = 0x00;
+1418   1              REF0CN = 0x03;  // Reference Control Register
+1419   1              AMX0CF = 0x00;  // AMUX Configuration Register
+1420   1              ADC0CF = 0x80;
+1421   1              ADC0CN = 0x80;
+1422   1      
+1423   1              ADC0LT = 0x0000;        // ADC Less-Than High Byte Register
+1424   1              ADC0GT = 0xFFFF;        // ADC Greater-Than High Byte Register
+1425   1      
+1426   1              SFRPAGE = 0x02;
+1427   1              AMX2CF = 0x00;  // AMUX Configuration Register
+1428   1              ADC2CF = 0x81;
+1429   1              ADC2CN = 0x80;
+1430   1      
+1431   1              ADC2LT = 0x00;  // ADC Less-Than High Byte Register
+1432   1              ADC2GT = 0xFF;  // ADC Greater-Than High Byte Register
+1433   1      }
+1434          
+1435          //-------------------------------------------------------------------
+1436          void Timer0_init(void)
+1437          {
+1438   1              SFRPAGE = 0x00;
+1439   1              CKCON = CKCON | 0x02;   // Clock Control Register       Источник - Sysclk/48
+1440   1              TH0 = 0xAE;     // 0xFFFF-49766400/48/FREQ = 0xAEFF
+1441   1              TL0 = 0xFF;     
+1442   1              TMOD = TMOD | 0x01;    // Timer Mode Register 1 режим - 16 разрядный таймер счетчик
+1443   1      
+1444   1              TR0 = 1; 
+1445   1              return;
+1446   1      }
+1447          
+1448          //----------------------------------------------------------------------
+1449          void TIMER0_ISR (void) interrupt 1
+1450          {
+1451   1              xdata unsigned int uitmp;
+1452   1              xdata unsigned char j;
+1453   1              xdata float tmp;
+1454   1              xdata char SFRPAGE_SAVE = SFRPAGE;
+1455   1              
+1456   1              SFRPAGE = 0;
+1457   1      
+1458   1              TH0 = 0xAE;     // 0xFFFF-49766400/48/FREQ = 0xAEFF
+1459   1              TL0 = 0xFF;     
+1460   1      
+1461   1              if (SteckPoint < SP)
+1462   1                      SteckPoint = SP;        
+1463   1         //if (CountRun++ < 5)
+1464   1          //  WDTCN = 0xA5;   //Перезапустить охранный таймер
+1465   1         CountRun++;
+1466   1      
+1467   1              flRun = 1;
+1468   1         timer_tick++;
+1469   1              liTimer_tick++;
+1470   1         
+1471   1         //Опрос датчиков----------------------------------------------------------------------
+1472   1              H_tmp = 0;                      
+1473   1              SFRPAGE = 0x00;
+1474   1              for(j = 0; j < 5; j++)
+1475   1              {
+1476   2                      AMX0SL = 0x06;  //Выбор канала
+1477   2                      for (uitmp = 0; uitmp < 10; uitmp++)
+1478   2                              _nop_();
+C51 COMPILER V9.00   BPU                                                                   06/29/2011 09:52:47 PAGE 25  
+
+1479   2              AD0INT = 0;
+1480   2                      AD0BUSY = 1;
+1481   2              AD0INT = 0;
+1482   2                      while(AD0BUSY)
+1483   2                              ;
+1484   2                      H_tmp = H_tmp+(ADC0 & 0x0fff);
+1485   2              }
+1486   1              H_tmp = H_tmp/5;
+1487   1      //      H_tmp = 11168.6-4.578*H_tmp+0.000362245*H_tmp*H_tmp-H0;  //№1MKM
+1488   1      //      H_tmp = 10825.6-4.2149*H_tmp+0.00030126*H_tmp*H_tmp-H0;  //№2MKM
+1489   1      
+1490   1              H_tmp = 11635.8-4.7889*H_tmp+0.000393*H_tmp*H_tmp-H0;  //№3
+1491   1      
+1492   1         s_H_filtr = s_H_filtr+(H_tmp-s_H_filtr)/FREQ;
+1493   1         delta_ro=1-0.000095*s_H_filtr+3.05E-09*s_H_filtr*s_H_filtr;
+1494   1              if (delta_ro < 0.001)
+1495   1                      delta_ro = 0.001;
+1496   1      
+1497   1              tmp =  (s_H_filtr-s_H_filtr_pr)*FREQ;
+1498   1         s_H_filtr_pr = s_H_filtr;
+1499   1              s_Vy_filtr = s_Vy_filtr+(tmp-s_Vy_filtr)/FREQ;
+1500   1         H_filtr = H_filtr+(H_tmp-H_filtr)/FREQ/0.3;
+1501   1      
+1502   1              tmp =  (H_filtr-H_filtr_pr)*FREQ;
+1503   1         H_filtr_pr = H_filtr;
+1504   1              Vy = Vy+(tmp-Vy)/FREQ/0.3;
+1505   1      
+1506   1         //Скорость--------------------------------------------------------------
+1507   1              AMX0SL = 0x07;                  
+1508   1              for (uitmp = 0; uitmp < 10; uitmp++)
+1509   1                      _nop_();
+1510   1              AD0INT = 0;
+1511   1              AD0BUSY = 1;
+1512   1              AD0INT = 0;
+1513   1              while(AD0BUSY)
+1514   1                      ;
+1515   1              tmp = ADC0 & 0x0fff;
+1516   1         tmp = -172.953751+0.524876*tmp+0.000231*tmp*tmp;  //№3
+1517   1         q = q+(tmp-q)/FREQ/0.3;
+1518   1      
+1519   1              //Wx--------------------------------------------------------------------
+1520   1         SFRPAGE = 0x02;
+1521   1         AMX2SL = 2;  
+1522   1              for (uitmp = 0; uitmp < 10; uitmp++)
+1523   1                      _nop_();
+1524   1              AD2INT = 0;
+1525   1              AD2BUSY = 1;
+1526   1              AD2INT = 0;
+1527   1              while(AD2BUSY)
+1528   1                      ;
+1529   1         tmp = ADC2;
+1530   1         Tx = Tx+(tmp-Tx)/FREQ*0.1;
+1531   1      
+1532   1              SFRPAGE = 0;
+1533   1              AMX0SL = 0x02;          
+1534   1              for (uitmp = 0; uitmp < 10; uitmp++)
+1535   1                      _nop_();
+1536   1              AD0INT = 0;
+1537   1              AD0BUSY = 1;
+1538   1              AD0INT = 0;
+1539   1              while(AD0BUSY)
+1540   1                      ;
+C51 COMPILER V9.00   BPU                                                                   06/29/2011 09:52:47 PAGE 26  
+
+1541   1              Wx = -170.285721+1.142857*Tx+(ADC0 & 0x0fff);    //Борт №3 
+1542   1              Wx = -178.237106 + 0.092784*Wx; 
+1543   1      
+1544   1         //Wy--------------------------------------------------------------------
+1545   1         SFRPAGE = 0x02;
+1546   1         AMX2SL = 7;  
+1547   1              for (uitmp = 0; uitmp < 10; uitmp++)
+1548   1                      _nop_();
+1549   1              AD2INT = 0;
+1550   1              AD2BUSY = 1;
+1551   1              AD2INT = 0;
+1552   1              while(AD2BUSY)
+1553   1                      ;
+1554   1         tmp = ADC2;
+1555   1         Ty = Ty+(tmp-Ty)/FREQ*0.1;
+1556   1      
+1557   1              SFRPAGE = 0;
+1558   1              AMX0SL = 0x00;                  
+1559   1              for (uitmp = 0; uitmp < 10; uitmp++)
+1560   1                      _nop_();
+1561   1              AD0INT = 0;
+1562   1              AD0BUSY = 1;
+1563   1              AD0INT = 0;
+1564   1              while(AD0BUSY)
+1565   1                      ;
+1566   1         Wy = -383.142853+2.571429*Ty+(ADC0 & 0x0fff);
+1567   1              Wy = 179.269043-0.091371*Wy;  //Борт №3    
+1568   1      
+1569   1         //Wz--------------------------------------------------------------------
+1570   1         SFRPAGE = 0x02;
+1571   1         AMX2SL = 1;  
+1572   1              for (uitmp = 0; uitmp < 10; uitmp++)
+1573   1                      _nop_();
+1574   1              AD2INT = 0;
+1575   1              AD2BUSY = 1;
+1576   1              AD2INT = 0;
+1577   1              while(AD2BUSY)
+1578   1                      ;
+1579   1         tmp = ADC2;
+1580   1         Tz = Tz+(tmp-Tz)/FREQ*0.1;
+1581   1      
+1582   1              SFRPAGE = 0;
+1583   1              AMX0SL = 0x01;          
+1584   1              for (uitmp = 0; uitmp < 10; uitmp++)
+1585   1                      _nop_();
+1586   1              AD0INT = 0;
+1587   1              AD0BUSY = 1;
+1588   1              AD0INT = 0;
+1589   1              while(AD0BUSY)
+1590   1                      ;
+1591   1      
+1592   1         Wz = 392.-2.666667*Tz+(ADC0 & 0x0fff);
+1593   1              Wz = 204.274811-0.091603*Wz;  //Борт №3
+1594   1      
+1595   1         //ax--------------------------------------------------------------------
+1596   1              SFRPAGE = 0;
+1597   1              AMX0SL = 0x03;          
+1598   1              for (uitmp = 0; uitmp < 10; uitmp++)
+1599   1                      _nop_();
+1600   1              AD0INT = 0;
+1601   1              AD0BUSY = 1;
+1602   1              AD0INT = 0;
+C51 COMPILER V9.00   BPU                                                                   06/29/2011 09:52:47 PAGE 27  
+
+1603   1              while(AD0BUSY)
+1604   1                      ;
+1605   1      //      ax_gir = G*(25.97156-0.009488*(ADC0 & 0x0fff)-cos_nx_vj);  //Борт №1
+1606   1      /*      ax_gir = ADC0 & 0x0fff;
+1607   1              ax_gir = (25.206301-0.009186*ax_gir);  //Борт №2*/
+1608   1      
+1609   1      //      ax_gir = G*(25.285999-0.009225*(ADC0 & 0x0fff)+cos_nx_vj);  //Борт №3
+1610   1      
+1611   1         //ay--------------------------------------------------------------------
+1612   1              SFRPAGE = 0;
+1613   1              AMX0SL = 0x05;          
+1614   1              for (uitmp = 0; uitmp < 10; uitmp++)
+1615   1                      _nop_();
+1616   1              AD0INT = 0;
+1617   1              AD0BUSY = 1;
+1618   1              AD0INT = 0;
+1619   1              while(AD0BUSY)
+1620   1                      ;
+1621   1      //      ay_gir = G*(25.739033-0.009355*(ADC0 & 0x0fff)+cos_ny_vj);  //Борт №1
+1622   1      /*      ay_gir = ADC0 & 0x0fff;
+1623   1              ay_gir = (25.9517-0.009324*ay_gir);  //Борт №2*/
+1624   1      //      ay_gir = G*(28.56-0.01*(ADC0 & 0x0fff)+cos_ny_vj);  //Борт №3
+1625   1      
+1626   1         //az--------------------------------------------------------------------
+1627   1              SFRPAGE = 0;
+1628   1              AMX0SL = 0x04;          
+1629   1              for (uitmp = 0; uitmp < 10; uitmp++)
+1630   1                      _nop_();
+1631   1              AD0INT = 0;
+1632   1              AD0BUSY = 1;
+1633   1              AD0INT = 0;
+1634   1              while(AD0BUSY)
+1635   1                      ;
+1636   1      //      az_gir = G*(-26.35598+0.009569*(ADC0 & 0x0fff)-cos_nz_vj);  //Борт №1
+1637   1      /*      az_gir = ADC0 & 0x0fff;
+1638   1              az_gir = (-26.7495+0.00946*az_gir);  //Борт №2*/
+1639   1      //      az_gir = G*(-26.956522+0.009662*(ADC0 & 0x0fff)+cos_nz_vj);  //Борт №3
+1640   1      //--------------------------------------------------------------------------------------------------
+1641   1      
+1642   1      
+1643   1      
+1644   1              //продольный канал----------------------------------------------------------
+1645   1      
+1646   1                      if (flStart == 0) 
+1647   1            {
+1648   2               int_dV = -5; //если зажата кнопка старта
+1649   2               tmp = 0;
+1650   2               i_Vzlet = 0;
+1651   2            }
+1652   1            else if (i_Vzlet < 3*FREQ)   //Со старта поддерживаем начальное пространственное положение ЛА
+1653   1            {
+1654   2      //            tmp = ToGrad*tang_gir-(15.+(3.-(float)i_Vzlet/FREQ)*15.);
+1655   2               if (tmp > 60) tmp = 60;
+1656   2                    else if (tmp < -60) tmp = -60;
+1657   2                    int_dV += 0.15*tmp/FREQ;
+1658   2               flFromStart = 1;
+1659   2            }
+1660   1            else if (flStopSU == 0)   //моторный полет
+1661   1            {
+1662   2                              tmp = -0.25*(H_filtr - H_zad);    //tmp = Vy_zad
+1663   2                              if (tmp > Vy_zad_ogr_nab) tmp = Vy_zad_ogr_nab;
+1664   2                              else if (tmp < Vy_zad_ogr_sn) tmp = Vy_zad_ogr_sn;
+C51 COMPILER V9.00   BPU                                                                   06/29/2011 09:52:47 PAGE 28  
+
+1665   2      
+1666   2                              tmp = Vy - tmp;                 //tmp = delta_Vy
+1667   2                              if (tmp > 60)  tmp = 60; 
+1668   2                              else if (tmp < -60) tmp = -60; 
+1669   2               if (flFromStart)
+1670   2               {
+1671   3                  flFromStart = 0;
+1672   3                    int_dV = delta_v-0.3*tmp;
+1673   3               }
+1674   2               else   
+1675   2                              int_dV = int_dV + 0.075*tmp/FREQ;
+1676   2                      }
+1677   1                      else        //планирование cо скоростью 13 м/с
+1678   1                      {
+1679   2                 tmp = -0.25*(V-13);  //tmp = delta_V_dat
+1680   2                              if (tmp > 60)  tmp = 60; 
+1681   2                              else if (tmp < -60) tmp = -60; 
+1682   2      
+1683   2                              int_dV = int_dV + 0.075*tmp/FREQ;
+1684   2      
+1685   2              tmp = Vy;       //tmp = delta_Vy
+1686   2                              if (tmp > 60)  tmp = 60; 
+1687   2                              else if (tmp < -60) tmp = -60; 
+1688   2                      }
+1689   1                      if (int_dV      > 20)  int_dV = 20; 
+1690   1                      else if (int_dV < -20) int_dV = -20; 
+1691   1      
+1692   1                      delta_v = 0.3*tmp + int_dV;
+1693   1                      if (delta_v > 20)  delta_v = 20;
+1694   1                      else if (delta_v < -20) delta_v = -20;
+1695   1      
+1696   1                      //боковой канал-------------------------------------------------------
+1697   1                      if (flStart == 0) //если зажата кнопка старта
+1698   1                      {
+1699   2                              tmp = Kren_dat = 0;
+1700   2               Kren_zad = 0;
+1701   2                              int_dKren = -15;
+1702   2                      }
+1703   1                      else
+1704   1                      {       
+1705   2               if (i_Vzlet < 3*FREQ)
+1706   2               {
+1707   3                              i_Vzlet++;
+1708   3                      Kren_zad = 0;
+1709   3                  Kren_dat = Kren_dat+(Wx-Wy-0.1*Kren_dat)/FREQ;
+1710   3                      tmp = 2.*(Kren_dat - Kren_zad);   //В данном случае tmp = dKren
+1711   3               }
+1712   2               else
+1713   2               {                                              
+1714   3                      Kren_zad = Kren_zad_buf;
+1715   3                            if (Kren_zad > 42)
+1716   3                                    Kren_zad = 42;
+1717   3                      else if (Kren_zad < -42)
+1718   3                              Kren_zad = -42;
+1719   3                  if (V < V_MIN+5)
+1720   3                  {
+1721   4                     tmp = V;
+1722   4                     if (tmp < V_BUM)
+1723   4                        tmp = V_BUM;
+1724   4                     tmp = (tmp-V_BUM)*(42.-6.)/(V_MIN+5.-V_BUM)+6; //tmp = kren_zad_max
+1725   4                     if (Kren_zad > tmp)
+1726   4                        Kren_zad = tmp;
+C51 COMPILER V9.00   BPU                                                                   06/29/2011 09:52:47 PAGE 29  
+
+1727   4                     else if (Kren_zad < -tmp)
+1728   4                        Kren_zad = -tmp;
+1729   4                  }
+1730   3      /*          tmp = 0.9441365-0.015913937*tang_gir*ToGrad; //tmp = K__
+1731   3                  Kren_dat = Kren_dat+(Wx-Wy-Kren_dat/0.11/V*cos_tang_gir*tmp)/FREQ;
+1732   3                  Kren_dat = Kren_dat+(Wx-Wy-Kren_dat/0.11/15)/FREQ;*/
+1733   3      
+1734   3                  Kren_dat = Kren_dat+(Wx-Wy-0.1*Kren_dat)/FREQ;
+1735   3                      tmp = Kren_dat - Kren_zad;   //В данном случае tmp = dKren
+1736   3               }
+1737   2                              int_dKren = int_dKren + 0.05*tmp/FREQ;
+1738   2                              if (int_dKren > delta_e_max) int_dKren = delta_e_max;
+1739   2                              else if (int_dKren < -delta_e_max) int_dKren =-delta_e_max;
+1740   2            }
+1741   1      //              delta_e = 0.1*tmp + int_dKren;
+1742   1                      if (delta_e > delta_e_max)  delta_e = delta_e_max;          //сломалась машинка это пока
+1743   1                      else if (delta_e < -delta_e_max) delta_e = -delta_e_max;
+1744   1      
+1745   1                      //оценим текущую ситуацию-----------------------------------------------
+1746   1      /*              if (flStart == 0)        //Стоим на катапульте
+1747   1                      {
+1748   1                              flStopSU = 0;
+1749   1                              NoCommand = 0;
+1750   1                      }
+1751   1                      else 
+1752   1                      {
+1753   1                              NoCommand++;
+1754   1                              if (s_H_filtr >= H_avar)        deltaH = 100;
+1755   1                              else                                                    deltaH = 50;
+1756   1      
+1757   1                              if (s_H_filtr > H_max && s_H_filtr < H_zad)  //Если летим снизу
+1758   1                                      H_max = s_H_filtr;
+1759   1                              if( s_H_filtr < (H_max-deltaH ))        
+1760   1                              {
+1761   1                                      flAvarStop = 1;         
+1762   1                                      timer_tick = 0;
+1763   1                              }
+1764   1                              if (NoCommand > FREQ*20)   //По отказу РК,  Time = 20 c
+1765   1                              {
+1766   1                                      flOtkazRK = 1;
+1767   1                  //возврат
+1768   1                              }
+1769   1            }*/
+1770   1              //Шимы---------------------------------------------------------------
+1771   1      //  delta_e, delta_z, delta_v, delta_n, delta_k, delta_g, delta_tl, delta_tp
+1772   1      
+1773   1         //правый элерон
+1774   1              uitmp = 25000*(1.5+0.55/delta_e_max*delta_e);
+1775   1              write(113, uitmp);
+1776   1              
+1777   1         //левый элерон
+1778   1              uitmp = 25000*(1.5-0.55/delta_e_max*delta_e);
+1779   1              write(114, uitmp);
+1780   1              
+1781   1              //delta_z
+1782   1      //      Count = 25000*(0.95+1.1/(delta_z_max-delta_z_min));//*(delta_z-delta_z_min));
+1783   1              uitmp = 25000*(0.95+1.1/(delta_z_max-(delta_z_min))*(delta_z-(delta_z_min)));
+1784   1              write(115, uitmp);
+1785   1              
+1786   1              //delta_v
+1787   1              uitmp = 25000*(0.95+1.1/(delta_v_max-(delta_v_min))*(delta_v-(delta_v_min)));
+1788   1              write(116, uitmp);
+C51 COMPILER V9.00   BPU                                                                   06/29/2011 09:52:47 PAGE 30  
+
+1789   1              
+1790   1              //левый delta_n
+1791   1              uitmp = 25000*(1.5+0.55/delta_n_max*delta_n);
+1792   1              write(117, uitmp);
+1793   1      
+1794   1              //правый delta_n
+1795   1              uitmp = 25000*(1.5-0.55/delta_n_max*delta_n);
+1796   1              write(118, uitmp);
+1797   1      
+1798   1              //delta_k
+1799   1              uitmp = 25000*(1.5+0.55/delta_k_max*delta_k);
+1800   1              write(119, uitmp);
+1801   1              
+1802   1              //delta_g       
+1803   1              uitmp = 25000*(0.95+1.1/delta_g_max*delta_g);
+1804   1              write(120, uitmp);
+1805   1      
+1806   1              //левый delta_tl
+1807   1              uitmp = 25000*(0.95+1.1/delta_t_max*delta_tl);
+1808   1              write(121, uitmp);
+1809   1      
+1810   1              //delta_tp
+1811   1              uitmp = 25000*(0.95+1.1/delta_t_max*delta_tp);
+1812   1              write(122, uitmp);
+1813   1      
+1814   1              SFRPAGE = SFRPAGE_SAVE;
+1815   1              return;
+1816   1      }
+1817          
+1818          //-----------------------------------------------------------------------------
+1819          unsigned int read(unsigned char adress)
+1820          {
+1821   1              unsigned int dat;
+1822   1              SFRPAGE = 0x00;
+1823   1              wr = we = 0;
+1824   1              re = rd = 1;
+1825   1              for (dat = 0; dat < 100; dat++)
+1826   1                      _nop_();
+1827   1      
+1828   1              SFRPAGE = 0x0f;
+1829   1              P6 = adress;
+1830   1              dat = P2;
+1831   1              dat = (dat << 8)+P7;
+1832   1              
+1833   1              SFRPAGE = 0x00;
+1834   1              rd = 0;
+1835   1      
+1836   1              return dat;
+1837   1      }
+1838          
+1839          //-----------------------------------------------------------------------------
+1840          void write(unsigned  char adress, unsigned int dat)
+1841          {
+1842   1              SFRPAGE = 0x00;
+1843   1              re = rd = 0;
+1844   1              we = 1;
+1845   1      
+1846   1              SFRPAGE = 0x0f;
+1847   1              P6 = adress;
+1848   1              P4 = dat & 0x00ff;
+1849   1              P5 = (dat & 0xff00) >> 8;
+1850   1      
+C51 COMPILER V9.00   BPU                                                                   06/29/2011 09:52:47 PAGE 31  
+
+1851   1              SFRPAGE = 0x00;
+1852   1              wr = 1;
+1853   1              for (adress = 0; adress < 0xf; adress++)
+1854   1                      _nop_();
+1855   1      
+1856   1              wr = 0;
+1857   1              return;
+1858   1      }
+1859          //-----------------------------------------------------------------------------------------
+1860          void WriteByteInKZA(unsigned char Byte)
+1861          { 
+1862   1              Byte++;
+1863   1              return;
+1864   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =  15766    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   1974     111
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      6      15
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =     11       2
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

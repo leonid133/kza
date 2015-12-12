@@ -1,0 +1,1 @@
+"C:\ivan\KNPP\VR\BPU\bpu\bpu.obj"  TO "C:\ivan\KNPP\VR\BPU\silabs_soft\test"  RS(256) PL(68) PW(78)  

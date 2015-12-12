@@ -1,0 +1,1195 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- saved from url=(0057)http://robochamp.ru/index.php/articles/electronics/89-sdc -->
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ru-ru" lang="ru-ru"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="google-site-verification" content="8oE0rljTrjM-HXbzl7a-Xaapw-fDH4RQFmP0yK991ZI">
+  <!--<base href="http://robochamp.ru/index.php/articles/electronics/89-sdc">--><base href=".">
+  
+  <meta name="robots" content="index, follow">
+  <meta name="keywords" content="sd card,карта sd,карты sd,команды для mmc карт в режиме spi,sd карта в режиме spi,карты SD,acmd41,mmc карта ток,mmc считать данные,sd 4gb">
+  <meta name="title" content="SD-карты">
+  <meta name="author" content="Олег">
+  <meta name="description" content="Статья о работе с SD, microSD, compact flash, CF, MMC картами памяти. ">
+  <meta name="generator" content="Joomla! 1.5 - Open Source Content Management">
+  <title>SD-карты</title>
+  <link href="http://www.robochamp.ru/index.php/component/jcomments/?task=rss&object_id=89&object_group=com_content&tmpl=component" rel="alternate" type="application/rss+xml" title="SD-карты">
+  <link href="http://robochamp.ru/templates/ja_zeolite/favicon.ico" rel="shortcut icon" type="image/x-icon">
+  <link rel="stylesheet" href="./SD-карты_files/style.css" type="text/css">
+  <link rel="stylesheet" href="./SD-карты_files/tagcloud.css" type="text/css">
+  <script type="text/javascript" src="./SD-карты_files/jcomments-v2.1.js"></script>
+  <script type="text/javascript" src="./SD-карты_files/ajax.js"></script>
+  <script type="text/javascript" src="./SD-карты_files/mootools.js"></script>
+  <script type="text/javascript" src="./SD-карты_files/caption.js"></script>
+  <script type="text/javascript" src="./SD-карты_files/odkl_share.js"></script>
+  <script type="text/javascript">
+/*<![CDATA[*/
+	var jax_live_site = 'http://www.robochamp.ru/index.php';
+	var jax_site_type = '1.5';
+/*]]>*/
+</script><script type="text/javascript" src="./SD-карты_files/ajax_1.3.js"></script>
+  <script type="text/javascript" src="./SD-карты_files/openapi.js" charset="windows-1251"></script>
+
+					<script type="text/javascript">
+					  VK.init({apiId: 1938911, onlyWidgets: true});
+					</script>
+
+
+<link rel="stylesheet" href="./SD-карты_files/system.css" type="text/css">
+<link rel="stylesheet" href="./SD-карты_files/general.css" type="text/css">
+<link rel="stylesheet" href="./SD-карты_files/template.css" type="text/css">
+<link rel="stylesheet" href="./SD-карты_files/typo.css" type="text/css">
+<link rel="stylesheet" href="./SD-карты_files/ja.vm.css" type="text/css">
+
+<script language="javascript" type="text/javascript">
+	var siteurl = 'http://robochamp.ru/';
+	var tmplurl = 'http://robochamp.ru/templates/ja_zeolite';
+</script>
+
+
+<script language="javascript" type="text/javascript" src="./SD-карты_files/ja.script.js"></script>
+<!-- js for dragdrop -->
+
+<!-- Menu head -->
+			<link href="./SD-карты_files/ja.moomenu.css" rel="stylesheet" type="text/css">
+			<script src="./SD-карты_files/ja.moomenu.js" language="javascript" type="text/javascript"></script>
+			<link href="./SD-карты_files/default.css" rel="stylesheet" type="text/css">
+
+<!--[if lte IE 6]>
+<style type="text/css">
+img {border: none;}
+</style>
+<![endif]-->
+
+<!--[if gt IE 7]>
+<link href="http://robochamp.ru/templates/ja_zeolite/css/ie8.css" rel="stylesheet" type="text/css" />
+<![endif]-->
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script><script src="./SD-карты_files/ga.js" type="text/javascript"></script><script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-13295479-2");
+pageTracker._trackPageview();
+} catch(err) {}</script><script src="chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/document_iterator.js"></script><script src="chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/find_proxy.js"></script><script src="chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/get_html_text.js"></script><script src="chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/global_constants.js"></script><script src="chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/name_injection_builder.js"></script><script src="chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/number_injection_builder.js"></script><script src="chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/string_finder.js"></script><script src="chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/change_sink.js"></script><meta name="document_iterator.js"><meta name="find_proxy.js"><meta name="get_html_text.js"><meta name="global_constants.js"><meta name="name_injection_builder.js"><meta name="number_injection_builder.js"><meta name="string_finder.js"><meta name="change_sink.js"><style charset="utf-8" type="text/css" id="AEEB20B6-2CBF-4F04-8C76-4B754DB03E30">SPAN.skype_pnh_container SPAN.skype_pnh_mark{  display:none !important;}@media screen{SPAN.skype_pnh_print_container_1333081492{  display:none !important;}SPAN.skype_pnh_container, SPAN.skype_pnh_container *{background-attachment: scroll !important;background-color: transparent !important;background-image: none !important;background-position: 0px 0px ! important;background-repeat: no-repeat !important;border: 0px none !important;border-color: #000000 !important;border-style: none !important;border-width: 0 !important;border-left: 0 none #000000 !important;border-top: 0 none #000000 !important;border-right: 0 none #000000 !important;border-bottom: 0 none #000000 !important;border-left-color: #000000 !important;border-left-style: none !important;border-left-width: 0 !important;border-top-color: #000000 !important;border-top-style: none !important;border-top-width: 0 !important;border-right-color: #000000 !important;border-right-style: none !important;border-right-width: 0 !important;border-bottom-color: #000000 !important;border-bottom-style: none !important;border-bottom-width: 0 !important;border-collapse: separate !important;bottom: auto !important;clear: none !important;clip: auto !important;cursor: pointer !important;direction: ltr !important;display: inline !important;float: none !important;font-style: normal !important;left: auto !important;letter-spacing: 0 !important;list-style-image: none !important;list-style-position: outside !important;list-style-type: disc !important;overflow: hidden !important;overflow-x: hidden !important;overflow-y: hidden !important;padding: 0px 0px 0px 0px !important;padding-left: 0px !important;padding-top: 0px !important;padding-right: 0px !important;padding-bottom: 0px !important;page-break-after: auto !important;page-break-before: auto !important;page-break-inside: auto !important;position: static !important;right: auto !important;table-layout: auto !important;text-align: left !important;text-decoration: none !important;text-indent: 0px !important;text-transform: none !important;top: auto !important;voice-family: inherit !important;white-space: nowrap !important;word-spacing: normal !important;word-wrap: nowrap !important;z-index: 0 !important;  color: #49535A !important;  font-family: Tahoma, Arial, Helvetica, sans-serif !important;  font-size: 11px !important;  font-weight: bold !important;  height: 14px !important;  line-height: 14px !important;  margin-left: 0px !important;  margin-top: 0px !important;  margin-right: 0px !important;  margin-bottom: 0px !important;  vertical-align: baseline !important;  width: auto !important;}SPAN.skype_pnh_container SPAN.skype_pnh_highlighting_active_fax SPAN.skype_pnh_right_span, SPAN.skype_pnh_container SPAN.skype_pnh_highlighting_inactive_fax SPAN.skype_pnh_right_span{  background-position: -92px 0px !important;}SPAN.skype_pnh_container SPAN.skype_pnh_highlighting_inactive_free SPAN.skype_pnh_dropart_flag_span{  background-position: 0px 1px !important;}SPAN.skype_pnh_container SPAN.skype_pnh_highlighting_inactive_free SPAN.skype_pnh_textarea_span{  background-position: -90px 0px !important;}SPAN.skype_pnh_container SPAN.skype_pnh_highlighting_inactive_free SPAN.skype_pnh_text_span{  visibility: hidden !important;}SPAN.skype_pnh_container SPAN.skype_pnh_highlighting_active_free SPAN.skype_pnh_dropart_flag_span{  background-position: 0px 1px !important;}SPAN.skype_pnh_container SPAN.skype_pnh_highlighting_active_free SPAN.skype_pnh_textarea_span{  background-position: -160px 0px !important;}SPAN.skype_pnh_container SPAN.skype_pnh_highlighting_active_free SPAN.skype_pnh_text_span{  background-position: -160px 0px !important;  color: #FFFFFF !important;}SPAN.skype_pnh_container SPAN.skype_pnh_left_span{  background-position: 0px 0px !important;  width: 6px !important;}SPAN.skype_pnh_container SPAN.skype_pnh_dropart_span{  background-position: -11px 0px !important;  width: 27px !important;}SPAN.skype_pnh_container SPAN.skype_pnh_dropart_wo_arrow_span{  background-position: -130px 0px !important;  width: 18px !important;}SPAN.skype_pnh_container SPAN.skype_pnh_dropart_flag_span{  background-position: 1px 1px !important;  width: 18px !important;}SPAN.skype_pnh_container SPAN.skype_pnh_textarea_span{  background-position: -125px 0px !important;}SPAN.skype_pnh_container SPAN.skype_pnh_text_span{  padding-left: 5px !important;  background-position: -125px 0px !important;}SPAN.skype_pnh_container SPAN.skype_pnh_right_span{  background-position: -62px 0px !important;  width: 15px !important;}}@media print{SPAN.skype_pnh_print_container_1333081492{}SPAN.skype_pnh_container{    display:none !important;}}@media screen{SPAN.skype_pnh_container SPAN.skype_pnh_highlighting_inactive_common *{  background-image:url('chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/numbers_common_inactive_icon_set.gif') !important;}SPAN.skype_pnh_container SPAN.skype_pnh_highlighting_active_common *{  background-image:url('chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/numbers_common_active_icon_set.gif') !important;}SPAN.skype_pnh_container SPAN.skype_pnh_highlighting_inactive_fax *{  background-image:url('chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/numbers_common_inactive_icon_set.gif') !important;}SPAN.skype_pnh_container SPAN.skype_pnh_highlighting_active_fax *{  background-image:url('chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/numbers_common_active_icon_set.gif') !important;}SPAN.skype_pnh_container SPAN.skype_pnh_highlighting_inactive_free *{  background-image:url('chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/numbers_free_icon_set.gif') !important;}SPAN.skype_pnh_container SPAN.skype_pnh_highlighting_active_free *{  background-image:url('chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/numbers_free_icon_set.gif') !important;}SPAN.skype_pnh_container SPAN.skype_pnh_dropart_flag_span{  background-image: url('chrome-extension://lifbcibllhkdhoafpjfnlhfpfgnpldfl/flags.gif') !important;}}</style></head>
+
+
+
+
+
+
+
+
+
+
+
+
+<body id="bd" class=" 1050 fs3">
+<a name="Top" id="Top"></a>
+<ul class="accessibility">
+	<li><a href="http://robochamp.ru/index.php/articles/electronics/89-sdc/articles/electronics#ja-content" title="Skip to content">Skip to content</a></li>
+	<li><a href="http://robochamp.ru/index.php/articles/electronics/89-sdc/articles/electronics#ja-mainnav" title="Skip to main navigation">Skip to main navigation</a></li>
+	<li><a href="http://robochamp.ru/index.php/articles/electronics/89-sdc/articles/electronics#ja-col1" title="Skip to 1st column">Skip to 1st column</a></li>
+	<li><a href="http://robochamp.ru/index.php/articles/electronics/89-sdc/articles/electronics#ja-col2" title="Skip to 2nd column">Skip to 2nd column</a></li>
+</ul>
+
+<div id="ja-wrapper">
+
+<!-- BEGIN: CPANEL -->
+<div id="ja-cpanel">
+		<div id="ja-search">
+		<form action="http://robochamp.ru/index.php/articles/electronics/index.php" method="post">
+	<div class="search">
+		<input name="searchword" id="mod_search_searchword" maxlength="20" alt="Поиск" class="inputbox" type="text" size="20" value="поиск..." onblur="if(this.value==&#39;&#39;) this.value=&#39;поиск...&#39;;" onfocus="if(this.value==&#39;поиск...&#39;) this.value=&#39;&#39;;"><input type="submit" value="Поиск" class="button" onclick="this.form.searchword.focus();">	</div>
+	<input type="hidden" name="task" value="search">
+	<input type="hidden" name="option" value="com_search">
+</form>
+	</div>	
+		
+	<div id="ja-pathway">
+	<strong>Вы находитесь в разделе: </strong><span class="breadcrumbs pathway">
+<a href="http://robochamp.ru/" class="pathway">Home</a> <img src="./SD-карты_files/arrow.png" alt=""> <a href="http://robochamp.ru/index.php/articles" class="pathway">Статьи</a> <img src="./SD-карты_files/arrow.png" alt=""> <a href="http://robochamp.ru/index.php/articles/electronics" class="pathway">Электроника</a> <img src="./SD-карты_files/arrow.png" alt=""> SD-карты</span>
+
+	</div>
+	
+</div>
+<!-- END: CPANEL -->
+
+<!-- BEGIN: HEADER -->
+<div id="ja-header" z-index="01" class="clearfix">
+
+		<h1 class="logo">
+		<a href="http://robochamp.ru/index.php" title="robochamp.ru"><span>robochamp.ru</span></a>
+	</h1>
+	
+		
+<!-- BEGIN: MAIN NAVIGATION -->
+<div id="ja-mainnavwrap">
+  	
+  <div id="ja-mainnav" class="clearfix">
+		<ul id="ja-cssmenu" class="clearfix">
+<li><a href="http://robochamp.ru/" class="menu-item0 first-item" id="menu1" title="Главная"><span class="menu-title">Главная</span></a></li> 
+<li><a href="http://robochamp.ru/index.php/shop" class="menu-item1" id="menu71" title="Магазин"><span class="menu-title">Магазин</span></a></li> 
+<li class="havechild active"><a href="http://robochamp.ru/index.php/articles" class="menu-item2 active" id="menu74" title="Статьи"><span class="menu-title">Статьи</span></a><ul style="height: 0px; left: -999em; "><li><a href="http://robochamp.ru/index.php/articles/actuators" class=" first-item" id="menu76" title="Приводы"><span class="menu-title">Приводы</span></a></li> 
+<li><a href="http://robochamp.ru/index.php/articles/interface" id="menu77" title="Интерфейсы"><span class="menu-title">Интерфейсы</span></a></li> 
+<li class="active"><a href="http://robochamp.ru/index.php/articles/electronics" class=" active" id="menu78" title="Электроника"><span class="menu-title">Электроника</span></a></li> 
+<li><a href="http://robochamp.ru/index.php/articles/scientific-articles" id="menu84" title="Scientific articles"><span class="menu-title">Scientific articles</span></a></li> 
+<li><a href="http://robochamp.ru/index.php/articles/sensor" id="menu87" title="Датчики"><span class="menu-title">Датчики</span></a></li> 
+<li><a href="http://robochamp.ru/index.php/articles/reviews" class=" last-item" id="menu106" title="Обзоры"><span class="menu-title">Обзоры</span></a></li> 
+</ul></li> 
+<li><a href="http://robochamp.ru/index.php/reglaments" class="menu-item3" id="menu75" title="Регламенты"><span class="menu-title">Регламенты</span></a></li> 
+<li class="havechild"><a href="http://robochamp.ru/index.php/repository" class="menu-item4" id="menu93" title="Репозиторий"><span class="menu-title">Репозиторий</span></a><ul style="height: 0px; left: -999em; "><li><a href="http://robochamp.ru/index.php/repository/AltiumDesignerLib/" class=" first-item" id="menu94" title="Библиотеки Altium Designer"><span class="menu-title">Библиотеки Altium Designer</span></a></li> 
+<li class="havesubchild"><a href="http://robochamp.ru/index.php/repository/Solidworks/" class=" last-item" id="menu95" title="Детали SolidWorks"><span class="menu-title">Детали SolidWorks</span></a><ul style="width: 0px; left: -999em; "><li><a href="http://robochamp.ru/index.php/repository/Solidworks/Sensors/" class=" first-item" id="menu96" title="Датчики"><span class="menu-title">Датчики</span></a></li> 
+<li><a href="http://robochamp.ru/index.php/repository/Solidworks/Motors/" id="menu97" title="Двигатели"><span class="menu-title">Двигатели</span></a></li> 
+<li><a href="http://robochamp.ru/index.php/repository/Solidworks/Construction_elements/" id="menu98" title="Конструкционные элементы"><span class="menu-title">Конструкционные элементы</span></a></li> 
+<li><a href="http://robochamp.ru/index.php/repository/Solidworks/Servo/" id="menu99" title="Сервоприводы"><span class="menu-title">Сервоприводы</span></a></li> 
+<li><a href="http://robochamp.ru/index.php/repository/Solidworks/Electronic_module/" id="menu100" title="Электронные модули"><span class="menu-title">Электронные модули</span></a></li> 
+<li class="havesubchild"><a href="http://robochamp.ru/index.php/remository/Solidworks/Electronic_components/" class=" last-item" id="menu101" title="Электронные компоненты"><span class="menu-title">Электронные компоненты</span></a><ul style="width: 0px; left: -999em; "><li><a href="http://robochamp.ru/index.php/remository/Solidworks/Electronic_components/connectors/" class=" first-item" id="menu102" title="Разъемы"><span class="menu-title">Разъемы</span></a></li> 
+</ul></li> 
+</ul></li> 
+</ul></li> 
+<li><a href="http://robochamp.ru/index.php/projects" class="menu-item5" id="menu86" title="Проекты"><span class="menu-title">Проекты</span></a></li> 
+<li><a href="http://robochamp.ru/index.php/mybloh" class="menu-item6 last-item" id="menu107" title="Блоги"><span class="menu-title">Блоги</span></a></li> 
+</ul>
+  </div>
+	
+</div>
+<!-- END: MAIN NAVIGATION -->
+  
+</div>
+<!-- END: HEADER -->
+
+
+<div id="ja-containerwrap-f">
+<div id="ja-container"><div id="ja-container-inner" class="clearfix">
+
+	<!-- BEGIN: CONTENT -->
+	<div id="ja-mainbodywrap">
+	
+	<div id="ja-mainbody" class="clearfix">
+
+		<div id="ja-contentwrapper">
+		
+    
+    <!-- BEGIN: CONTENT -->
+		<div id="ja-contentwrap"><div id="ja-content">
+		
+			
+
+			<div id="ja-current-content" class="clearfix">
+
+    		﻿
+
+<h2 class="contentheading">
+			SD-карты	</h2>
+
+
+<div class="article-toolswrap">
+<div class="article-tools clearfix">
+	<div class="article-meta">
+			<span class="createdate">
+			08.03.2010 10:19		</span>
+		
+			<span class="createby">
+			Олег		</span>
+		
+		</div>
+
+		<div class="buttonheading">
+								<span>
+			<a href="http://robochamp.ru/index.php/component/mailto/?tmpl=component&link=aHR0cDovL3d3dy5yb2JvY2hhbXAucnUvaW5kZXgucGhwL2FydGljbGVzL2VsZWN0cm9uaWNzLzg5LXNkYw%3D%3D" title="E-mail" onclick="window.open(this.href,&#39;win2&#39;,&#39;width=400,height=350,menubar=yes,resizable=yes&#39;); return false;"><img src="./SD-карты_files/emailButton.png" alt="E-mail"></a>			</span>
+					
+				
+						</div>
+	
+	</div>
+</div>
+
+
+<div class="article-content">
+<p>Перевод статьи Elm Chan, оригинал представлен&nbsp;<a href="http://elm-chan.org/docs/mmc/mmc_e.html">здесь</a>&nbsp;</p>
+<p><strong>Введение</strong></p>
+<p style="text-align: justify" class="MsoNormal"><span>Сейчас&nbsp;<strong>SD</strong>-карты  памяти (Secure Digital Memory Card) являются самыми популярными картами памяти  для мобильных устройств. SD-карты (далее&nbsp;<strong>SDC</strong>) были  разработаны как внешне совместимые с MMC-картами (Multi Media Card) (далее<strong>MMC</strong>),  при этом&nbsp;<strong>SDC</strong>-совместимые устройства тоже могут  использовать&nbsp;<strong>MMC</strong>, но с некоторыми оговорками. Также  существуют уменьшенные версии, такие как<strong>&nbsp;RS-MMC</strong>,&nbsp;<strong>miniSD&nbsp;</strong>и&nbsp;<strong>microSD</strong>,  с аналогичными функциями.&nbsp;<strong>MMC/SDC</strong>&nbsp;имеет встроенный  микроконтроллер, все средства управления flash-памятью (стирание, чтение,  запись и защита от ошибок) полностью сосредоточены внутри карты. По умолчанию  данные передаются между картой и ведущим контроллером блоками по&nbsp;<strong>512&nbsp;</strong>байт,  так что с точки зрения прикладных программ её можно рассматривать как подобие  обычного накопителя. В настоящее время в качестве файловой системы в основном  используются FAT12 и FAT16 с правилом разделения на разделы FDISK. FAT32 применяется  только для карт большой ёмкости (≥ 2 Гб).&nbsp;</span></p>
+<div class="MsoNormal" style="text-align: justify"><span>    </span></div>
+<div class="MsoNormal" align="center" style="text-align: center"><span><hr id="system-readmore" width="100%" size="2">
+</span></div>
+<p style="text-align: justify" class="MsoNormal"><span>&nbsp;</span></p>
+<p style="text-align: justify" class="MsoNormal"><span>В  этой статье приведены элементарные знания и разнообразные интересные моменты, о  которых я узнал, используя MMC/SDC в небольших встраиваемых системах.&nbsp;</span></p>
+<p style="text-align: justify" class="MsoNormal"><span>&nbsp;</span></p>
+<p style="text-align: center" class="MsoNormal"><img border="0" alt="001.jpg" width="325" height="257" align="baseline" src="./SD-карты_files/001.jpg"><span><br>
+</span></p>
+<p style="text-align: center" class="MsoNormal"><span>Рис.  1. SDC и MMC&nbsp;</span></p>
+<p class="MsoNormal"><span>&nbsp;</span></p>
+<p style="text-align: justify" class="MsoNormal"><strong><span>Контактная  площадка</span></strong><span>&nbsp;</span></p>
+<p style="text-align: justify" class="MsoNormal"><span>Ниже,  на Рис. 2, показаны контактные площадки SDC и MMC. MMC имеет семь контактных  площадок, а у SDC их девять, две из которых добавлены к семи площадкам MMC. Три  контакта у каждой карты заняты в качестве выводов источника питания, так что  количество рабочих сигналов составляет соответственно четыре или шесть. Обмен  данными между ведущим контроллером и картой осуществляется в виде  последовательной тактируемой передачи.&nbsp;</span></p>
+<p style="text-align: justify" class="MsoNormal"><span>Диапазон  рабочих напряжений питания указан в регистре OCR, его необходимо считать, чтобы  убедиться в правильности выбранного напряжения. Однако питающее напряжение  можно установить и в фиксированное значение, поскольку MMC/SDC работают в  диапазоне напряжений от 2.7 до 3.6 вольт. Так как потребление тока максимально  может достигать нескольких десятков миллиампер, управляющий контроллер (хост)  должен быть способен обеспечить ток 100 миллиампер.&nbsp;</span><span>&nbsp;</span></p>
+<p style="text-align: center" class="MsoNormal"><span>&nbsp;<img border="0" alt="002.jpg" width="368" height="240" align="baseline" src="./SD-карты_files/002.jpg"></span><span>&nbsp;</span></p>
+<p style="text-align: center" class="MsoNormal"><span>Рис.  2. Контактная поверхность SDC и MMC&nbsp;</span></p>
+<p style="text-align: justify" class="MsoNormal"><strong><span>Режим  SPI</span></strong></p>
+<p style="text-align: justify" class="MsoNormal"><span>Режим  SPI является альтернативным режимом работы с MMC/SDC, более простым по  сравнению с использованием их родного интерфейса. MMC/SDC можно подключить  через универсальный порт SPI или порт GPIO (универсальный порт ввода/вывода),  встроенный в большинство микроконтроллеров. Поэтому режим SPI прекрасно  подходит для недорогих встраиваемых приложений. Особенно нет никаких причин  использовать родной режим для электронных работ, выполненных вручную в качестве  хобби. SDC работает в режиме "SPI 0". Что же касается MMC, то они не  используют синхронизацию SPI как таковую, а оба действия защёлкивания и сдвига  определяются по переднему фронту SCLK. Но вроде бы это работает в режиме  "SPI 0". Поэтому наиболее подходящим режимом для работы с MMC/SDC по  SPI является режим "SPI 0" (положительный синхроимпульс, защёлкивание  по переднему фронту, сдвиг по заднему фронту). Режим "SPI 3" тоже  подходит для этих целей.&nbsp;</span></p>
+<p style="text-align: justify" class="MsoNormal"><strong><span>Команда  и ответ</span></strong></p>
+<p style="text-align: justify" class="MsoNormal"><span>В  режиме SPI направление данных на сигнальной линии фиксировано, и данные  передаются последовательно по байтам. Кадр команды, передаваемый от ведущего  контроллера к карте, имеет фиксированную длину в 6 байтов и формат, приведённый  на Рис. 3. В ответ на кадр команды ведущему передаётся ответ на команду (R1, R2  или R3). Так как вся передача данных управляется последовательными  синхроимпульсами, генерируемыми ведущим, последний должен продолжать чтение  байтов, пока не получит действительный ответ. Время ответа на команду (NCR)  составляет от 0 до 8 байтов для SDC, и от 1 до 8 байтов для MMC. Сигнал CS должен  удерживаться в состоянии низкого уровня в течение всей транзакции (команда,  ответ и передача данных, если таковые имеются). Поле CRC как таковое в режиме  SPI не обязательно, но его присутствие хотя бы в качестве битового поля  необходимо, чтобы составить кадр команды.&nbsp;</span></p>
+<p style="text-align: center" class="MsoNormal"><img border="0" alt="Untitled_1.jpg" width="550" height="92" align="baseline" src="./SD-карты_files/Untitled_1.jpg"></p>
+<p style="text-align: center" class="MsoNormal"><span>Рис.  3. Кадр команды&nbsp;</span></p>
+<p class="MsoNormal"><strong><span>Набор  команд SPI</span></strong></p>
+<p style="text-align: justify" class="MsoNormal"><span>Каждая  команда представлена в виде аббревиатуры (например, GO_IDLE_STATE) или в виде  обозначения CMD, где - номер индекса команды, который может принимать значение  от 0 до 63. В приведённой ниже таблице описаны только группа команд, обычно  используемых для чтения/записи и инициализации карты. Более детальную  информацию по всем командам вы можете найти в спецификациях от MMCA и  SDCA.&nbsp;</span></p>
+<table border="1" cellspacing="0" cellpadding="0" class="MsoNormalTable">
+    <tbody>
+        <tr>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center"><strong>Индекс команд</strong></p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center"><strong>Аргумент</strong></p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center"><strong>Ответ</strong></p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center"><strong>Данные</strong></p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center"><strong>Аббревиатура</strong></p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center"><strong>Описание</strong></p>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">CMD0</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Нет(0)</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">R1</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Нет</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">GO_IDLE_STATE</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Программная перезагрузка.</p>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">CMD1</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Нет(0)</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">R1</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Нет</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">SEND_OP_COND</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Начало процесса инициализации.</p>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">ACMD41(*1)</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">*2</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">R1</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Нет</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">APP_SEND_OP_COND</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Только для&nbsp;<span><span>SDC</span></span>. Начало процесса инициализации.</p>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">CMD8</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">*3</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">R7</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Нет</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">SEND_IF_COND</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Только для&nbsp;<span><span>SDC</span><span>&nbsp;</span><span>V</span></span>2.    Проверка диапазона напряжений<span><span>.</span></span></p>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">CMD9</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Нет(0)</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">R1</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Есть</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">SEND_CSD</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Чтение регистра CSD.</p>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">CMD10</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Нет(0)</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">R1</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Есть</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">SEND_CID</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Чтение регистра CID.</p>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">CMD12</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Нет(0)</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">R1b</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Нет</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">STOP_TRANSMISSION</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Прекращение чтения данных.</p>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">CMD16</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Block<br>
+            length[31:0]</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">R1</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Нет</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">SET_BLOCKLEN</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Изменение размера блока чтения/записи.</p>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">CMD17</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Address[31:0]</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">R1</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Есть</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">READ_SINGLE_BLOCK</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Чтение блока.</p>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">CMD18</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Address[31:0]</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">R1</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Есть</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">READ_MULTIPLE_BLOCK</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Read multiple blocks.</p>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">CMD23</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Number of<br>
+            blocks[15:0]</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">R1</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Нет</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">SET_BLOCK_COUNT</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Только&nbsp;для&nbsp;<span><span>MMC.&nbsp;</span></span>Определяет количество    блоков для передачи</p>
+            <p style="text-align: center">со следующей командой чтения/записи мульти-блоком</p>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">ACMD23(*1)</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Number of<br>
+            blocks[22:0]</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">R1</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Нет</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center"><span><span>SET_WR_BLOCK_ERASE_COUNT</span></span></p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Только для&nbsp;<span><span>SDC</span></span>. Определяет количество блоков для пометки на    удаление</p>
+            <p style="text-align: center">со следующей командой записи мульти-блока&nbsp;<span><span>next</span><span>&nbsp;</span><span>multi</span></span>-<span><span>block</span><span>&nbsp;</span><span>write</span><span>&nbsp;</span><span>command</span></span>.</p>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">CMD24</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Address[31:0]</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">R1</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Есть</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">WRITE_BLOCK</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Запись блока.</p>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">CMD25</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Address[31:0]</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">R1</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Есть</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">WRITE_MULTIPLE_BLOCK</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Запись нескольких блоков.</p>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">CMD55(*1)</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Нет(0)</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">R1</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Нет</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">APP_CMD</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Главная команда из&nbsp;<span><span>ACMD</span><span>&nbsp;</span></span>&lt;<span><span>n</span></span>&gt;    команд.</p>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">CMD58</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Нет(0)</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">R3</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Нет</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">READ_OCR</p>
+            </td>
+            <td valign="top" style="padding: 0cm">
+            <p style="text-align: center">Чтение OCR.</p>
+            </td>
+        </tr>
+    </tbody>
+</table>
+<p class="MsoNormal"><strong><span>Ответ  SPI</span></strong></p>
+<p style="text-align: justify" class="MsoNormal"><span>Имеется  три формата ответа на команду: R1, R2, и R3, зависящие от каждой команды. Для  большинства команд возвращается байт ответа R1. Битовые поля для ответа R1  показаны на Рис. 4. Значение, равное 0x00, означает успешное выполнение  команды. Когда происходит какая-либо ошибка, будет установлен соответствующий  бит ответа R1. Ответ R3 возвращается только для команды CMD58. Его первый байт  - это ответ R1, за которым следует содержимое регистра OCR (4 байта).&nbsp;</span></p>
+<p style="text-align: justify" class="MsoNormal"><span>Некоторые  команды отнимают больше времени, чем NCR. Такие команды возвращают ответ R1b,  который представляет собой ответ R1 и следующий за ним флаг занятости (на линии  DO удерживается низкий уровень до тех пор, пока выполняется внутренний  процесс). Ведущий контроллер должен ждать окончания процесса пока не получит  0xFF.&nbsp;</span></p>
+<p style="text-align: center" class="MsoNormal"><img border="0" alt="004.png" width="500" height="176" align="baseline" src="./SD-карты_files/004.png"></p>
+<p style="text-align: center" class="MsoNormal"><span>&nbsp;</span><span>Рис.  4. Структура ответов R1 и R3&nbsp;</span></p>
+<p style="text-align: justify" class="MsoNormal"><strong><span>Процедура  инициализации для режима SPI</span></strong><span>&nbsp;</span></p>
+<p style="text-align: justify" class="MsoNormal"><span>После  сброса по включению питания MMC/SDC входит в её родной режим работы. Чтобы  переключить карту в режим SPI, нужно выполнить следующую процедуру.&nbsp;</span></p>
+<p style="text-align: justify" class="MsoNormal"><span>Включение  питания (вставка)</span><span>&nbsp;</span></p>
+<p style="text-align: justify" class="MsoNormal"><span>После  того как питающее напряжение достигло 2.2 В, выждите хотя бы миллисекунду,  затем установите на линиях DI и CS высокий уровень и подайте более 74 импульсов  на SCLK, и карта будет в состоянии принять родную команду.</span></p>
+<p style="text-align: justify" class="MsoNormal"><span>&nbsp;</span></p>
+<p style="text-align: justify" class="MsoNormal"><strong><span>Программный  сброс</span></strong></p>
+<p style="text-align: justify" class="MsoNormal"><span>Чтобы  выполнить сброс карты, выдайте команду CMD0 при низком уровне на линии CS.  После обнаружения команды CMD0 карта опрашивает сигнал CS. Если уровень сигнала  CS низкий (т.е. активный уровень), карта входит в режим SPI. Поскольку команда  CMD0 должна посылаться как родная команда, поле CRC должно содержать правильное  значение. Стоит лишь карте войти в режим SPI, проверка CRC отключается и  значение CRC не принимается в расчёт, поэтому процедуру передачи команд можно  написать с встроенным байтом CRC, равным 0x95, который является правильным  только для команды CMD0. Если CMD0 принята успешно, карта войдёт в состояние  простоя (idle) и ответит ответом R1 с установленным в единицу битом "In  Idle State" (R1 = 0x01). Снова включить проверку CRC можно командой  CMD59.&nbsp;</span></p>
+<p style="text-align: justify" class="MsoNormal"><strong><span>Инициализация</span></strong></p>
+<p style="text-align: justify" class="MsoNormal"><span>В  состоянии простоя карта принимает только команды CMD0, CMD1 и CMD58, любые  другие команды будут отклонены. Когда карта обнаруживает команду CMD1, она  начинает инициализацию. Чтобы определить, завершена ли инициализация, ведущий  контроллер должен повторять посылку команды CMD1 и проверять ответ. Как только  карта успешно проинициализировалась, бит "In Idle State" в ответе R1  будет сброшен (R1 = 0x00). Процесс инициализации может занять несколько сотен  миллисекунд (большие карты имеют тенденцию к большим затратам времени). После  окончания инициализации будут приниматься и команды чтения/записи. В это время  можно считать OCR и CID для подтверждения диапазона рабочего напряжения,  ёмкости карты или любого другого необходимого свойства.&nbsp;</span></p>
+<p style="text-align: justify" class="MsoNormal"><span>В  случае SDC-карт для начала инициализации рекомендуется использовать CMD1  вместо ACMD41. Похоже, что ACMD41 работает не для всех SDC, так что если ACMD41 была  отклонена, или если вышло время ожидания при опросе состояния простоя,  необходимо выполнить повторную передачу команды, но уже в виде  последовательности CMD1.&nbsp;</span></p>
+<div align="center"><script type="text/javascript"><!--
+google_ad_client = "ca-pub-5306888997334575";
+/* Большой банер 728 на 90 */
+google_ad_slot = "2271422960";
+google_ad_width = 728;
+google_ad_height = 90;
+//-->
+</script> <script type="text/javascript" src="./SD-карты_files/show_ads.js">
+</script><ins style="display:inline-table;border:none;height:90px;margin:0;padding:0;position:relative;visibility:visible;width:728px"><ins id="aswift_0_anchor" style="display:block;border:none;height:90px;margin:0;padding:0;position:relative;visibility:visible;width:728px"><iframe allowtransparency="true" frameborder="0" height="90" hspace="0" marginwidth="0" marginheight="0" onload="var i=this.id,s=window.google_iframe_oncopy,H=s&amp;&amp;s.handlers,h=H&amp;&amp;H[i],w=this.contentWindow,d;try{d=w.document}catch(e){}if(h&amp;&amp;d&amp;&amp;(!d.body||!d.body.firstChild)){if(h.call){i+=&#39;.call&#39;;setTimeout(h,0)}else if(h.match){i+=&#39;.nav&#39;;w.location.replace(h)}s.log&amp;&amp;s.log.push(i)}" scrolling="no" vspace="0" width="728" id="aswift_0" name="aswift_0" style="left:0;position:absolute;top:0;"></iframe></ins></ins></div>
+<p style="text-align: justify" class="MsoNormal"><span>&nbsp;</span></p>
+<p style="text-align: justify" class="MsoNormal"><strong><span>Передача  данных</span></strong><span><br>
+</span></p>
+<p style="text-align: justify" class="MsoNormal"><strong><span>Пакет  данных и ответ на данные</span></strong></p>
+<p style="text-align: justify" class="MsoNormal"><span>В  транзакции с передачей данных после ответа на команду может быть  передан/получен один или более блоков данных. Блок данных передаётся как пакет  данных, который состоит из маркера (Token), блока данных (Data Block) и CRC.  Формат пакета данных показан ниже, на Рис. 5. Существует три маркера данных  (см. Рис. 5). Один из них, маркер "Stop Tran", который означает конец  многоблочной записи, используется в виде одиночного байта без блока данных и  CRC.&nbsp;</span></p>
+<p style="text-align: center" class="MsoNormal"><span>&nbsp;<img border="0" alt="005.png" width="620" height="300" align="baseline" src="./SD-карты_files/005.png"></span></p>
+<p style="text-align: center" class="MsoNormal"><span>&nbsp;</span><span>Рис.  5. Формат пакета данных, ответа данных и маркера ошибки&nbsp;</span></p>
+<p class="MsoNormal"><span>&nbsp;</span></p>
+<p class="MsoNormal"><strong><span>Одноблочное  чтение</span></strong></p>
+<p style="text-align: center" class="MsoNormal"><span>&nbsp;</span><span><img border="0" alt="006.png" width="350" height="110" align="baseline" src="./SD-карты_files/006.png"></span></p>
+<p style="text-align: center" class="MsoNormal"><span>Рис.  6. Команда одноблочного чтения&nbsp;</span></p>
+<p style="text-align: justify" class="MsoNormal"><span>Одноблочное  чтение инициируется командой CMD17. Её аргумент задаёт ячейку, из которой  следует начать чтение. Чтение осуществляется побайтово. Адрес должен быть  байт-ориентированным, т.е. если вы указываете адрес сектора, задаваемый  несколькими старшими битами, вам необходимо дополнить его нулями для получения  полных четырёх адресных байтов.&nbsp;</span><span>&nbsp;</span></p>
+<p style="text-align: justify" class="MsoNormal"><span>В  ответ на команду CMD17 карта выдаёт ведущему контроллеру пакет данных. После  обнаружения правильного маркера данных ведущий контроллер принимает следующий  за ним блок данных и два байта CRC, которые необходимо принять, даже если CRC  не используется. По умолчанию размер блока 512 байтов, но его можно изменить  командой CMD16. Если во время операции чтения произошла какая-нибудь ошибка,  вместо пакета данных будет возвращён маркер ошибки (см. Рис. 5).&nbsp;</span></p>
+<p class="MsoNormal"><span>&nbsp;</span></p>
+<p class="MsoNormal"><strong><span>Многоблочное  чтение</span></strong></p>
+<p style="text-align: center" class="MsoNormal"><strong><span><img border="0" alt="007.png" width="700" height="110" align="baseline" src="./SD-карты_files/007.png"></span></strong></p>
+<p style="text-align: center" class="MsoNormal"><span>Рис.  7. Команда многоблочного чтения&nbsp;</span></p>
+<p class="MsoNormal"><span>&nbsp;</span><span>С  помощью команды многоблочного чтения CMD18 можно прочитать из карты  последовательность из нескольких блоков, начиная с заданного адреса. Если перед  этой командой с помощью команды CMD23 (только для MMC) не было задано число  передаваемых блоков, будет инициировано неограниченное многоблочное чтение, то  есть операция чтения будет продолжаться, пока ведущий контроллер не прервёт её  командой CMD12. Байт, получаемый сразу же после передачи CMD12, является  наполняющим, его не нужно учитывать. После этого байта следует ответ на  команду.&nbsp;</span></p>
+<p class="MsoNormal"><strong><span>Одноблочная  запись</span></strong></p>
+<p style="text-align: center" class="MsoNormal"><strong><span><img border="0" alt="008.png" width="360" height="110" align="baseline" src="./SD-карты_files/008.png"></span></strong></p>
+<p style="text-align: center" class="MsoNormal"><span>Рис.  8. Команда одноблочной записи&nbsp;</span></p>
+<p style="text-align: justify" class="MsoNormal"><span>После  того как карта приняла команду записи CMD24, ведущий контроллер после байтового  промежутка (один или более байтов) передаёт в карту пакет данных. Формат пакета  такой же, как и у команды блочного чтения. После передачи пакета карта сразу же  выдаёт ответ на данные (Data Response), за которым следует флаг занятости.  Большинство карт не могут менять размер записываемого блока, он является  фиксированным и составляет 512 байтов.&nbsp;</span></p>
+<p style="text-align: justify" class="MsoNormal"><span>По  правилам режима SPI сигнал CS должен находится в активном уровне в течение всей  транзакции, однако есть исключение из этого правила. Когда карта занята,  ведущий контроллер может снять сигнал CS, чтобы освободить шину SPI для  какого-нибудь другого SPI-устройства. Если же снова выбрать карту в то время,  когда она занята выполнением внутреннего процесса, карта снова установит сигнал  DO в низкий уровень. Поэтому, чтобы сократить время ожидания, лучше выполнять  проверку на занятость непосредственно перед выдачей команды и пакета данных, а  не ожидать освобождения карты после посылки команды. Кроме того, внутренний  процесс инициируется спустя байт после ответа данных, т. е. необходимо выдать 8  тактовых импульсов, чтобы инициировать внутреннюю операцию записи. Состояние  сигнала CS во время этих восьми тактовых импульсов не учитывается, поэтому  можно совместить эту инициацию с процессом освобождения шины, описанным ниже  (см. "Система со многими ведомыми").&nbsp;</span><span>&nbsp;</span></p>
+<p style="text-align: justify" class="MsoNormal"><strong><span>Многоблочная  запись</span></strong></p>
+<p style="text-align: center" class="MsoNormal"><img border="0" alt="wm.png" width="700" height="110" align="baseline" src="./SD-карты_files/wm.png"></p>
+<p style="text-align: center" class="MsoNormal"><span>&nbsp;</span><span>Рис.  9. Команда&nbsp;многоблочной записи&nbsp;</span><span>&nbsp;&nbsp;</span></p>
+<p style="text-align: justify" class="MsoNormal"><span>С  помощью команды многоблочной записи CMD25 можно записать последовательность из  нескольких блоков, начиная с заданного адреса. Если перед этой командой число  передаваемых блоков не было задано с помощью команды CMD23 (только для MMC) или  ACMD23 (для SDC), транзакция будет инициирована как неограниченная многоблочная  запись, то есть операция записи будет продолжаться, пока ведущий контроллер не  прервёт её передачей маркера "Stop Tran". Флаг занятости появиться  байт спустя после маркера "Stop Tran". Что же касается SDC, то  транзакция многоблочной записи должна прерываться маркером "Stop  Tran" независимо от того, является ли она предопределённой или  неограниченной.&nbsp;</span></p>
+<p style="text-align: justify" class="MsoNormal"><strong><span>Чтение  CSD и CID</span></strong></p>
+<p style="text-align: justify" class="MsoNormal"><span>Эти  команды подобны одноблочному чтению за исключением длины блока. CSD и CID  передаются ведущему в виде 16-байтовых блоков данных. Более детальную  информацию по CMD, CID и OCR вы сможете найти в спецификациях на MMC/SDC.&nbsp;</span></p>
+<p style="text-align: justify" class="MsoNormal"><strong><span>Неподключенная  шина и "горячее" подключение</span></strong></p>
+<p style="text-align: justify" class="MsoNormal"><span>По  сути, любая линия, которая может оставаться неподключенной должна притягиваться  к низкому или высокому уровню через резистор. Это основное правило  проектирования на МОП-устройствах. Поскольку для DI и DO обычным является  состояние высокого уровня, их следует притянуть к высокому уровню. Согласно  спецификациям SDC/MMC для потягивающих резисторов рекомендуется выбирать  значения 50 - 100 кОм. Однако тактовый сигнал в спецификациях SDC/MMC не  упоминается, поскольку он обычно управляется ведущим контроллером. Если  существует вероятность, что в течение какого-то времени он может оставаться  неподключенным, его следует подтянуть к его обычному уровню, то есть к  низкому.&nbsp;</span></p>
+<p style="text-align: justify" class="MsoNormal"><span>MMC/SDC  позволяет использовать "горячую" вставку/удаление, но для этого  необходимо кое-что учесть в схеме основной платы во избежание некорректной  работы. Например, если питающее напряжение системы (Vcc) подключается к разъёму  карты напрямую, то в момент замыкания контакта питающее напряжение упадёт из-за  тока зарядки конденсатора, встроенного в карту. Ниже, на Рис. 10 A приведена  осциллограмма, показывающая, что в этом случае происходит падение напряжение на  600 милливольт. Этого вполне достаточно, чтобы запустить детектор падения  напряжения. На Рис. 10 B показано, что при использовании для блокировки  импульса тока катушки индуктивности, падение напряжения уменьшилось до 200  милливольт. Электролитический конденсатор большой ёмкости (OS-CON) (Рис. 10 C)  может радикально уменьшить падение напряжения. Однако он может вызывать  колебания на LDO-регуляторе.</span><span>&nbsp;</span></p>
+<p style="text-align: center" class="MsoNormal"><span><img border="0" alt="010.png" width="450" height="310" align="baseline" src="./SD-карты_files/010.png">&nbsp;</span></p>
+<p style="text-align: center" class="MsoNormal"><span>Рис.  10. "Горячее" подключение&nbsp;</span></p>
+<p class="MsoNormal"><strong><span>Система  со многими ведомыми</span></strong></p>
+<p style="text-align: justify" class="MsoNormal"><span>В  SPI каждое ведомое устройство выбирается отдельным сигналом CS, поэтому к шине  SPI можно подключить несколько устройств. Обычное ведомое устройство SPI  управляет/освобождает линию DO по сигналу CS асинхронно. Однако MMC/SDC  управляет/освобождает линию DO синхронно с SCLK. Поэтому, если к шине SPI  присоединены MMC/SDC и какие-нибудь другие ведомые устройства SPI, то  существует вероятность возникновения конфликта на шине. На Рис. 11 показана  временная диаграмма управления/освобождения для MMC/SDC (линия DO подтянута к  1/2 Vcc, чтобы видеть состояние шины). Поэтому, чтобы заставить MMC/SDC  освободить линию DO, ведущее устройство должно передать один дополнительный  байт после снятия сигнала</span><span><br>
+</span></p>
+<p style="text-align: center" class="MsoNormal"><span><img border="0" alt="011.png" width="505" height="235" align="baseline" src="./SD-карты_files/011.png"></span></p>
+<p style="text-align: center" class="MsoNormal"><span>Рис.  11</span><span>&nbsp;</span></p>
+<p style="text-align: justify" class="MsoNormal"><strong><span>Оптимизация  производительности записи</span></strong></p>
+<p style="text-align: justify" class="MsoNormal"><span>Большинство  MMC/SDC в качестве массива памяти используют NAND Flash Memory (flash-память  типа НЕ-И). Такая память имеет низкую стоимость и может быстро  читать/записывать большое количество данных, но, с другой стороны, её  недостаток состоит в неэффективном перезаписывании небольших объёмов данных.  Обычно для flash-память требуется стирать существующие данные перед записью  новых, а минимальная единица для операции стирания (блок стирания) больше  минимального размер записываемого блока. Обычная flash-память типа НЕ-И имеет  размер блоков 512/16К байтов для операции записи/стирания соответственно, а  новейшие карты больших объёмов имеют микросхемы с ещё большими блоками 2K/128K  байтов. Это означает, что перезапись всех данных в блоке стирания в карте  выполняется даже в том случае, если записывается только один сектор (512  байтов).&nbsp;</span></p>
+<p style="text-align: justify" class="MsoNormal"><strong><span>Контрольный  тест</span></strong></p>
+<p style="text-align: justify" class="MsoNormal"><span>Я  исследовал производительность чтения/записи некоторых MMC/SDC (см Рис. 12) на  недорогом 8-разрядном микроконтроллере (ATmega64 на частоте 9.2 МГц) при  условии, что встраиваемая система является системой с ограниченным объёмом  памяти. Из соображений объёмов памяти, write() и read() выполнялись по 2048  байтов за раз.&nbsp;</span></p>
+<p style="text-align: justify" class="MsoNormal"><span>Результат:&nbsp;</span></p>
+<p style="text-align: justify" class="MsoNormal"><span>Карта  Скорость чтения, Кбайт/с Скорость записи, Кбайт/с</span></p>
+<p class="MsoNormal"><span>128  Мб SDC 328 77</span></p>
+<p class="MsoNormal"><span>512  Мб SDC 234 28</span></p>
+<p class="MsoNormal"><span>128  Мб MMC 312 182</span></p>
+<p style="text-align: justify" class="MsoNormal"><span>Судя  по эти результатам, производительность записи 512 Мб SDC оказалась в три раза  хуже по сравнению с 128 Мб SDC.&nbsp;</span></p>
+<p style="text-align: justify" class="MsoNormal"><span>Как  правило, производительность чтения/записи запоминающих устройств большой  ёмкости увеличивается пропорционально его плотности записи, однако среди карт  памяти иногда возникает противоположная тенденция. Что же касается MMC, то,  похоже, она в несколько раз быстрее SDC, и это неплохая производительность.  После этого эксперимента я протестировал некоторые SDC, поставляемые разными  производителями, и обнаружил, что SDC от PQI была быстрее, чем MMC от Hitachi,  а вот у SDC от Panasonic и Toshiba была очень плохая производительность.&nbsp;</span></p>
+<p style="text-align: justify" class="MsoNormal"><strong><span>Размер  блока стирания</span></strong></p>
+<p style="text-align: justify" class="MsoNormal"><span>Чтобы  проанализировать детали операции записи, время занятости (число циклов опроса)  после передачи записываемых данных выводилось на консоль в низкоуровневой  функции записи диска. Множество чисел на строке указывает блоки данных и маркер  "Stop Tran", который выдаётся транзакцией многоблочной записи.&nbsp;</span></p>
+<p style="text-align: justify" class="MsoNormal"><span>В  результате анализа выявлено различие внутренних процессов между 128 Мб SDC и  512 Мб SDC. 128 Мб SDC перезаписывает блок стирания в конце многоблочной  транзакции. 512 Мб SDC, похоже, имеет буферы данных размером 4 Кбайта и  перезаписывает блоки стирания по каждой границе в 4 Кбайта. Поэтому их нельзя  сравнивать напрямую, но время обработки перезаписи блока стирания в тиках  составляет 3800 для 128 Мб SDC и 30000 для 512 Мб SDC, то есть в 8 раз дольше,  чем для 128 Мб SDC. Судя по этому результату, похоже, что 128 Мб SDC использует  микросхему с блоками небольшого размера, а 512 Мб SDC использует микросхему с  блоками большого размера, либо многоканальный контроллер (MLC)*. Конечно,  больший размер блока снижает производительность при частичной перезаписи блоков.  В 512 Мб SDC только область в 512 Кбайт от начала памяти является относительно  быстрой. Это можно увидеть по времени записи в close(). Возможно, к этой  области применена какая-то специальная обработка для более быстрого доступа к  FAT.&nbsp;</span></p>
+<p style="text-align: justify" class="MsoNormal"><span>&nbsp;</span><strong><span>Улучшение  производительности записи</span></strong></p>
+<p style="text-align: justify" class="MsoNormal"><span>&nbsp;</span><span>Чтобы  избежать этого узкого места и поднять производительность записи SDC/MMC, за  один раз следует выполнять запись максимально возможного числа блоков (в идеале  выровненного по блоку стирания). Другими словами, необходимо выделить большую  буферную память и передать её в fwrite(). Что касается низкоуровневой функции  записи диска, то для повышения эффективности обработки записи нужно  предварительно сообщать карте число записываемых секторов. Это называется  "предопределённая многоблочная запись". Однако для этих целей  используются разные команды: CMD23 для MMC и ACMD23 для SDC.&nbsp;</span><span><br>
+</span></p>
+<p style="text-align: justify" class="MsoNormal"><span>Правда,  такой подход мог бы привести к тщетным попыткам увеличить производительность  записи SDC на микроконтроллерах с несколькими килобайтами ОЗУ. Если вам нужна  производительность записи в карту памяти, то лучше применить CompactFlash или  MMC, а не SDC. В частности, CompactFlash имеет хорошую производительность,  которая в десять раз быстрее, чем у SDC.&nbsp;</span></p>
+<p style="text-align: justify" class="MsoNormal"><span>Карты  памяти изначально разбиты на разделы и отформатированы, чтобы выровнять единицу  выделения памяти по блоку стирания. При неосторожном переразбиении или  переформатировании карты памяти системой, которая не совместима с MMC/SDC  (обычный ПК), оптимизация нарушится, и производительность записи может быть утеряна.  Я попытался переформатировать 512 Мб SDC под FAT32 на ПК, и производительность  записи (измерялась копированием файла) понизилась в несколько раз. Поэтому  переформатирование карты должно выполняться с помощью оборудования,  совместимого с MMC/SDC, а не на ПК.</span></p>
+<p style="text-align: justify" class="MsoNormal">&nbsp;</p>
+<p>&nbsp;</p>
+
+					<div id="jlvkcomments" style="width: 100%; background-image: none; background-attachment: initial; background-origin: initial; background-clip: initial; background-color: initial; height: 130px; background-position: initial initial; background-repeat: initial initial; "><iframe name="fXD6b14a" frameborder="0" src="./SD-карты_files/widget_comments.htm" width="100%" height="133px" scrolling="no" id="vkwidget1" style="overflow-x: hidden; overflow-y: hidden; height: 130px; "></iframe></div>
+					<script type="text/javascript">
+					VK.Widgets.Comments("jlvkcomments", {limit: 10, width: "0", autoPublish: "1", attach:"*"},89);
+					</script>
+					<div style="text-align: right;">
+							<a style="text-decoration:none; color: #c0c0c0; font-family: arial,helvetica,sans-serif; font-size: 5pt; " target="_blank" href="http://joomline.ru/">Расширения для Joomla</a>
+					</div><div class="clearfix"></div><div class="tag">Tags:<ul><li><a href="http://robochamp.ru/index.php/component/tag/sd-%D0%BA%D0%B0%D1%80%D1%82%D1%8B" rel="tag" title="sd карты">sd карты</a></li></ul></div></div>
+
+	<span class="modifydate">
+		Обновлено ( 09.03.2011 04:13 )
+	</span>
+
+<span class="article_separator">&nbsp;</span>
+<style>
+.butsclear  {
+clear:both;
+content:"";
+display:block;
+height:0;
+font-size:0;
+visibility:hidden;} 
+.allbuts {display:block;float:left;}
+.buttons{
+font-size: 13px;            /* размер шрифта */
+font-weight: bold;         /* стиль текста: жирный */			
+padding:5px;               /* отступ от границ */
+border:1px solid #CCC;   /* толщина и цвет рамки */
+background: #FFFFFF;   /* фоновый цвет */
+display:block;
+float:left;
+}
+.allbuts a { height:32px ;width:32px; display:block; float:left; padding-right:10px;} 
+.buttons .butspre a div{
+border: none;
+opacity:1.0;                 /* непрозрачность: 100% */
+}
+ 
+.buttons .butspre a:hover div{
+border: none;
+opacity:0.7;                 /* непрозрачность: 70% */
+}
+.buts32 {
+background: url(/plugins/content/rusbuttons/set1-32.png) no-repeat;
+width:32px;
+height:32px;
+float:left;
+display:block;
+}
+#ibuts2 {background-position:-32px 0px;}
+#ibuts3 {background-position:-64px 0px;}
+#ibuts4 {background-position:-96px 0px;}
+#ibuts5 {background-position:-128px 0px;}
+#ibuts6 {background-position:-160px 0px;}
+#ibuts7 {background-position:-192px 0px;}
+#ibuts8 {background-position:-224px 0px;}
+#ibuts9 {background-position:-256px 0px;}
+div.butscopy {font-size:8px; display:block;float:right; clear:left; }
+div.butscopy a {color:gray;}
+
+</style>
+<div class="buttons"><div class="butspre">Интересная статья? Поделись ей с другими:</div><div class="allbuts">
+<a rel="nofollow" target="_blank" href="http://twitter.com/home?status=%23robochamp+SD-%D0%BA%D0%B0%D1%80%D1%82%D1%8B%3A+http%3A%2F%2Fwww.robochamp.ru%2Findex.php%2Farticles%2Felectronics%2F89-sdc" title="Добавить в Twitter"><div class="buts32" id="ibuts1" title="Опубликовать в Twitter" alt="Опубликовать в Twitter"></div></a>
+ 
+<a rel="nofollow" target="blank" href="http://www.facebook.com/sharer.php?u=http%3A%2F%2Fwww.robochamp.ru%2Findex.php%2Farticles%2Felectronics%2F89-sdc"><div class="buts32" id="ibuts2" title="Написать в Facebook" alt="Написать в Facebook"></div></a>
+ 
+<a rel="nofollow" target="_blank" href="http://vkontakte.ru/share.php?url=http%3A%2F%2Fwww.robochamp.ru%2Findex.php%2Farticles%2Felectronics%2F89-sdc"><div class="buts32" id="ibuts3" title="Поделиться ВКонтакте" alt="Поделиться ВКонтакте"></div></a>
+
+ 
+<a rel="nofollow" target="_blank" href="http://www.google.com/buzz/post?url=http%3A%2F%2Fwww.robochamp.ru%2Findex.php%2Farticles%2Felectronics%2F89-sdc&title=SD-%D0%BA%D0%B0%D1%80%D1%82%D1%8B&srcURL=http://www.robochamp.ru/"><div class="buts32" id="ibuts4" title="В Google Buzz" alt="В Google Buzz"></div></a>
+ 
+<a rel="nofollow" target="_blank" href="http://www.livejournal.com/update.bml?event=http%3A%2F%2Fwww.robochamp.ru%2Findex.php%2Farticles%2Felectronics%2F89-sdc&subject=SD-%D0%BA%D0%B0%D1%80%D1%82%D1%8B"><div class="buts32" id="ibuts5" title="Записать себе в LiveJournal" alt="Записать себе в LiveJournal"></div></a>
+ 
+<a rel="nofollow" target="_blank" href="http://connect.mail.ru/share?share_url=http%3A%2F%2Fwww.robochamp.ru%2Findex.php%2Farticles%2Felectronics%2F89-sdc"><div class="buts32" id="ibuts6" title="Показать В Моем Мире" alt="Показать В Моем Мире"></div></a>
+ 
+<a rel="nofollow" target="_blank" href="http://www.liveinternet.ru/journal_post.php?action=n_add&cnurl=http%3A%2F%2Fwww.robochamp.ru%2Findex.php%2Farticles%2Felectronics%2F89-sdc&cntitle=SD-%D0%BA%D0%B0%D1%80%D1%82%D1%8B"><div class="buts32" id="ibuts7" title="В дневник на LI.RU" alt="В дневник на LI.RU"></div></a>
+
+ 
+<a rel="nofollow" target="_blank" href="http://my.ya.ru/posts_add_link.xml?URL=http%3A%2F%2Fwww.robochamp.ru%2Findex.php%2Farticles%2Felectronics%2F89-sdc&title=SD-%D0%BA%D0%B0%D1%80%D1%82%D1%8B"><div class="buts32" id="ibuts8" title="Поделиться ссылкой на Я.ру" alt="Поделиться ссылкой на Я.ру"></div></a>
+
+<a rel="nofollow" href="http://www.robochamp.ru/index.php/articles/electronics/89-sdc" target="_blank" class="soc-but-classmates" onclick="ODKL.Share(this);return false;"><div class="buts32" id="ibuts9" title="Поделиться ссылкой в Одноклассниках" alt="Поделиться ссылкой в Одноклассниках"></div></a>
+</div>
+</div><div class="butsclear"></div>
+<script type="text/javascript">
+var jcomments=new JComments(89, 'com_content','http://robochamp.ru/index.php?option=com_jcomments&amp;tmpl=component');
+jcomments.setList('comments-list');
+</script>
+<div id="jc">
+<div id="comments"><h4>Комментарии<a class="rss" href="http://robochamp.ru/index.php/component/jcomments/?task=rss&object_id=89&object_group=com_content&tmpl=component" title="RSS лента комментариев этой записи." target="_blank">&nbsp;</a><a class="refresh" href="http://robochamp.ru/index.php/articles/electronics/89-sdc#" title="Обновить список комментариев" onclick="jcomments.showPage(89,&#39;com_content&#39;,0);return false;">&nbsp;</a></h4>
+<center><div id="nav-top"><span class="activepage"><b>1</b></span><span onclick="jcomments.showPage(89, &#39;com_content&#39;, 2);" class="page" onmouseover="this.className=&#39;hoverpage&#39;;" onmouseout="this.className=&#39;page&#39;;">2</span><span onclick="jcomments.showPage(89, &#39;com_content&#39;, 3);" class="page" onmouseover="this.className=&#39;hoverpage&#39;;" onmouseout="this.className=&#39;page&#39;;">3</span><span onclick="jcomments.showPage(89, &#39;com_content&#39;, 4);" class="page" onmouseover="this.className=&#39;hoverpage&#39;;" onmouseout="this.className=&#39;page&#39;;">4</span></div></center>
+<div id="comments-list" class="comments-list">
+        <div class="even" id="comment-item-71"><div class="rbox"><div class="rbox_tr"><div class="rbox_tl"><div class="rbox_t">&nbsp;</div></div></div><div class="rbox_m">
+<div class="comment-box">
+<span class="comments-vote">
+	<span id="comment-vote-holder-71">
+<a href="http://robochamp.ru/index.php/articles/electronics/89-sdc#" class="vote-good" title="Хороший комментарий!" onclick="jcomments.voteComment(71, 1);return false;"></a><a href="http://robochamp.ru/index.php/articles/electronics/89-sdc#" class="vote-poor" title="Плохой комментарий!" onclick="jcomments.voteComment(71, -1);return false;"></a>
+<span class="vote-none">0</span>
+	</span>
+</span>
+<a class="comment-anchor" href="http://robochamp.ru/index.php/articles/electronics/89-sdc#comment-71" id="comment-71">#33</a>
+<span class="comment-author">Олег</span>
+<span class="comment-date">02.07.2011 14:01</span>
+<div class="comment-body" id="comment-body-71"><span class="quote">Цитирую Blinker:</span><blockquote>Хорошо, что есть ссылка на первоисточник, а то этот перевод с большими дефектами и пропусками, что сильно затрудняет понимание.</blockquote><br>Если есть возможность опишите ошибки, исправлю.</div>
+<span class="comments-buttons">
+<a href="http://robochamp.ru/index.php/articles/electronics/89-sdc#" onclick="jcomments.quoteComment(71); return false;">Цитировать</a>
+</span>
+</div><div class="clear"></div>
+</div><div class="rbox_br"><div class="rbox_bl"><div class="rbox_b">&nbsp;</div></div></div></div>
+</div>
+        <div class="odd" id="comment-item-70"><div class="rbox"><div class="rbox_tr"><div class="rbox_tl"><div class="rbox_t">&nbsp;</div></div></div><div class="rbox_m">
+<div class="comment-box">
+<span class="comments-vote">
+	<span id="comment-vote-holder-70">
+<a href="http://robochamp.ru/index.php/articles/electronics/89-sdc#" class="vote-good" title="Хороший комментарий!" onclick="jcomments.voteComment(70, 1);return false;"></a><a href="http://robochamp.ru/index.php/articles/electronics/89-sdc#" class="vote-poor" title="Плохой комментарий!" onclick="jcomments.voteComment(70, -1);return false;"></a>
+<span class="vote-good">+1</span>
+	</span>
+</span>
+<a class="comment-anchor" href="http://robochamp.ru/index.php/articles/electronics/89-sdc#comment-70" id="comment-70">#32</a>
+<span class="comment-author">Blinker</span>
+<span class="comment-date">28.06.2011 03:08</span>
+<div class="comment-body" id="comment-body-70">Хорошо, что есть ссылка на первоисточник, а то этот перевод с большими дефектами и пропусками, что сильно затрудняет понимание.</div>
+<span class="comments-buttons">
+<a href="http://robochamp.ru/index.php/articles/electronics/89-sdc#" onclick="jcomments.quoteComment(70); return false;">Цитировать</a>
+</span>
+</div><div class="clear"></div>
+</div><div class="rbox_br"><div class="rbox_bl"><div class="rbox_b">&nbsp;</div></div></div></div>
+</div>
+        <div class="even" id="comment-item-59"><div class="rbox"><div class="rbox_tr"><div class="rbox_tl"><div class="rbox_t">&nbsp;</div></div></div><div class="rbox_m">
+<div class="comment-box">
+<span class="comments-vote">
+	<span id="comment-vote-holder-59">
+<a href="http://robochamp.ru/index.php/articles/electronics/89-sdc#" class="vote-good" title="Хороший комментарий!" onclick="jcomments.voteComment(59, 1);return false;"></a><a href="http://robochamp.ru/index.php/articles/electronics/89-sdc#" class="vote-poor" title="Плохой комментарий!" onclick="jcomments.voteComment(59, -1);return false;"></a>
+<span class="vote-none">0</span>
+	</span>
+</span>
+<a class="comment-anchor" href="http://robochamp.ru/index.php/articles/electronics/89-sdc#comment-59" id="comment-59">#31</a>
+<span class="comment-author">Макс</span>
+<span class="comment-date">10.01.2011 12:07</span>
+<div class="comment-body" id="comment-body-59">Олег, большое спасибо за ответ. Было нужно мнение специалиста и я его получил.</div>
+<span class="comments-buttons">
+<a href="http://robochamp.ru/index.php/articles/electronics/89-sdc#" onclick="jcomments.quoteComment(59); return false;">Цитировать</a>
+</span>
+</div><div class="clear"></div>
+</div><div class="rbox_br"><div class="rbox_bl"><div class="rbox_b">&nbsp;</div></div></div></div>
+</div>
+        <div class="odd" id="comment-item-57"><div class="rbox"><div class="rbox_tr"><div class="rbox_tl"><div class="rbox_t">&nbsp;</div></div></div><div class="rbox_m">
+<div class="comment-box">
+<span class="comments-vote">
+	<span id="comment-vote-holder-57">
+<a href="http://robochamp.ru/index.php/articles/electronics/89-sdc#" class="vote-good" title="Хороший комментарий!" onclick="jcomments.voteComment(57, 1);return false;"></a><a href="http://robochamp.ru/index.php/articles/electronics/89-sdc#" class="vote-poor" title="Плохой комментарий!" onclick="jcomments.voteComment(57, -1);return false;"></a>
+<span class="vote-none">0</span>
+	</span>
+</span>
+<a class="comment-anchor" href="http://robochamp.ru/index.php/articles/electronics/89-sdc#comment-57" id="comment-57">#30</a>
+<span class="comment-author">Андрей</span>
+<span class="comment-date">07.01.2011 17:30</span>
+<div class="comment-body" id="comment-body-57">Олег, спасибо))<br>лично для меня речь про прямую замену не идет, так что ничего страшного в изменении кода для себя не вижу))</div>
+<span class="comments-buttons">
+<a href="http://robochamp.ru/index.php/articles/electronics/89-sdc#" onclick="jcomments.quoteComment(57); return false;">Цитировать</a>
+</span>
+</div><div class="clear"></div>
+</div><div class="rbox_br"><div class="rbox_bl"><div class="rbox_b">&nbsp;</div></div></div></div>
+</div>
+        <div class="even" id="comment-item-55"><div class="rbox"><div class="rbox_tr"><div class="rbox_tl"><div class="rbox_t">&nbsp;</div></div></div><div class="rbox_m">
+<div class="comment-box">
+<span class="comments-vote">
+	<span id="comment-vote-holder-55">
+<a href="http://robochamp.ru/index.php/articles/electronics/89-sdc#" class="vote-good" title="Хороший комментарий!" onclick="jcomments.voteComment(55, 1);return false;"></a><a href="http://robochamp.ru/index.php/articles/electronics/89-sdc#" class="vote-poor" title="Плохой комментарий!" onclick="jcomments.voteComment(55, -1);return false;"></a>
+<span class="vote-none">0</span>
+	</span>
+</span>
+<a class="comment-anchor" href="http://robochamp.ru/index.php/articles/electronics/89-sdc#comment-55" id="comment-55">#29</a>
+<span class="comment-author">Олег</span>
+<span class="comment-date">07.01.2011 08:43</span>
+<div class="comment-body" id="comment-body-55">Я нашел где можно взять эти микросхемы с доставкой в любую точку России. <br><br>64 мбит с бесплатной доставкой по России, выходит около 200р<br>http://cgi.ebay.com/ST-M25P64-VME6G-25P64V6P-/330506827764?pt=LH_DefaultDomain_0&amp;hash=item4cf3bdf7f4#ht_1155wt_905<br><br>По поводу прямой замены - скорее всего не будет работать, нужно вносить изменения в прошивку для работы с SD.</div>
+<span class="comments-buttons">
+<a href="http://robochamp.ru/index.php/articles/electronics/89-sdc#" onclick="jcomments.quoteComment(55); return false;">Цитировать</a>
+</span>
+</div><div class="clear"></div>
+</div><div class="rbox_br"><div class="rbox_bl"><div class="rbox_b">&nbsp;</div></div></div></div>
+</div>
+        <div class="odd" id="comment-item-54"><div class="rbox"><div class="rbox_tr"><div class="rbox_tl"><div class="rbox_t">&nbsp;</div></div></div><div class="rbox_m">
+<div class="comment-box">
+<span class="comments-vote">
+	<span id="comment-vote-holder-54">
+<a href="http://robochamp.ru/index.php/articles/electronics/89-sdc#" class="vote-good" title="Хороший комментарий!" onclick="jcomments.voteComment(54, 1);return false;"></a><a href="http://robochamp.ru/index.php/articles/electronics/89-sdc#" class="vote-poor" title="Плохой комментарий!" onclick="jcomments.voteComment(54, -1);return false;"></a>
+<span class="vote-none">0</span>
+	</span>
+</span>
+<a class="comment-anchor" href="http://robochamp.ru/index.php/articles/electronics/89-sdc#comment-54" id="comment-54">#28</a>
+<span class="comment-author">Андрей</span>
+<span class="comment-date">07.01.2011 01:06</span>
+<div class="comment-body" id="comment-body-54">всех с наступившими праздниками))<br><br>Олег, а можно и мне копию ответа Максу?<br><br>Заранее спасибо)))</div>
+<span class="comments-buttons">
+<a href="http://robochamp.ru/index.php/articles/electronics/89-sdc#" onclick="jcomments.quoteComment(54); return false;">Цитировать</a>
+</span>
+</div><div class="clear"></div>
+</div><div class="rbox_br"><div class="rbox_bl"><div class="rbox_b">&nbsp;</div></div></div></div>
+</div>
+        <div class="even" id="comment-item-53"><div class="rbox"><div class="rbox_tr"><div class="rbox_tl"><div class="rbox_t">&nbsp;</div></div></div><div class="rbox_m">
+<div class="comment-box">
+<span class="comments-vote">
+	<span id="comment-vote-holder-53">
+<a href="http://robochamp.ru/index.php/articles/electronics/89-sdc#" class="vote-good" title="Хороший комментарий!" onclick="jcomments.voteComment(53, 1);return false;"></a><a href="http://robochamp.ru/index.php/articles/electronics/89-sdc#" class="vote-poor" title="Плохой комментарий!" onclick="jcomments.voteComment(53, -1);return false;"></a>
+<span class="vote-none">0</span>
+	</span>
+</span>
+<a class="comment-anchor" href="http://robochamp.ru/index.php/articles/electronics/89-sdc#comment-53" id="comment-53">#27</a>
+<span class="comment-author">Олег</span>
+<span class="comment-date">06.01.2011 20:35</span>
+<div class="comment-body" id="comment-body-53">Макс, ответил на письмо.</div>
+<span class="comments-buttons">
+<a href="http://robochamp.ru/index.php/articles/electronics/89-sdc#" onclick="jcomments.quoteComment(53); return false;">Цитировать</a>
+</span>
+</div><div class="clear"></div>
+</div><div class="rbox_br"><div class="rbox_bl"><div class="rbox_b">&nbsp;</div></div></div></div>
+</div>
+        <div class="odd" id="comment-item-52"><div class="rbox"><div class="rbox_tr"><div class="rbox_tl"><div class="rbox_t">&nbsp;</div></div></div><div class="rbox_m">
+<div class="comment-box">
+<span class="comments-vote">
+	<span id="comment-vote-holder-52">
+<a href="http://robochamp.ru/index.php/articles/electronics/89-sdc#" class="vote-good" title="Хороший комментарий!" onclick="jcomments.voteComment(52, 1);return false;"></a><a href="http://robochamp.ru/index.php/articles/electronics/89-sdc#" class="vote-poor" title="Плохой комментарий!" onclick="jcomments.voteComment(52, -1);return false;"></a>
+<span class="vote-none">0</span>
+	</span>
+</span>
+<a class="comment-anchor" href="http://robochamp.ru/index.php/articles/electronics/89-sdc#comment-52" id="comment-52">#26</a>
+<span class="comment-author">Макс</span>
+<span class="comment-date">06.01.2011 12:32</span>
+<div class="comment-body" id="comment-body-52">Олег, здравствуйте<br>интересует такой вопрос (реальна ли задумка)<br>можно заменить SD картой микросхему SPI flash памяти<br>M25P16 www.numonyx.com/Documents/Datasheets/M25P16.pdf. Данная микруха стоит в роутере и не позволяет<br>залить альтернативное ПО (в виду ограниченного объёма-2Мб). Достать такую же но больше нереально, а<br>SD карточек на 32Мб штук шесть валяется.<br><br>Всех с наступающим Рождеством!</div>
+<span class="comments-buttons">
+<a href="http://robochamp.ru/index.php/articles/electronics/89-sdc#" onclick="jcomments.quoteComment(52); return false;">Цитировать</a>
+</span>
+</div><div class="clear"></div>
+</div><div class="rbox_br"><div class="rbox_bl"><div class="rbox_b">&nbsp;</div></div></div></div>
+</div>
+        <div class="even" id="comment-item-49"><div class="rbox"><div class="rbox_tr"><div class="rbox_tl"><div class="rbox_t">&nbsp;</div></div></div><div class="rbox_m">
+<div class="comment-box">
+<span class="comments-vote">
+	<span id="comment-vote-holder-49">
+<a href="http://robochamp.ru/index.php/articles/electronics/89-sdc#" class="vote-good" title="Хороший комментарий!" onclick="jcomments.voteComment(49, 1);return false;"></a><a href="http://robochamp.ru/index.php/articles/electronics/89-sdc#" class="vote-poor" title="Плохой комментарий!" onclick="jcomments.voteComment(49, -1);return false;"></a>
+<span class="vote-none">0</span>
+	</span>
+</span>
+<a class="comment-anchor" href="http://robochamp.ru/index.php/articles/electronics/89-sdc#comment-49" id="comment-49">#25</a>
+<span class="comment-author">Олег</span>
+<span class="comment-date">23.12.2010 19:26</span>
+<div class="comment-body" id="comment-body-49">Если критерий именно энергопотреблен<span style="font-size:0px;padding:0;margin:0;"> </span>ие, то мне кажется SD это не самый оптимальный вариант. Но исходя из соображений общей эффективности (цена, доступность, скорость, потребление) мне кажется microSD карты наиболее оптимальны для музыки, книг, небольших видеофайлов.</div>
+<span class="comments-buttons">
+<a href="http://robochamp.ru/index.php/articles/electronics/89-sdc#" onclick="jcomments.quoteComment(49); return false;">Цитировать</a>
+</span>
+</div><div class="clear"></div>
+</div><div class="rbox_br"><div class="rbox_bl"><div class="rbox_b">&nbsp;</div></div></div></div>
+</div>
+        <div class="odd" id="comment-item-45"><div class="rbox"><div class="rbox_tr"><div class="rbox_tl"><div class="rbox_t">&nbsp;</div></div></div><div class="rbox_m">
+<div class="comment-box">
+<span class="comments-vote">
+	<span id="comment-vote-holder-45">
+<a href="http://robochamp.ru/index.php/articles/electronics/89-sdc#" class="vote-good" title="Хороший комментарий!" onclick="jcomments.voteComment(45, 1);return false;"></a><a href="http://robochamp.ru/index.php/articles/electronics/89-sdc#" class="vote-poor" title="Плохой комментарий!" onclick="jcomments.voteComment(45, -1);return false;"></a>
+<span class="vote-none">0</span>
+	</span>
+</span>
+<a class="comment-anchor" href="http://robochamp.ru/index.php/articles/electronics/89-sdc#comment-45" id="comment-45">#24</a>
+<span class="comment-author">Дмитрий</span>
+<span class="comment-date">19.12.2010 05:37</span>
+<div class="comment-body" id="comment-body-45">С картой читалки разряжаются быстрее.<br>Причем иногда значительно быстрее.<br>Задача выбрать карту с минимальным энергопотреблен<span style="font-size:0px;padding:0;margin:0;"> </span>ием.<br>Просмотрел много информации, но так и не сделал каких-то определенных выводов.<br>Хотел у вас спросить, есть ли подобный опыт.</div>
+<span class="comments-buttons">
+<a href="http://robochamp.ru/index.php/articles/electronics/89-sdc#" onclick="jcomments.quoteComment(45); return false;">Цитировать</a>
+</span>
+</div><div class="clear"></div>
+</div><div class="rbox_br"><div class="rbox_bl"><div class="rbox_b">&nbsp;</div></div></div></div>
+</div>
+</div>
+<center><div id="nav-bottom"><span class="activepage"><b>1</b></span><span onclick="jcomments.showPage(89, &#39;com_content&#39;, 2);" class="page" onmouseover="this.className=&#39;hoverpage&#39;;" onmouseout="this.className=&#39;page&#39;;">2</span><span onclick="jcomments.showPage(89, &#39;com_content&#39;, 3);" class="page" onmouseover="this.className=&#39;hoverpage&#39;;" onmouseout="this.className=&#39;page&#39;;">3</span><span onclick="jcomments.showPage(89, &#39;com_content&#39;, 4);" class="page" onmouseover="this.className=&#39;hoverpage&#39;;" onmouseout="this.className=&#39;page&#39;;">4</span></div></center>
+<div id="comments-list-footer"><a class="refresh" href="http://robochamp.ru/index.php/articles/electronics/89-sdc#" title="Обновить список комментариев" onclick="jcomments.showPage(89,&#39;com_content&#39;,0);return false;">Обновить список комментариев</a><br><a class="rss" href="http://robochamp.ru/index.php/component/jcomments/?task=rss&object_id=89&object_group=com_content&tmpl=component" target="_blank">RSS лента комментариев этой записи.</a></div>
+</div>
+<h4>Добавить комментарий</h4>
+<form id="comments-form" name="comments-form" action="javascript:void(null);">
+<p>
+	<input id="comments-form-name" type="text" name="name" value="" maxlength="20" size="22" tabindex="1">
+	<label for="comments-form-name">Имя (обязательное)</label>
+</p>
+<p>
+	<input id="comments-form-email" type="text" name="email" value="" size="22" tabindex="2">
+	<label for="comments-form-email">E-Mail (обязательное)</label>
+</p>
+<p>
+	<div class="smiles"><img src="./SD-карты_files/laugh.gif" alt=":D" class="smile"><img src="./SD-карты_files/lol.gif" alt=":lol:" class="smile"><img src="./SD-карты_files/smile.gif" alt=":-)" class="smile"><img src="./SD-карты_files/wink.gif" alt=";-)" class="smile"><img src="./SD-карты_files/cool.gif" alt="8)" class="smile"><img src="./SD-карты_files/normal.gif" alt=":-|" class="smile"><img src="./SD-карты_files/whistling.gif" alt=":-*" class="smile"><img src="./SD-карты_files/redface.gif" alt=":oops:" class="smile"><img src="./SD-карты_files/sad.gif" alt=":sad:" class="smile"><img src="./SD-карты_files/cry.gif" alt=":cry:" class="smile"><img src="./SD-карты_files/surprised.gif" alt=":o" class="smile"><img src="./SD-карты_files/confused.gif" alt=":-?" class="smile"><img src="./SD-карты_files/sick.gif" alt=":-x" class="smile"><img src="./SD-карты_files/shocked.gif" alt=":eek:" class="smile"><img src="./SD-карты_files/sleeping.gif" alt=":zzz" class="smile"><img src="./SD-карты_files/tongue.gif" alt=":P" class="smile"><img src="./SD-карты_files/rolleyes.gif" alt=":roll:" class="smile"><img src="./SD-карты_files/unsure.gif" alt=":sigh:" class="smile"></div><textarea id="comments-form-comment" name="comment" cols="65" rows="8" tabindex="5"></textarea><div class="grippie"><span class="counter">Осталось: <span>1000</span>  символов</span></div>
+</p>
+<p>
+	<input class="checkbox" id="comments-form-subscribe" type="checkbox" name="subscribe" value="1" tabindex="5">
+	<label for="comments-form-subscribe">Подписаться на уведомления о новых комментариях</label><br>
+</p>
+<p>
+	<img class="captcha" onclick="jcomments.clear(&#39;captcha&#39;);" id="comments-form-captcha-image" name="captcha-image" src="./SD-карты_files/index.php" width="120" height="60" alt="Защитный код"><br>
+	<span class="captcha" onclick="jcomments.clear(&#39;captcha&#39;);">Обновить</span><br>
+	<input class="captcha" id="comments-form-captcha" type="text" name="captcha-refid" value="" size="5" tabindex="6"><br>
+</p>
+<div id="comments-form-buttons">
+	<div class="btn" id="comments-form-send"><div><a href="http://robochamp.ru/index.php/articles/electronics/89-sdc#" tabindex="7" onclick="jcomments.saveComment();return false;" title="Отправить (Ctrl+Enter)">Отправить</a></div></div>
+	<div class="btn" id="comments-form-cancel" style="display: none; "><div><a href="http://robochamp.ru/index.php/articles/electronics/89-sdc#" tabindex="8" onclick="return false;" title="Отменить">Отменить</a></div></div>
+	<div style="clear:both;"></div>
+</div>
+	<input type="hidden" name="object_id" value="89">
+	<input type="hidden" name="object_group" value="com_content">
+</form><a id="addcomments" href="http://robochamp.ru/index.php/articles/electronics/89-sdc#addcomments"></a>
+
+
+<script type="text/javascript">
+function JCommentsInitializeForm()
+{
+	var jcEditor = new JCommentsEditor('comments-form-comment', true);
+	jcEditor.initSmiles('http://www.robochamp.ru/components/com_jcomments/images/smiles');
+	jcEditor.addSmile(':D','laugh.gif');
+	jcEditor.addSmile(':lol:','lol.gif');
+	jcEditor.addSmile(':-)','smile.gif');
+	jcEditor.addSmile(';-)','wink.gif');
+	jcEditor.addSmile('8)','cool.gif');
+	jcEditor.addSmile(':-|','normal.gif');
+	jcEditor.addSmile(':-*','whistling.gif');
+	jcEditor.addSmile(':oops:','redface.gif');
+	jcEditor.addSmile(':sad:','sad.gif');
+	jcEditor.addSmile(':cry:','cry.gif');
+	jcEditor.addSmile(':o','surprised.gif');
+	jcEditor.addSmile(':-?','confused.gif');
+	jcEditor.addSmile(':-x','sick.gif');
+	jcEditor.addSmile(':eek:','shocked.gif');
+	jcEditor.addSmile(':zzz','sleeping.gif');
+	jcEditor.addSmile(':P','tongue.gif');
+	jcEditor.addSmile(':roll:','rolleyes.gif');
+	jcEditor.addSmile(':sigh:','unsure.gif');
+	jcEditor.addCounter(1000, 'Осталось:', ' символов', 'counter');
+	jcomments.setForm(new JCommentsForm('comments-form', jcEditor));
+}
+setTimeout(JCommentsInitializeForm, 100);
+</script>
+<div id="comments-footer" align="center"><a href="http://www.joomlatune.ru/" title="JComments" target="_blank">JComments</a></div>
+<script type="text/javascript">
+jcomments.setAntiCache(1,1,0);
+</script> 
+</div>
+
+			</div>
+
+		</div></div>
+		<!-- END: CONTENT -->
+		
+    </div>
+
+	  
+	</div></div>
+	<!-- END: CONTENT -->
+		
+	
+</div></div>
+</div>
+
+		<!-- BEGIN: BOTTOM SPOTLIGHT-->
+	<div id="ja-botsl"><div id="ja-botsl-bot"><div id="ja-botsl-top" class="clearfix">
+	
+	  	  <div class="ja-box-left" style="width: 24.98%;">
+					<div class="moduletable">
+					<h3><span>Последние новости</span></h3>
+					<ul class="latestnews">
+	<li class="latestnews">
+		<a href="http://robochamp.ru/index.php/articles/sensor/133-sonardiy" class="latestnews">
+			Ультразвуковая навигация из подручных средств</a>
+	</li>
+	<li class="latestnews">
+		<a href="http://robochamp.ru/index.php/articles/71-ins/132-2012-01-05-11-23-38" class="latestnews">
+			МЭМС гироскопы и их ошибки</a>
+	</li>
+	<li class="latestnews">
+		<a href="http://robochamp.ru/index.php/articles/59/131" class="latestnews">
+			Сбор данных с датчиков смартфона</a>
+	</li>
+	<li class="latestnews">
+		<a href="http://robochamp.ru/index.php/articles/electronics/130-diacs" class="latestnews">
+			Тиристоры, микросхемы, диоды</a>
+	</li>
+	<li class="latestnews">
+		<a href="http://robochamp.ru/index.php/articles/electronics/129-transistors" class="latestnews">
+			Транзисторы</a>
+	</li>
+</ul>		</div>
+	
+	  </div>
+	  	  
+	  	  <div class="ja-box-center" style="width: 24.98%;">
+					<div class="moduletable">
+					<h3><span>Самое популярное</span></h3>
+					<ul class="mostread">
+	<li class="mostread">
+		<a href="http://robochamp.ru/index.php/articles/1-latest-news/112-iterests" class="mostread">
+			Интересные материалы</a>
+	</li>
+	<li class="mostread">
+		<a href="./SD-карты_files/SD-карты.htm" class="mostread">
+			SD-карты</a>
+	</li>
+	<li class="mostread">
+		<a href="http://robochamp.ru/index.php/projects/102-eyera-hexapod" class="mostread">
+			Робот-шестиног</a>
+	</li>
+	<li class="mostread">
+		<a href="http://robochamp.ru/index.php/articles/actuators/106-airmuscle" class="mostread">
+			Делаем пневмомускул для робота своими руками.</a>
+	</li>
+	<li class="mostread">
+		<a href="http://robochamp.ru/index.php/articles/1-latest-news/115-2010-12-04-18-54-12" class="mostread">
+			Манипулятор-хобот</a>
+	</li>
+</ul>		</div>
+	
+	  </div>
+	  	  
+	  	  <div class="ja-box-center" style="width: 24.98%;">
+					<div class="moduletable">
+					<h3><span>Контактные данные</span></h3>
+					<p>Харсеев Олег Михайлович</p>
+<ul>
+    <li><strong>Моб:</strong> <span class="skype_pnh_print_container_1333081492">+7 918 542 44 82</span><span class="skype_pnh_container" dir="ltr" tabindex="-1"><span class="skype_pnh_mark"> begin_of_the_skype_highlighting</span>&nbsp;<span class="skype_pnh_highlighting_inactive_common" dir="ltr" skypeaction="skype_dropdown" title="Щелкните, чтобы недорого позвонить через Skype"><span class="skype_pnh_left_span" skypeaction="skype_dropdown" title="Действия Skype">&nbsp;&nbsp;</span><span class="skype_pnh_dropart_span" skypeaction="skype_dropdown" title="Действия Skype"><span class="skype_pnh_dropart_flag_span" skypeaction="skype_dropdown" style="background-position: -4835px 1px !important; ">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>&nbsp;&nbsp;&nbsp;</span><span class="skype_pnh_textarea_span"><span class="skype_pnh_text_span">+7 918 542 44 82</span></span><span class="skype_pnh_right_span">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>&nbsp;<span class="skype_pnh_mark">end_of_the_skype_highlighting</span></span></li>
+    <li><strong>Email:&nbsp;</strong><img height="19" alt="mail.png" align="baseline" width="143" src="./SD-карты_files/mail.png"></li>
+    <li><strong>Web: </strong><a href="http://www.robochamp.ru/">Робочемпионат</a></li>
+</ul>		</div>
+	
+	  </div>
+	  	
+	  	  <div class="ja-box-right" style="width: 24.98%;">
+					<div class="moduletable">
+					<h3><span>Контактные данные</span></h3>
+					<p>Подъячев&nbsp;Михаил Игоревич</p>
+<ul>
+    <li><strong>Моб:</strong> <span class="skype_pnh_print_container_1333081492">+7 918 519 36 13</span><span class="skype_pnh_container" dir="ltr" tabindex="-1"><span class="skype_pnh_mark"> begin_of_the_skype_highlighting</span>&nbsp;<span class="skype_pnh_highlighting_inactive_common" dir="ltr" skypeaction="skype_dropdown" title="Щелкните, чтобы недорого позвонить через Skype"><span class="skype_pnh_left_span" skypeaction="skype_dropdown" title="Действия Skype">&nbsp;&nbsp;</span><span class="skype_pnh_dropart_span" skypeaction="skype_dropdown" title="Действия Skype"><span class="skype_pnh_dropart_flag_span" skypeaction="skype_dropdown" style="background-position: -4835px 1px !important; ">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>&nbsp;&nbsp;&nbsp;</span><span class="skype_pnh_textarea_span"><span class="skype_pnh_text_span">+7 918 519 36 13</span></span><span class="skype_pnh_right_span">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>&nbsp;<span class="skype_pnh_mark">end_of_the_skype_highlighting</span></span></li>
+    <li><strong>Email: mikee87@mail.ru</strong></li>
+    <li><strong>Web: </strong><a href="http://www.robochamp.ru/">Робочемпионат</a></li>
+</ul>		</div>
+	
+	  </div>
+	  
+	  
+	</div></div></div>
+	<!-- END: BOTTOM SPOTLIGHT -->
+	
+<!-- BEGIN: FOOTER -->
+<div id="ja-footer" class="clearfix">
+	
+	<!--copyright symbol-->
+©
+
+<!--print optional prefix text-->
+
+
+<!--display current year-->
+2012
+<!--display site name as configured in global configs-->
+robochamp.ru
+<!--print optional copyright post text-->
+Все права защищены, копирование материалов только с разрешения администрации.
+</div>
+<!-- END: FOOTER -->
+
+
+<script type="text/javascript">
+	addSpanToTitle();
+	//jaAddFirstItemToTopmenu();
+	//jaRemoveLastContentSeparator();
+	//jaRemoveLastTrBg();
+	//moveReadmore();
+	//addIEHover();
+	//slideshowOnWalk ();
+	jaMenuIcon();
+	fixMenuWidth();
+</script>
+
+</div>
+
+<p align="center">
+
+
+<!-- begin of Top100 code -->
+
+<script id="top100Counter" type="text/javascript" src="./SD-карты_files/top100.jcn"></script><a href="http://top100.rambler.ru/home?id=2382859" target="_blank"><img src="./SD-карты_files/top100.scn" alt="Rambler&#39;s Top100" title="Rambler&#39;s Top100" style="border: none;"></a>
+<noscript>
+&lt;a href="http://top100.rambler.ru/navi/2382859/"&gt;
+&lt;img src="http://counter.rambler.ru/top100.cnt?2382859" alt="Rambler's Top100" border="0" /&gt;
+&lt;/a&gt;
+
+</noscript>
+<!-- end of Top100 code -->
+
+<!--Rating@Mail.ru counter-->
+<script language="javascript"><!--
+d=document;var a='';a+=';r='+escape(d.referrer);js=10;//--></script>
+<script language="javascript1.1"><!--
+a+=';j='+navigator.javaEnabled();js=11;//--></script>
+<script language="javascript1.2"><!--
+s=screen;a+=';s='+s.width+'*'+s.height;
+a+=';d='+(s.colorDepth?s.colorDepth:s.pixelDepth);js=12;//--></script>
+<script language="javascript1.3"><!--
+js=13;//--></script><script language="javascript" type="text/javascript"><!--
+d.write('<a href="http://top.mail.ru/jump?from=1984989" target="_top">'+
+'<img src="http://d9.c4.be.a1.top.mail.ru/counter?id=1984989;t=130;js='+js+
+a+';rand='+Math.random()+'" alt="Рейтинг@Mail.ru" border="0" '+
+'height="40" width="88"><\/a>');if(11<js)d.write('<'+'!-- ');//--></script><a href="http://top.mail.ru/jump?from=1984989" target="_top"><img src="./SD-карты_files/counter" alt="Рейтинг@Mail.ru" border="0" height="40" width="88"></a><!-- 
+<noscript><a target="_top" href="http://top.mail.ru/jump?from=1984989">
+<img src="http://d9.c4.be.a1.top.mail.ru/counter?js=na;id=1984989;t=130" 
+height="40" width="88" border="0" alt="Рейтинг@Mail.ru"></a></noscript>
+<script language="javascript" type="text/javascript"><!--
+if(11<js)d.write('--'+'>');//-->
+<!--// Rating@Mail.ru counter-->
+
+<!-- CODA web-systems link -->
+<a href="http://www.world-building.ru/"><img src="./SD-карты_files/button.gif" height="31" width="88" border="0"></a>
+<!-- CODA web-systems link -->
+
+<a href="http://troeshki.kiev.ua/from.php?645075"><img alt="Каталог проверенных ресурсов!" src="./SD-карты_files/b88x31.gif" height="31" width="88" border="0"></a>
+
+<!--Begin 88x31 searchtoday.ru-->
+<a target="_blank" href="http://www.searchtoday.ru/">
+<img src="./SD-карты_files/top100_searchtoday_red.gif" alt="Поиск по тематическим каталогам" border="0" width="88" height="31"></a>
+<!--End-->
+
+</p>
+
+
+
+
+</body><span id="skype_highlighting_settings" display="none" autoextractnumbers="1"></span><object id="skype_plugin_object" location.href="http://robochamp.ru/index.php/articles/electronics/89-sdc" location.hostname="robochamp.ru" style="position: absolute; visibility: hidden; left: -100px; top: -100px; " width="0" height="0" type="application/x-vnd.skype.click2call.chrome.5.7.0"></object></html>

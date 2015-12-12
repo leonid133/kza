@@ -1,0 +1,1396 @@
+#include "c8051f120.h"
+#include "bpu1.h"
+#include "init.h"
+#include "interface1.h"
+#include "servo.h"
+#include <math.h>
+#include <stdlib.h>
+#include <intrins.h>
+#include <float.h>
+#include <mmcflash6.h>
+
+#define Rz  6380.
+
+#define Vy_zad_max 3
+#define Vy_zad_min -2
+#define delta_e_max 25
+#define delta_v_max 50
+#define delta_v_min -30
+#define delta_n_max 50
+#define delta_k_max 10
+#define delta_z_max 50
+#define delta_z_min -10
+#define delta_g_max 100
+#define delta_t_max 100
+#define delta_t_min 0
+
+xdata float wx_dat = 0, wy_dat = 0, wz_dat = 0, Tx, Ty, Tz;
+
+xdata char KrenKam, UgolKam;
+
+#define NBFM 		50
+xdata char BuferFromModem [NBFM]; // Для анализа с последовательного порта
+xdata char wBFM, rBFM, marBFM;	 
+
+xdata int koors;
+unsigned long DecodeLatOrLon(char *Array, char nomer);
+xdata unsigned long LatFly, LonFly;//, lLatZad, lLonZad, lLatZad_pr, lLonZad_pr;
+/*	xdata unsigned long int LatMar[128], LonMar[128];
+	xdata int H_Mar[128], Vz_Mar[128];
+*/
+	xdata unsigned long int LatMar[12], LonMar[12];
+	xdata int H_Mar[12], Vz_Mar[12];
+	xdata unsigned char n_, i_mar;
+	xdata float cos_Lat0;
+
+//время(сек) = timer_tick*FREQ
+xdata unsigned int timer_tick;   //относительное (счётчик) 
+xdata long int liTimer_tick;     //абсолютное
+xdata long int liTimer_tick_GPS; //прихода последней GPS посылки
+xdata unsigned int i_Vzlet;             
+
+#define EPSILON 400
+#define G 9.81
+
+xdata float H0 = 0, H_dat = 0, H_max = 0, H_dat_pr, Vy_dat = 0, H_filtr = 0, Vy_filtr = 0, H_filtr_pr, delta_ro = 1, q_dat = 0, Vz = 0, V_dat = 0, nSU = 0, Vtop = 20;
+xdata float kren_dat = 0, int_dKren = 0, delta_e = 0, delta_v = 0, int_delta_v = 0, koors_dat = 0, koors_zad = 0, int_dKoors = 0; 
+xdata int  H_zad = 200, H_zad_buf = 200;
+xdata float V_zad = 30, Vv_dat = 0;
+xdata char kren_zad = 0, kren_zad_buf = 0, Vz_zad = 0, KrenKam_zad = 0, UgolKam_zad = 0;
+xdata unsigned int NoCommand = 0;
+xdata float Vy_zad = Vy_zad_max, Vy_zad_buf = Vy_zad_max, Vy_zad_ogr_nab = Vy_zad_max, int_Vy_zad_ogr_nab = Vy_zad_max;
+xdata float ax_dat, ay_dat, az_dat;
+
+#define NS 	75
+xdata char mess [NS], r, w, mar;		// Для анализа посылки GPS
+//idata char mess[NS]="$GPRMC,064600,A,5551.8573,N,04906.4012,E,251.315,312.7,200500,11.5,E*40"; 
+//idata char mess[NS]="$GPRMC,100508,A,5550.9399,N,04906.4464,E,1.640,343.1,170703,11.6,E*4E"; 
+
+bdata unsigned char  Dat37 = 0x80;
+sbit auto_k = Dat37^0; 
+sbit delta_el = Dat37^1;
+sbit delta_ep = Dat37^2;
+sbit delta_zl = Dat37^3;
+sbit delta_zp = Dat37^4;
+sbit delta_vl = Dat37^5;
+sbit delta_vp = Dat37^6;
+
+bdata unsigned char  Dat38 = 0x80; 
+sbit delta_nl = Dat38^0;
+sbit delta_np = Dat38^1;
+sbit flParashute = Dat38^2;
+sbit flOtkazRK   = Dat38^3;
+//sbit flash  = Dat38^4;
+
+xdata char CountRun, dataRSTSRC;
+bit flRun   //сработал таймер основного цикла
+//, flWDTRun
+, flAvarStop
+, flNoKoord
+, flCommand
+, flNewGPS
+, flInit = 0;
+
+xdata float delta_g = 0, int_delta_g = 0, delta_n = 0, delta_k = 0, delta_z = 0, delta_z_zad = 0, delta_tl = 0, delta_tp = 0;
+
+xdata char RegimeKren = 0;              /* 0 - ручное управление креном
+                                       1 - Автономный полет (с автоматической посадкой)
+                                       2 - Возврат          (с автоматической посадкой)
+                                       3 - Прошивка маршрута                   */
+xdata char RegimeVy = 0;                /* 0 - управление Vу
+                                       1 - управление эшелонами
+                                       2 - автономный полет на заданном эшелоне*/
+xdata char RegimeV = 0;                 /* 0 - ручное управление газом и закрылками
+                                       1 - стабилизация путевой скорости
+                                       2 - автономный полет
+                                       3 - стабилизация воздушной скорости     */
+xdata char RegimeSU = 2;                /* 0 - запуск
+                                       1 - работа
+                                       2 - стоп                   */
+xdata char RegimeStart = 0;        		/* 0 - предстартовая подготовка
+													1 - разгон
+                                       2 - набор высоты
+                                       3 - Ок!                    */
+#define Gla0 140
+#define S  2.1
+#define Nr_max (14.0/1.36*1000)
+#define Nr_min (6.0/1.36*1000)
+#define n_max 3200
+#define n_min 1000
+#define kren_max 30
+#define H_avar 200
+
+float Gla = 120, V_bum, V_min, Nr, Cybez, Cxvir, Cyvir, kren_ogr, rasst_toch_mar;
+
+							      
+//--------------------------------------------------------------------------------------
+/*float code a0_wx, a1_wx, a2_wx, 
+			  a0_wy, a1_wy, a2_wy, 
+			  a0_H,  a1_H,  a2_H, 
+			  a0_q,  a1_q,  a2_q, N_OfWorks;*/
+/*float code a[256] _at_ 0x1000;
+
+void GetValue(char NPackage);
+//------------------------------------------------------------------------------------
+void GetValue(char NPackage)
+{
+	unsigned long int Buf = *(unsigned long int *) &a[NPackage];
+
+   BufferInModem[0] = 0x40 | NPackage;
+   BufferInModem[1] = 0x80 | (Buf&0x7f);
+   BufferInModem[2] = 0x80 | ((Buf &     0x3f80   ) >> 7 );
+	BufferInModem[3] = 0x80 | ((Buf &   0x1fc000 ) >> 14);
+   BufferInModem[4] = 0x80 | ((Buf &  0xfe00000) >> 21);
+   BufferInModem[5] = 0x80 | ((Buf & 0xf0000000) >> 28);
+   BufferInModem[6] = (BufferInModem[0]^BufferInModem[1]^BufferInModem[2]^BufferInModem[3]
+		^BufferInModem[4]^BufferInModem[5]) | 0x80;
+	r0 = 0;
+	rk = 7;
+	flTransmiter = 1;
+
+	SFRPAGE = 0x00;
+	TI0 = 1;
+	return;
+}*/
+
+xdata unsigned char SteckPoint;
+unsigned char code RLB _at_ 0xfbff;
+unsigned char code WELB _at_ 0xfbfe;
+unsigned char xdata *pwrite;
+
+void UART0_isr(void);
+void UART1_isr(void);
+void Timer0_isr(void);
+
+//-----------------------------------------------------------------------
+void main(void)
+{
+	//Для работы с последовательным портом "Модем"
+	xdata char RK_code[26], nByte = 0, KontrSumma = 0, NPackage;	
+
+   xdata float angle, tmp, napr_vetv_mar, otkl_ot_mar, dz, dx, dz_pr, dx_pr; //Для автоуправления
+
+   bit ValidGPS, flPoint; 	
+	xdata unsigned char i, i_comma, tmpGPS[6], nLetter = 7;
+	xdata unsigned long temp_koord;
+
+   SFRPAGE = 0;
+   dataRSTSRC = RSTSRC; //Управление источниками сброса
+
+	WDTCN = 0xde;			//Стоп сторожевой таймер
+	WDTCN = 0xad;
+
+   FLSCL = FLSCL | 1;	//Разрешение стирания/записи FLASH памяти
+
+	port_init(); 
+	sysclk();	
+	UART0_Init();	
+	UART1_Init(); 
+	DAC0_init();	
+	ADC_init();
+	Timer0_init(); 
+	config();
+	SPI_Init();
+  	MMC_init1();
+
+//	DAC0 = 0x00;
+	SteckPoint = SP;	
+   WDTCN = 0x07;	   // Макс время = 0,021 с
+
+	while(1)	
+	{
+      CountRun = 0;
+		if(WriteInKZA(nByte))
+		{
+			nByte++; //запись в буфер получилась меняем байт 
+		}
+	}
+	//---------------------------------------------------------------
+            
+/*            i = PSBANK;       
+		      EA = 0;           // Disable interrupts                 
+			   
+			   SFRPAGE = 0x0f;	// Enable FLASH block writes
+            PSBANK &= 0xcf;
+            PSBANK |= 0x3f;
+			   CCH0CN &= 0xfe;                   
+
+			   SFRPAGE = 0;
+
+		      FLSCL |= 0x01;    // Enable FLASH writes/erases
+		      PSCTL = 0x01;
+            pwrite = (char xdata *)&WELB;
+		      *pwrite = 0;      // Write Data to FLASH                   
+		      PSCTL = 0;        // MOVX targets XRAM
+
+		      PSCTL = 0x01;     // MOVX writes write FLASH byte
+            pwrite = (char xdata *)&RLB;
+		      *pwrite = 0;      // Write Data to FLASH                   
+   	      PSCTL = 0;        // MOVX targets XRAM
+		      FLSCL &= ~0x01;   // Disable FLASH writes/erases
+   
+			   SFRPAGE = CONFIG_PAGE;
+			   CCH0CN &= ~0x01;           // Clear the CHBLKW bit
+		      EA = 1;                    // Restore interrupt state      
+            PSBANK = i;
+*/
+	//Управление источниками сброса-------------------------------------------------
+   //если сброс от собаки
+	if(dataRSTSRC == 0x08 && RegimeStart && flInit) 
+	{
+		;
+	}
+	else
+	{
+   	//Инициализация переменных------------------------------------------------------
+		for (r0 = 0; r0 < SIZE_BUFFER0; r0++)
+			BufferInModem[r0] = 0x80;	
+		r0 = rk = 0;
+		r = w = mar = 0;
+ 		rBFM = wBFM = marBFM = 0;
+   	liTimer_tick = liTimer_tick_GPS = timer_tick = 0;
+	}
+
+//----------------------------------------
+flInit = 0;
+//----------------------------------------
+
+
+		
+	while(1)	//Управление движением -----------------------------------------------------------
+	{
+      CountRun = 0;
+
+   	if(rBFM < wBFM+marBFM*NBFM)
+   	{
+			if ((BuferFromModem[rBFM] & 0xC0) == 0x40)	
+			{
+				nByte = 0;
+				KontrSumma = 0;
+				NPackage = BuferFromModem[rBFM] & 0x3f;
+				NoCommand = 0;
+				flOtkazRK = 0;
+
+  				WriteInKZA (0x40|21);	
+				WriteInKZA( (liTimer_tick & 0x007f) | 0x80 );
+				WriteInKZA( ((liTimer_tick & 0x3f80) >> 7) | 0x80 );
+				WriteInKZA( ((liTimer_tick & 0x1fc000) >> 14) | 0x80 );
+				WriteInKZA( ((liTimer_tick & 0xfe00000) >> 21) | 0x80 );
+			}
+   		WriteInKZA( BuferFromModem[rBFM] );
+
+			if (nByte > 25)
+				nByte = 25;
+			RK_code[nByte] = BuferFromModem[rBFM] & 0x7f;
+			KontrSumma = KontrSumma^RK_code[nByte++];
+
+			if ( (nByte == 3) && (KontrSumma == 0) )
+			{
+            if ( NPackage == 1 )	//H_zad
+				{
+               flCommand = 1;
+					H_zad_buf = RK_code[1];
+					H_zad_buf = 50*H_zad_buf - 1000;
+					if (H_zad_buf < -1000) H_zad_buf = -1000;
+					else if (H_zad_buf > 5000) H_zad_buf = 5000;
+				}
+			   else if (NPackage == 2)
+			   {
+	   		   if(RK_code[1] == 1)  //Телеметрия
+					{
+						flCommand = 1;
+					}
+	   		   else if(RK_code[1] == 2)    //Стоп двигатель Режим планирования
+					{
+                  flCommand = 1;
+   					RegimeSU = 2;
+						H_zad_buf = 0;
+					}
+	   		   else if(RK_code[1] == 3)    //Запуск двигателя
+					{
+                  flCommand = 1;
+   					RegimeSU = 0;
+					}
+		      	else if (RK_code[1] == 4)  //Инициализация Ок
+      			{
+	  			   	BufferInModem[0] = 0x40 | 23;
+						BufferInModem[1] = 0x80;
+    					BufferInModem[2] = (BufferInModem[0]^BufferInModem[1]) | 0x80;
+                 	while (flTransmiter)
+	   	            ;			
+                  flTransmiter = 1;
+	               r0 = 0;
+	               rk = 3;
+					   SFRPAGE = 0x00;
+   					TI0 = 1;
+
+                  RegimeKren = RegimeStart = 1;
+                  n_ = 1;
+                  RegimeV = 0;
+                  delta_g = 100;
+                  delta_z_zad = 0;
+												//снять тормоза
+                  OutModem21();
+     				}
+               else if (RK_code[1] == 6)  //Посадка на парашюте
+               {
+                  flCommand = 1;
+               }
+		      	else if (RK_code[1] == 7)  //Тест рулей + Инициализация
+					{
+                  flCommand = 1;
+						flInit = 0;
+						timer_tick = H0 = 0;
+				   	delta_k = delta_n = delta_e = delta_g = delta_z = delta_v = delta_tl = delta_tp = 0;
+					}
+		      	else if (RK_code[1] == 10)  //Возврат
+				   {
+                  flCommand = 1;
+                  RegimeKren = 2;
+                  n_ = i_mar-2;
+					}
+				}
+				else if ( NPackage == 3 )//Kren_zad
+				{
+					if ((RK_code[1] > -kren_max+60) && (RK_code[1] < kren_max+60))
+					{
+	               flCommand = 1;
+						kren_zad_buf = -60+RK_code[1];
+	               RegimeKren = 0;
+   	         }
+				}
+			   else if(NPackage == 4)	         //автономный полет
+			   {
+               flCommand = 1;
+					if (RK_code[1] <= i_mar)
+					{
+	               flCommand = 1;
+	               RegimeV = RegimeKren = 1;
+   	            RegimeVy = 2;
+				      n_ = RK_code[1];
+   	            H_zad_buf = H_Mar[n_];
+      	         Vz_zad = Vz_Mar[n_];
+					}
+			   }
+			   else if(NPackage == 5)	//Vz_zad
+			   {
+               flCommand = 1;
+               if (RegimeV == 0)
+                  int_delta_g = delta_g;
+               RegimeV = 1;
+			      Vz_zad = RK_code[1];
+			   }
+         	else if(NPackage == 6)	//V_zad
+         	{
+               flCommand = 1;
+               if (RegimeV == 0)
+                  int_delta_g = delta_g;
+               RegimeV = 1;
+         	   V_zad = RK_code[1];
+         	}
+         	else if(NPackage == 7)	//Газ зад.
+         	{
+               flCommand = 1;
+               delta_g = RK_code[1];
+               if (delta_g < 0) delta_g = 0;
+               if (delta_g > 100) delta_g = 100;
+               RegimeV = 0;
+         	}			   
+				else if(NPackage == 8)	//Крен камеры зад.
+			   {
+               flCommand = 1;
+			      KrenKam_zad = RK_code[1];
+					KrenKam_zad = KrenKam_zad-60;
+			   }
+			   else if(NPackage == 9)	//Угол камеры к горизонту зад.UgolKam_zad
+			   {
+               flCommand = 1;
+//			      UgolKam_zad = RK_code[1];
+			   }
+			   else if(NPackage == 12)	//Уход нуля и параметры ветра
+			   {
+
+			   }
+			   else if(NPackage == 13) //Vy_zad
+			   {
+               Vy_zad_buf = 0.1*RK_code[1]-6;
+               if (Vy_zad_buf > Vy_zad_max) Vy_zad_buf = Vy_zad_max;
+               if (Vy_zad_buf < Vy_zad_min) Vy_zad_buf = Vy_zad_min;
+               RegimeVy = 0;
+				}
+			   else if(NPackage == 15) //delta_z
+			   {
+               flCommand = 1;
+			      delta_z = -10+RK_code[1];
+					RegimeV = 0;
+				}
+			}	//if ( nByte == 3 )
+         //Координаты ППМ------------------------------------------------------
+			else if ((NPackage == 11) && (nByte == 13) && (RegimeStart == 0) && (KontrSumma == 0))
+			{
+				n_ = RK_code[11];
+				if(n_ > i_mar)
+						i_mar = n_;
+				LatMar[n_] = DecodeLatOrLon(RK_code, 1);
+				if (n_ == 0)
+				{
+				  		cos_Lat0 = LatMar[0];
+				  		cos_Lat0 = cos((cos_Lat0/60/10000-90)/ToGrad);
+				}
+
+				LonMar[n_] = DecodeLatOrLon(RK_code, 5);
+
+        		H_Mar[n_] = (int)RK_code[9]*50-1000;
+        		if(H_Mar[n_] < -1000)     
+					H_Mar[n_]= -1000;
+            else if(H_Mar[n_] > 5000) 
+					H_Mar[n_] = 5000;
+            Vz_Mar[n_] = (int)RK_code[10];
+
+				BufferInModem[0] = 22 | 0x40;
+				OutModem4(LatMar[n_], 1);	
+				OutModem4(LonMar[n_], 5);	
+            BufferInModem[9] = (H_Mar[n_]+1000)/50 | 0x80;
+            BufferInModem[10] = Vz_Mar[n_] | 0x80;
+			   BufferInModem[11] = n_ | 0x80; 
+
+         	BufferInModem[12] = 0;
+         	for (i = 0; i < 12; i++ )
+	         	BufferInModem[12] = BufferInModem[12] ^ BufferInModem[i];
+     	   	BufferInModem[12] = 0x80|BufferInModem[12];				 
+	
+            while (flTransmiter)
+		            ;			
+	         r0 = 0;
+	         rk = 13;
+            flTransmiter = 1;
+				SFRPAGE = 0x00;
+				TI0 = 1;
+         }
+         rBFM++;
+			if(rBFM >= NBFM)
+			{
+   			rBFM = 0;
+				marBFM = 0;	
+			}
+      }
+
+		//-----------------------------------------------------------------------------------
+		if(flNewGPS)	
+		{
+			flNewGPS = 0;
+         OutModem20();
+
+			if (RegimeKren == 0 || RegimeStart == 0) //не ручное управление
+				break; 
+start1:
+			dz = LonMar[n_];
+			dz = 0.1856*(dz - LonFly)*cos_Lat0;
+		   dx = LatMar[n_];
+		   dx = 0.1856*(dx-LatFly);
+
+
+	   		dz_pr = LonMar[n_-1];
+			   dz_pr = 0.1856*(dz_pr-LonFly)*cos_Lat0;
+   			dx_pr = LatMar[n_-1];
+		   	dx_pr = 0.1856*(dx_pr-LatFly);
+
+			   rasst_toch_mar = sqrt(dz*dz+dx*dx);		
+   			if ((EPSILON > rasst_toch_mar) && (n_ != i_mar) && (n_ != 0))
+			   {
+      			if ((n_ == i_mar-2) && (fabs(H_dat-100) > 50))
+         			;
+      			else
+      			{
+         			n_++;
+         			flCommand = 1;
+
+         			if (RegimeV == 2)
+               		Vz_zad = Vz_Mar[n_];
+         			if (RegimeVy == 2)
+               		H_zad_buf = H_Mar[n_];
+         			goto start1;
+      			}
+   			}
+
+        	   if ( (fabs(dx-dx_pr) <= FLT_EPSILON) && (fabs(dz-dz_pr) <= FLT_EPSILON) )
+  		      	napr_vetv_mar = 0;
+        	  	else
+  		      	napr_vetv_mar = atan2(dz-dz_pr, dx-dx_pr);
+
+      		if ( (fabs(dx) <= FLT_EPSILON) && (fabs(dz) <= FLT_EPSILON) )
+		      	angle = 0;
+      		else
+		      	angle = atan2(dz, dx);	//napr_toch_mar = atan2(dz, dx),
+      		angle = angle-napr_vetv_mar;
+
+			   otkl_ot_mar = rasst_toch_mar*sin(angle);
+			   dz = otkl_ot_mar*cos(napr_vetv_mar)+10.0*V_dat*sin(napr_vetv_mar);	//dz = z_toch_pricel
+   			dx = -otkl_ot_mar*sin(napr_vetv_mar)+10.*V_dat*cos(napr_vetv_mar);	//dx = x_toch_pricel
+
+			   if ((fabs(dx) > FLT_EPSILON) || (fabs(dz) > FLT_EPSILON))
+      			koors_zad = atan2(dz, dx);
+			   tmp = koors_zad - 1.0/ToGrad*koors;	//проверить tmp область видимости не перекрывается ли с глобальной
+
+/*			tmp = koors;
+			tmp =  -tmp/ToGrad;
+    		if ( (fabs(dx) > FLT_EPSILON) || (fabs(dz) > FLT_EPSILON) )
+				tmp =  tmp + atan2(dz, dx);
+*/
+		   while (tmp > M_PI)
+      		tmp -= D_PI;
+		   while (tmp < -M_PI)
+      		tmp += D_PI;
+
+		   tmp = ToGrad*tmp;		
+			if(tmp > kren_max) 		tmp = kren_max;
+		   else if(tmp < -kren_max)tmp = -kren_max;
+			kren_zad_buf = tmp;
+		}
+      else if (liTimer_tick-liTimer_tick_GPS > 2*FREQ) //Отсутствие координат
+		{
+			flNoKoord = 1;
+			liTimer_tick_GPS = liTimer_tick;	
+         OutModem20();
+		}
+
+		//Расшифровка посылки GPS
+		if (r < w+mar*NS) 
+		{
+			if(mess[r] == '$')
+			{
+            nLetter = 0;
+			}
+         else if ((nLetter == 0) && (mess[r] == 'G'))
+            nLetter++;
+         else if ((nLetter == 1) && (mess[r] == 'P'))
+            nLetter++;
+         else if ((nLetter == 2) && (mess[r] == 'R'))
+            nLetter++;
+         else if ((nLetter == 3) && (mess[r] == 'M'))
+            nLetter++;
+         else if ((nLetter == 4) && (mess[r] == 'C'))
+         {
+            nLetter++;
+				i_comma = 0;
+				ValidGPS = 0;
+         } 
+		   else if(mess[r] == ',')
+			{
+				i_comma++;
+				i = 0;
+				flPoint = 0;
+			}
+		   else if(i_comma == 2)
+			{
+				if(mess[r] == 'A') 
+					ValidGPS = 1;
+				else
+					ValidGPS = 0;
+			}
+         else if (ValidGPS)
+			{
+				if (i_comma == 3)                //Latitude
+				{
+					if(mess[r] == '.')
+					{
+						flPoint = 1;
+						i = 0;
+					}
+					else if (flPoint == 0)			//Целая часть
+					{
+						tmpGPS[i++] = mess[r];
+						if(i == 2)
+						{
+		      		   tmpGPS[i] = 0;
+							temp_koord = atoi(tmpGPS);
+   			      	temp_koord = 60UL*10000*temp_koord;
+						}	
+						else if(i == 4)
+						{
+							tmpGPS[0] = tmpGPS[1] = '0';
+			      	   tmpGPS[i] = 0;
+   				      temp_koord = temp_koord+10000UL*atoi(tmpGPS);
+						}	
+					}
+					else					//Дробная часть
+					{
+						tmpGPS[i++] = mess[r];
+	      		   tmpGPS[i] = 0;
+					}
+				}
+				else if (i_comma == 4)
+				{
+		      	temp_koord = temp_koord+atoi(tmpGPS);
+//-----------
+//lLatFly = 55UL*60*10000+50UL*10000+8680;
+//--------
+					if (mess[r] == 'S')   				//знак Latitude
+						LatFly = 54000000UL-temp_koord;		//90UL*60*10000-koord;
+					else		  
+						LatFly = 54000000UL+temp_koord;	//90UL*60*10000+koord;
+				}
+				else if (i_comma == 5)                //Longitude
+				{
+					if(mess[r] == '.')
+					{
+						flPoint = 1;
+						i = 0;
+					}
+					else if (flPoint == 0)			//Целая часть
+					{
+						tmpGPS[i++] = mess[r];
+						if(i == 3)
+						{
+		      		   tmpGPS[i] = 0;
+   			      	temp_koord = atoi(tmpGPS);
+   			      	temp_koord = 60UL*10000*temp_koord;
+						}	
+						else if(i == 5)
+						{
+							tmpGPS[0] = tmpGPS[1] = tmpGPS[2] = '0';
+			      	   tmpGPS[i] = 0;
+   				      temp_koord = temp_koord+10000UL*atoi(tmpGPS);
+						}	
+					}
+					else					//Дробная часть
+					{
+						tmpGPS[i++] = mess[r];
+	      		   tmpGPS[i] = 0;
+					}
+				}
+				else if (i_comma == 6)
+				{
+		      	temp_koord = temp_koord+atoi(tmpGPS);
+//----------------
+//lLonFly = 49UL*60*10000+6UL*10000+3760;
+//----------------
+					if (mess[r] == 'W')   //знак Longitude
+						LonFly = 108000000UL-temp_koord;		//180UL*60*10000-koord;
+					else       
+						LonFly = temp_koord+108000000UL;	//180UL*60*10000;
+				}
+				else if (i_comma == 7)	//скорость в узлах
+				{
+					if(mess[r] == '.')
+					{
+						flPoint = 1;
+   		      	Vz = 1.852*atoi(tmpGPS)/3.6;   //??? Преобразовать из узлов в м/с
+//---------
+//Vz = 20;
+//-----------
+					}
+					else if(flPoint == 0)
+					{
+						tmpGPS[i++] = mess[r];
+	      	   	tmpGPS[i] = 0;
+					}
+            }
+				else if (i_comma == 8)	//курс в градусах
+				{
+					if(mess[r] == '.')
+					{
+						flPoint = 1;
+   		      	koors = atoi(tmpGPS);
+                  if (koors < 0)
+                     koors = 360+koors;
+						koors_dat = 1.0/ToGrad*koors; 
+
+						flNoKoord = 0;
+						flNewGPS = 1;
+						liTimer_tick_GPS = liTimer_tick;	
+		            OutModem20();
+//-----------						   
+//koors = 30;
+//-----------
+					}
+					else if(flPoint == 0)
+					{
+						tmpGPS[i++] = mess[r];
+	      	   	tmpGPS[i] = 0;
+					}
+            }
+			}
+			r++;
+	   	if(r >= NS)
+			{
+   	   	r = 0;
+				mar = 0;	
+			}      
+		}
+
+		//Инициализация ----------------------------------------------------------------------------
+      if (flInit == 0 && flRun)
+      {
+			flRun = 0;
+   		if (timer_tick < FREQ)    	//элероны
+   			delta_e = 0;     
+   		else if (timer_tick < 2.0*FREQ)    	//элероны
+   			delta_e = delta_e_max;     
+   		else if (timer_tick < 3.0*FREQ)
+   			delta_e = -delta_e_max;
+   		else if (timer_tick < 4.0*FREQ) 	//руль высоты
+			{
+	   		delta_e = 0;			
+   			delta_v = 30;		
+			}
+   		else if (timer_tick < 5.0*FREQ)
+   			delta_v = -30;
+   		else if (timer_tick < 6.0*FREQ)  //закрылок
+			{
+		   	delta_v = 0;			
+   			delta_z = delta_z_max;		
+			}
+   		else if (timer_tick < 7.0*FREQ)
+   			delta_z = delta_z_min;
+		   else if (timer_tick < 8.0*FREQ)  //рули направления
+   		{
+	   		delta_z = 0;			
+   			delta_n = delta_n_max;		
+   		}
+   		else if (timer_tick < 9.0*FREQ)
+	   		delta_n = -delta_n_max;
+   		else if (timer_tick < 10.0*FREQ) 	//колесо
+			{
+   			delta_n = 0;			
+   			delta_k = delta_k_max;		
+			}
+   		else if (timer_tick < 11.0*FREQ)
+	   		delta_k = -delta_k_max;
+   		else if (timer_tick < 12.0*FREQ)	//газ
+			{
+   			delta_k = 0;			
+   			delta_g = delta_g_max;		
+			}
+			else if (timer_tick < 13.0*FREQ)
+			{
+   			delta_g = 0;
+				delta_tl = delta_t_max;
+			}
+			else if (timer_tick < 14.0*FREQ)
+			{
+   			delta_tl = 0;
+				delta_tp = delta_t_max;
+			}
+			else
+			{
+//---------------------------------
+timer_tick = 0;
+//---------------------------------
+
+
+				delta_tp = 0;
+
+   			H0 = H_filtr;    //установим H0
+   			H_filtr = 0;
+//				flInit = 1;
+			}
+      }
+		
+		//Работа---------------------------------------------------------------------
+		if(flRun)		
+		{
+			flRun = 0;
+         if (flCommand)
+		     	OutModem21();
+			
+	      //Находим скорость-----------------------------------------------
+   	  	tmp = q_dat*2./0.125/delta_ro;
+     		if (tmp > 0) V_dat = sqrt(tmp);
+      	else			 V_dat = FLT_EPSILON;
+	  	   if (V_dat < FLT_EPSILON) V_dat = FLT_EPSILON;
+	      Vv_dat = Vv_dat+(Vz-V_dat-Vv_dat)*0.8/FREQ;  //скорость ветра
+				
+	      //ограничение cкорости-----------------------------------------------
+			Cybez = 1.5+0.0143*delta_z;
+      	Gla = Gla0+Vtop*0.72;
+         V_bum = sqrt(2.*Gla/Cybez/0.125/delta_ro/S);
+         V_min = 1.2*V_bum;
+
+         //ограничение крена--------------------------------------------------
+		   tmp = sqrt(288.15/(288.15-0.0065*H_dat));	//tmp = b
+         Nr = Nr_max; //л.с.
+         if (RegimeV == 0)
+            	Nr = Nr_min+(Nr_max-Nr_min)/(n_max-n_min)*(nSU-n_min);
+		   tmp = Nr*(1.11*delta_ro*tmp-0.11)/V_dat/9.81*0.7;     //tmp = pr             
+
+         Cxvir = tmp/q_dat/S;
+			Cyvir = -1.024760+3.627632e+01*Cxvir-1.258619e+02*Cxvir*Cxvir;
+			if (Cyvir > Cybez)
+				Cyvir = Cybez;
+			tmp = q_dat*S*Cyvir/Gla;		//tmp = ny
+			if (tmp > 1) kren_ogr = ToGrad*atan(sqrt(1-pow(1./tmp, 2))*tmp);
+         else         kren_ogr = 3;
+         if (kren_ogr < 3) kren_ogr = 3;
+         if (kren_ogr > kren_max) kren_ogr = kren_max;
+ 		}	//if (flRun)
+	}	//while (1)
+	return;
+}
+
+//-------------------------------------------------------------------
+void UART0_isr(void) interrupt 4
+{
+	xdata char SFRPAGE_SAVE = SFRPAGE;
+	SFRPAGE = UART0_PAGE;
+	if (SteckPoint < SP)
+		SteckPoint = SP;	
+	
+	if (RI0)  
+  	{ 
+		BuferFromModem [wBFM++] = SBUF0;  // read character
+		if(wBFM >= NBFM)
+		{
+     		wBFM = 0;
+			marBFM = 1;	
+		}      
+	  	RI0 = 0;		
+	}
+	if (TI0)
+	{
+  		if(r0 < rk)
+			SBUF0 = BufferInModem[r0++];
+		else						
+			flTransmiter = 0;			//Окончание передачи
+		TI0 = 0;
+  	}
+	SFRPAGE = SFRPAGE_SAVE;
+	return;
+}
+
+//---------------------------------------------------------------------------------
+void UART1_isr(void) interrupt 20
+{
+	xdata char SFRPAGE_SAVE = SFRPAGE;//, tmp;
+	SFRPAGE = UART1_PAGE;							  
+	if (SteckPoint < SP)
+		SteckPoint = SP;	
+
+	if (RI1)  
+  	{  
+		mess [w++] = SBUF1;  // read character	
+		if(w >= NS)
+		{
+      	w = 0;
+			mar = 1;	
+		}      
+		RI1 = 0;
+
+/*		tmp = SBUF1;
+		SFRPAGE = UART0_PAGE;
+		SBUF0 = tmp;
+		TI0 = 1;
+		SFRPAGE = UART1_PAGE;	*/		  
+  	}	
+	TI1 = 0;
+	SFRPAGE = SFRPAGE_SAVE;
+	return;
+}
+
+//----------------------------------------------------------------------
+void TIMER0_ISR (void) interrupt 1
+{
+  	xdata unsigned int uitmp;
+	xdata unsigned char j;
+	xdata float tmp;
+	xdata char SFRPAGE_SAVE = SFRPAGE;
+	SFRPAGE = 0;
+
+	TH0 = 0xAE;     // 0xFFFF-49766400/48/FREQ = 0xAEFF
+	TL0 = 0xFF;     
+
+	if (SteckPoint < SP) SteckPoint = SP;	
+   if (CountRun++ < 5)  WDTCN = 0xA5;	//Перезапустить охранный таймер
+   CountRun++;
+
+	flRun = 1;
+   timer_tick++;
+	liTimer_tick++;
+   timeFlashOver++;
+
+   //Опрос датчиков----------------------------------------------------------------------
+	tmp = 0;			
+	SFRPAGE = 0x00;
+	for(j = 0; j < 5; j++)
+	{
+		AMX0SL = 0x06;	//Выбор канала
+		for (uitmp = 0; uitmp < 10; uitmp++)
+			_nop_();
+     	AD0INT = 0;
+		AD0BUSY = 1;
+     	AD0INT = 0;
+		while(AD0BUSY)
+			;
+  		tmp = tmp+0.2*(ADC0 & 0x0fff);
+	}
+//	tmp = 7633.1-2.1692*tmp-H0;  //Борт №1
+	tmp = 7760.3-2.2437*tmp-H0;  //Борт №2
+
+   H_filtr = H_filtr+(tmp-H_filtr)/FREQ*0.8;
+ 	Vy_filtr = Vy_filtr+((H_filtr-H_filtr_pr)*FREQ-Vy_filtr)/FREQ*0.8;
+   H_filtr_pr = H_filtr;
+	
+	H_dat = H_dat+(tmp-H_dat)/FREQ/0.3;
+ 	Vy_dat = Vy_dat+((H_dat-H_dat_pr)*FREQ-Vy_dat)/FREQ/0.3;
+   H_dat_pr = H_dat;
+
+   delta_ro = 1-0.000095*H_filtr+3.05e-09*H_filtr*H_filtr;
+	if (delta_ro < 0.5)
+		delta_ro = 0.5;
+
+   //Скорость--------------------------------------------------------------
+	AMX0SL = 0x07;	 		
+	for (uitmp = 0; uitmp < 10; uitmp++)
+		_nop_();
+  	AD0INT = 0;
+	AD0BUSY = 1;
+  	AD0INT = 0;
+	while(AD0BUSY)
+		;
+//   tmp = -103.13+0.6825*(ADC0 & 0x0fff);  //Борт №1
+   tmp = -90.639+0.6881*(ADC0 & 0x0fff);  //Борт №2
+   q_dat = q_dat+(tmp-q_dat)/FREQ*0.8;
+
+	//Wx--------------------------------------------------------------------
+   SFRPAGE = 0x02;
+   AMX2SL = 2;	
+	for (uitmp = 0; uitmp < 10; uitmp++)
+		_nop_();
+  	AD2INT = 0;
+	AD2BUSY = 1;
+  	AD2INT = 0;
+	while(AD2BUSY)
+		;
+   tmp = ADC2;
+   Tx = Tx+(tmp-Tx)/FREQ*0.1;
+
+	SFRPAGE = 0;
+	AMX0SL = 0x02;	 	
+	for (uitmp = 0; uitmp < 10; uitmp++)
+		_nop_();
+  	AD0INT = 0;
+	AD0BUSY = 1;
+  	AD0INT = 0;
+	while(AD0BUSY)
+		;
+/*	wx_dat = 2271-0.7086*Tx+(ADC0 & 0x0fff);    //Борт №1 
+	wx_dat = 208.14-0.0961*wx_dat; */
+	wx_dat = 2159.3-0.1518*Tx+(ADC0 & 0x0fff);    //Борт №2 
+	wx_dat = 194.81-0.0917*wx_dat; 
+
+   //Wy--------------------------------------------------------------------
+   SFRPAGE = 0x02;
+   AMX2SL = 7;	
+	for (uitmp = 0; uitmp < 10; uitmp++)
+		_nop_();
+  	AD2INT = 0;
+	AD2BUSY = 1;
+  	AD2INT = 0;
+	while(AD2BUSY)
+		;
+   tmp = ADC2;
+   Ty = Ty+(tmp-Ty)/FREQ*0.1;
+
+	SFRPAGE = 0;
+	AMX0SL = 0x00;	 		
+	for (uitmp = 0; uitmp < 10; uitmp++)
+		_nop_();
+  	AD0INT = 0;
+	AD0BUSY = 1;
+  	AD0INT = 0;
+	while(AD0BUSY)
+		;
+/*   wy_dat = 2118-0.4586*Ty+(ADC0 & 0x0fff);	//Борт №1
+	wy_dat = 196.82-0.096*wy_dat;    */  
+   wy_dat = 2303.3-1.2435*Ty+(ADC0 & 0x0fff);	//Борт №2
+	wy_dat = 210.3-0.0983*wy_dat;      
+
+   //Wz--------------------------------------------------------------------
+   SFRPAGE = 0x02;
+   AMX2SL = 1;	
+	for (uitmp = 0; uitmp < 10; uitmp++)
+		_nop_();
+  	AD2INT = 0;
+	AD2BUSY = 1;
+  	AD2INT = 0;
+	while(AD2BUSY)
+		;
+   tmp = ADC2;
+   Tz = Tz+(tmp-Tz)/FREQ*0.1;
+
+	SFRPAGE = 0;
+	AMX0SL = 0x01;	 	
+	for (uitmp = 0; uitmp < 10; uitmp++)
+		_nop_();
+  	AD0INT = 0;
+	AD0BUSY = 1;
+  	AD0INT = 0;
+	while(AD0BUSY)
+		;
+
+/*   wz_dat = 2122.3-0.6448*Tz+(ADC0 & 0x0fff);	//Борт №1
+	wz_dat = -194.96+0.0961*wz_dat;  */
+   wz_dat = 2281.9-1.3018*Tz+(ADC0 & 0x0fff);	//Борт №2
+	wz_dat = -203.27+0.0974*wz_dat;  
+
+   //ax--------------------------------------------------------------------
+	SFRPAGE = 0;
+	AMX0SL = 0x03;	 	
+	for (uitmp = 0; uitmp < 10; uitmp++)
+		_nop_();
+  	AD0INT = 0;
+	AD0BUSY = 1;
+  	AD0INT = 0;
+	while(AD0BUSY)
+		;
+//	ax_dat = -8.5176+0.0031*(ADC0 & 0x0fff); //Борт №1
+	ax_dat = -8.5233+0.0031*(ADC0 & 0x0fff); //Борт №2
+
+
+   //ay--------------------------------------------------------------------
+	SFRPAGE = 0;
+	AMX0SL = 0x05;	 	
+	for (uitmp = 0; uitmp < 10; uitmp++)
+		_nop_();
+  	AD0INT = 0;
+	AD0BUSY = 1;
+  	AD0INT = 0;
+	while(AD0BUSY)
+		;
+//	ay_dat = -25.965+0.0094*(ADC0 & 0x0fff); //Борт №1
+	ay_dat = 8.1835-0.003*(ADC0 & 0x0fff); //Борт №2
+
+   //az--------------------------------------------------------------------
+	SFRPAGE = 0;
+	AMX0SL = 0x04;	 	
+	for (uitmp = 0; uitmp < 10; uitmp++)
+		_nop_();
+  	AD0INT = 0;
+	AD0BUSY = 1;
+  	AD0INT = 0;
+	while(AD0BUSY)
+		;
+//	az_dat = 8.4867-0.0031*(ADC0 & 0x0fff); //Борт №1
+	az_dat = 8.4889-0.0031*(ADC0 & 0x0fff); //Борт №2
+
+	if (flInit)	//если не инициализация
+	{	
+		if (RegimeStart == 1)//автономный взлет---------------------------------------------------
+   	{
+            RegimeKren = 1;
+            RegimeV = 0;
+            delta_g = 100;
+            delta_z_zad = 0;
+
+            if(V_dat > 108/3.6)
+            {
+               flCommand = 1;
+               RegimeStart = 2;
+               int_delta_v = delta_v = 12;
+               RegimeVy = 0;
+               Vy_zad_buf = Vy_zad_ogr_nab = int_Vy_zad_ogr_nab = 2;
+            }
+		}
+   	else if ((RegimeStart == 2) && (H_dat > 100))
+   	{
+               flCommand = 1;
+               RegimeStart = 3;
+               RegimeV = 1;
+               RegimeVy = 2;
+               RegimeKren = 1;
+               H_zad_buf = H_Mar[n_];
+               Vz_zad = Vz_Mar[n_];
+               int_delta_g = delta_g = 100;
+   	}
+   	if (RegimeV == 1)
+   	{
+            V_zad = Vz_zad-Vv_dat;
+            if (V_zad < V_min) V_zad = V_min;
+   	}
+      else if (RegimeKren && (n_ == i_mar-2))//заход на посадку---------------------------------------------------
+      {
+            tmp = -(H_dat-100)/Vy_zad_min;	//tmp = t_ 
+            tmp = (30+Vv_dat)*tmp;			//tmp = L_
+            if (tmp > rasst_toch_mar)
+            {
+               flCommand = 1;
+            
+               RegimeV = 2;
+               Vz_zad = 30+Vv_dat;
+
+               H_zad = 100;
+               RegimeVy = 1;
+            }
+      }
+      else if (RegimeKren && (n_ == i_mar-1))
+      {
+            float Vy_lan = -2;
+            V_zad = V_min;
+            if (RegimeSU == 1)   //моторный полет
+            {
+                  H_zad = 100;
+                  RegimeVy = 1;
+                  flCommand = 1;
+
+                  tmp = -H_dat/Vy_lan;				//tmp = t_
+                  tmp = (V_zad+Vv_dat)*tmp;		//tmp = L_
+                  if (tmp > rasst_toch_mar)
+                     RegimeSU = 2;
+            }
+      }
+      else
+            H_zad = H_zad_buf;
+
+
+		//продольный канал----------------------------------------------------------
+      if (RegimeStart > 1)
+      {
+            if (RegimeSU == 1)    //моторный полет
+            {
+               Vy_zad = Vy_zad_buf;	//ручное управление Vу
+					tmp = 0.5; 		//tmp = Vy_lim
+               if (RegimeVy)  //управление эшелонами
+               {
+                  Vy_zad = 0.25*(H_zad-H_dat);
+                  tmp  = Vy_zad_max*0.3;
+               }
+               if (Vy_zad > Vy_zad_max)  Vy_zad = Vy_zad_max;
+               else if (Vy_zad < Vy_zad_min) Vy_zad = Vy_zad_min;
+
+               if (Vy_zad > tmp)  //набор высоты
+               {
+                  float delta_V_dat = 0.05*(V_dat+0.03*(100-delta_g)*(100-delta_g)-V_zad);
+
+                  int_Vy_zad_ogr_nab += 0.75*delta_V_dat/FREQ;
+                  if (int_Vy_zad_ogr_nab > Vy_zad_max)   int_Vy_zad_ogr_nab = Vy_zad_max;
+                  else if (int_Vy_zad_ogr_nab < 0.5)       int_Vy_zad_ogr_nab = 0.5;
+
+                  Vy_zad_ogr_nab = 0.3*delta_V_dat+int_Vy_zad_ogr_nab;
+                  if (Vy_zad_ogr_nab > Vy_zad_max)  Vy_zad_ogr_nab = Vy_zad_max;
+                  else if (Vy_zad_ogr_nab < 0.5)        Vy_zad_ogr_nab = 0.5;
+
+                  if (Vy_zad > Vy_zad_ogr_nab) Vy_zad = Vy_zad_ogr_nab;
+               }
+               tmp = -0.8*(Vy_dat-Vy_zad);  //tmp = ddelta_V
+               if (tmp > delta_v_max) tmp = delta_v_max;
+               else if (tmp < delta_v_min) tmp = delta_v_min;
+
+               int_delta_v += 0.075*tmp/FREQ;
+      }
+      else    //планирование 
+      {
+        	      tmp = -0.3*Vy_dat;
+               if (tmp > delta_v_max) tmp = delta_v_max;
+               else if (tmp < delta_v_min) tmp = delta_v_min;
+
+  	            int_delta_v += 0.075*0.25*(V_dat-V_bum)/FREQ;	//планирование c минимальной скоростью
+//  	            int_delta_v += 0.075*0.25*(V_dat-V_zad)/FREQ;	//планирование c переменной скоростью
+            }
+            if (int_delta_v > delta_v_max-5)  int_delta_v = delta_v_max-5;
+            if (int_delta_v < delta_v_min+5) int_delta_v = delta_v_min+5;
+
+            delta_v = tmp+int_delta_v;
+            if (delta_v > delta_v_max)  delta_v = delta_v_max;
+	         if (delta_v < delta_v_min) delta_v = delta_v_min;
+      }     //end  if (RegimeStart)
+
+         //стабилизация путевой скорости-------------------------------------
+      if (RegimeV)
+      {
+            float delta_nSU = 0.6*(3.*(Vy_zad*Vy_zad-Vy_dat*Vy_dat)+V_zad*V_zad-V_dat*V_dat);
+            int_delta_g += 0.08*delta_nSU/FREQ;
+            if (int_delta_g > 100)     int_delta_g = 100;
+            else if (int_delta_g < 0)  int_delta_g = 0;
+            delta_g = int_delta_g + delta_nSU;
+            if (delta_g > 100)     delta_g = 100;
+            else if (delta_g < 0)  delta_g = 0;
+      }
+         //управление закрылком----------------------------------------------
+      {
+            float ddelta_z = 0.4*(delta_z_zad-delta_z);
+            if (ddelta_z > 0.4) ddelta_z = 0.4;
+            else if (ddelta_z < -0.4) ddelta_z = -0.4;
+            delta_z = delta_z + ddelta_z;
+
+            int_delta_v += 56./41.*ddelta_z;
+      }
+
+
+  		//боковой канал-------------------------------------------------------
+      if (RegimeStart > 1)
+      {
+            if (RegimeStart == 3)
+            {
+               delta_k = 0.95*delta_k;
+               delta_n = 0.95*delta_n;
+            }
+            kren_dat = kren_dat+(1.2*wx_dat-wy_dat-0.12*kren_dat)/FREQ;   //lvo = 865 мм
+//            kren_dat = kren_dat+(1.2*wx_dat-wy_dat-0.22*kren_dat)*dt_dat;   //lvo = 865+300 = 1165 мм
+            tmp = kren_zad;	//tmp = kren_zad_
+            if(tmp > kren_ogr)
+               tmp = kren_ogr;
+            else if(tmp < -kren_ogr)
+               tmp = -kren_ogr;
+            tmp = kren_dat+tmp;	//tmp = dKren
+            int_dKren = int_dKren+0.5*tmp/FREQ;
+            if(int_dKren > (delta_e_max-5)/0.025)       int_dKren = (delta_e_max-5)/0.025;
+            else if(int_dKren < -(delta_e_max-5)/0.025) int_dKren = -(delta_e_max-5)/0.025;
+            delta_e = 0.3*tmp+0.025*int_dKren;//+0.05*wx_dat;
+            if (delta_e > delta_e_max)      delta_e = delta_e_max;
+            else if (delta_e < -delta_e_max)delta_e = -delta_e_max;
+      }
+      else
+      {
+            koors_dat -= wy_dat/ToGrad/FREQ;
+            tmp = koors_zad-koors_dat;	//tmp = dKoors
+            while (tmp > M_PI)
+  		         tmp -= D_PI;
+            while (tmp < -M_PI)
+  		         tmp += D_PI;
+            tmp = 1.2*tmp*ToGrad;
+
+            int_dKoors += 0.00005*tmp;
+            if(int_dKoors > 40)       int_dKoors = 40;
+            else if(int_dKoors < -40) int_dKoors = -40;
+            delta_n = -(0.4*tmp+int_dKoors);
+            if (delta_n > 45)      delta_n = 45;
+            else if (delta_n < -45)delta_n = -45;
+
+            tmp = 0;				//tmp = del_k
+            if (fabs(V_dat) > FLT_EPSILON)
+               tmp = wy_dat*(1.9+0.114)/V_dat*ToGrad;
+            delta_k = 0.3*delta_n+tmp;
+            if (delta_k > 18)
+               delta_k = 18;
+            else if (delta_k < -18)
+               delta_k = -18;
+      }
+
+	 	//оценим текущую ситуацию-----------------------------------------------
+		if (RegimeStart == 0)        //предстартовая подготовка
+		{
+			NoCommand = 0;
+		}
+		else 
+		{
+			NoCommand++;
+			if(flAvarStop == 1)
+			{
+			   if (timer_tick > 30*FREQ)  //остановим машинку ввода ПС
+	   			/*bitParashut = 0*/;
+				else if (timer_tick > 2*FREQ)
+				{
+					flParashute = 1;
+//	   			bitParashut = flParashut;
+				}
+				else
+				{
+					RegimeSU = 2;
+//					bitStopSU = flStopSU;
+     				H_zad = 0;  
+				}
+			}
+			else 
+			{
+				if ((H_filtr > H_max) && (H_filtr < H_zad))  //Если летим снизу
+					H_max = H_filtr;
+
+				if (H_filtr > H_avar)	tmp = 100;	//tmp = deltaH
+				else							tmp = 50;
+				if( H_filtr < (H_max-tmp))	
+				{
+					flAvarStop = 1;         
+					timer_tick = 0;
+				}
+				if (NoCommand > FREQ*20)   //По отказу РК,  Time = 20 c
+				{
+               flCommand = 1;		//возврат
+					flOtkazRK = 1;
+               RegimeKren = 2;
+               n_ = i_mar-2;            	
+				}
+			}
+      }
+	}
+
+	//Шимы---------------------------------------------------------------
+//  delta_e, delta_z, delta_v, delta_n, delta_k, delta_g, delta_tl, delta_tp
+
+   //правый элерон
+/*   if (delta_e > delta_e_max) delta_e = delta_e_max;
+   else if (delta_e < -delta_e_max) delta_e = -delta_e_max;
+	uitmp = 25000*(1.5+0.55/delta_e_max*delta_e);
+	write(113, uitmp);
+	
+   //левый элерон
+	uitmp = 25000*(1.5-0.55/delta_e_max*delta_e);
+	write(114, uitmp);
+	
+	//delta_z
+   if (delta_z > delta_z_max) delta_z = delta_z_max;
+   else if (delta_z < delta_z_min) delta_z = delta_z_min;
+	uitmp = 25000*(0.95+1.1/(delta_z_max-(delta_z_min))*(delta_z-(delta_z_min)));
+	write(115, uitmp);
+*/	
+	//delta_v
+   if (delta_v > delta_v_max) delta_v = delta_v_max;
+   else if (delta_v < delta_v_min) delta_v = delta_v_min;
+//	uitmp = 25000*(1.5-1.1/(delta_v_max-delta_v_min)*(delta_v-10);
+	uitmp = 25000*(1.5-0.67*1.1/delta_v_max*delta_v);
+	write(120, uitmp);
+
+//	uitmp = 25000*(1.5+0.55*delta_v/delta_v_max);
+//	write(121, uitmp);
+	
+	//левый delta_n
+/*   if (delta_n > delta_n_max) delta_n = delta_n_max;
+   else if (delta_n < -delta_n_max) delta_n = -delta_n_max;
+	uitmp = 25000*(1.5+0.55/delta_n_max*delta_n);
+	write(117, uitmp);
+
+	//правый delta_n
+	uitmp = 25000*(1.5-0.55/delta_n_max*delta_n);
+	write(118, uitmp);
+
+	//delta_k
+   if (delta_k > delta_k_max) delta_k = delta_k_max;
+   else if (delta_k < -delta_k_max) delta_k = -delta_k_max;
+	uitmp = 25000*(1.5+0.55/delta_k_max*delta_k);
+	write(119, uitmp);
+	
+	//delta_g	
+   if (delta_g > delta_g_max) delta_g = delta_g_max;
+   else if (delta_z < 0) delta_z = 0;
+	uitmp = 25000*(0.95+1.1/delta_g_max*delta_g);
+	write(120, uitmp);
+
+	//левый delta_tl
+   if (delta_tl > delta_t_max) delta_tl = delta_t_max;
+   else if (delta_tl < delta_t_min) delta_tl = delta_t_min;
+	uitmp = 25000*(0.95+1.1/delta_t_max*delta_tl);
+	write(121, uitmp);
+
+	//delta_tp
+   if (delta_tp > delta_t_max) delta_tp = delta_t_max;
+   else if (delta_tp < delta_t_min) delta_tp = delta_t_min;
+	uitmp = 25000*(0.95+1.1/delta_t_max*delta_tp);
+	write(122, uitmp);
+*/
+	SFRPAGE = SFRPAGE_SAVE;
+	return;
+}
+
+//----------------------------------------------------------------------------
+unsigned long DecodeLatOrLon(char Array[], char n)
+{
+	xdata unsigned long koord, tmp;
+	koord = Array[n] & 0x7f;
+	tmp = Array[n+1] & 0x7f;
+	koord = koord+(tmp << 7);
+	tmp = Array[n+2] & 0x7f;
+	koord = koord+(tmp << 14);
+	tmp = Array[n+3] & 0x7f;
+	koord = koord+(tmp << 21);
+	return koord;
+}
+
